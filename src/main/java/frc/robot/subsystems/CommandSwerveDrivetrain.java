@@ -260,8 +260,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param timestampSeconds The timestamp of the vision measurement in seconds.
      */
     @Override
+    // Note: changed on 5_26_2024 to change time conversion to correct time
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
+        super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
     }
 
     /**
@@ -283,7 +284,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs
     ) {
-        super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
+        // changed time conversion to correct time on 5_26_2024
+        super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     }
 
     public Pose2d getPose() {
