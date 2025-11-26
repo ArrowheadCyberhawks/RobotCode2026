@@ -72,6 +72,10 @@ public class VisionSubsystem extends SubsystemBase {
 //     LimelightHelpers.setPipelineIndex(getLimelightName(), pipeline.ordinal());
 //   }
 
+  public void SetIMUMode(int mode) {
+    LimelightHelpers.SetIMUMode(getLimelightName(), mode);
+  }
+
 
   public double getDistanceToTarget() {
     if (!hasTarget()) {

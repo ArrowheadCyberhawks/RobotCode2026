@@ -42,12 +42,15 @@ public class RobotContainer {
 
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+	//public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
 	public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
+
 
 
 	public RobotContainer() {
 		configureBindings();
-		
+		visionSubsystem.SetIMUMode(1);
+
 		// Set the logger to log to the first flashdrive plugged in
 		SignalLogger.setPath("/media/sda1/");
 
@@ -102,6 +105,7 @@ public class RobotContainer {
 
 	public void updateVisionPose() {
 		LimelightHelpers.PoseEstimate limelightMeasurement = visionSubsystem.getPoseEstimate();
+
 
 		if (!limelightMeasurement.pose.equals(new Pose2d())) {
 			drivetrain.addVisionMeasurement(limelightMeasurement.pose, limelightMeasurement.timestampSeconds);
