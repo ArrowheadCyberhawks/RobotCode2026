@@ -55,7 +55,7 @@ public class RobotContainer {
 	}
 
 	public void periodic() {
-		// updateVisionPose();
+		updateVisionPose();
 	}
 
 	private void configureBindings() {
@@ -106,9 +106,8 @@ public class RobotContainer {
 			drivetrain.addVisionMeasurement(limelightMeasurement.pose, limelightMeasurement.timestampSeconds);
 		}
 
+		//horrible inefficient garbage telemetry code
 		SmartDashboard.putNumberArray("Robot Pose", new double[] {limelightMeasurement.pose.getX(), limelightMeasurement.pose.getY(), limelightMeasurement.pose.getRotation().getDegrees()});
-
-	
 	}
 
 	
