@@ -88,9 +88,8 @@ public class VisionSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Add 180 degrees because camera is mounted on opposite side
     LimelightHelpers.SetRobotOrientation(
-        getLimelightName(), rotationSupplier.getAsDouble() + 180, 0, 0, 0, 0, 0);
+        getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
   }
 
   private void setUpShuffleboard() {
