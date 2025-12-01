@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.VecBuilder;
@@ -19,20 +20,26 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
+import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.LimelightHelpers;
+import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
 	private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-	private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+	private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+																						// max angular velocity
 
 	/* Setting up bindings for necessary control of the swerve drive platform */
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
 			.withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+	private final SwerveRequest.FieldCentricFacingAngle driveFacingAngleRequest = new SwerveRequest.FieldCentricFacingAngle()
+			.withDeadband(MaxSpeed * 0.01)
+			.withSteerRequestType(SteerRequestType.MotionMagicExpo);
+
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
@@ -42,9 +49,9 @@ public class RobotContainer {
 
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-	//public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-
+	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
+	private VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
+	//private QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
 
 
 	public RobotContainer() {
@@ -86,6 +93,16 @@ public class RobotContainer {
 			point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
 		));
 
+		joystick.leftBumper().whileTrue(drivetrain.applyRequest(() -> visionSubsystem.pointAtTag()));
+		joystick.rightBumper().whileTrue(drivetrain.applyRequest(() -> visionSubsystem.alignToTag()));
+		joystick.a().whileTrue(
+			new DriveToPose(
+				drivetrain,
+				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
+				driveFacingAngleRequest)
+		);
+
+
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
 		joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -106,15 +123,15 @@ public class RobotContainer {
 	public void updateVisionPose() {
 		LimelightHelpers.PoseEstimate limelightMeasurement = visionSubsystem.getPoseEstimate();
 
-
 		if (!limelightMeasurement.pose.equals(new Pose2d())) {
 			drivetrain.addVisionMeasurement(limelightMeasurement.pose, limelightMeasurement.timestampSeconds);
 			System.out.println("limelight pose valid: " + limelightMeasurement.pose);
 		}
 
-		//horrible inefficient garbage telemetry code
-		SmartDashboard.putNumberArray("Robot Pose", new double[] {limelightMeasurement.pose.getX(), limelightMeasurement.pose.getY(), limelightMeasurement.pose.getRotation().getDegrees()});
+		// horrible inefficient garbage telemetry code
+		SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
+		SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurement.pose.getX(),
+				limelightMeasurement.pose.getY(), limelightMeasurement.pose.getRotation().getDegrees() });
 	}
 
-	
 }

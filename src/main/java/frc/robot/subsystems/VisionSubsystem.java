@@ -1,14 +1,24 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
+// import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
+// import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentricFacingAngle;
+
 import edu.wpi.first.cscore.HttpCamera;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.LimelightHelpers;
-import frc.robot.subsystems.LimelightHelpers.PoseEstimate;
-import java.util.function.DoubleSupplier;
+import frc.robot.LimelightHelpers;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.LimelightHelpers.PoseEstimate;
 
 
 public class VisionSubsystem extends SubsystemBase {
@@ -25,7 +35,7 @@ public class VisionSubsystem extends SubsystemBase {
   }
 
   private String getLimelightName() {
-    return "limelight";
+    return "limelight"; //replace in a constants file somewhere
   }
 
   public double getTX() {
@@ -68,14 +78,13 @@ public class VisionSubsystem extends SubsystemBase {
     return LimelightHelpers.getFiducialID(getLimelightName());
   }
 
-//   public void setPipeline(String pipeline) {
-//     LimelightHelpers.setPipelineIndex(getLimelightName(), pipeline.ordinal());
-//   }
+  // public void setPipeline(String pipeline) {
+  // LimelightHelpers.setPipelineIndex(getLimelightName(), pipeline.ordinal());
+  // }
 
   public void SetIMUMode(int mode) {
     LimelightHelpers.SetIMUMode(getLimelightName(), mode);
   }
-
 
   public double getDistanceToTarget() {
     if (!hasTarget()) {
@@ -90,6 +99,70 @@ public class VisionSubsystem extends SubsystemBase {
     return lastDistance;
   }
 
+
+  public SwerveRequest alignToTag() {
+    double tx = getTX();
+    double ty = getTY();
+
+    double goalX = 0.25; //random num for testing
+    double goalY = 0.10;
+
+    double xError = goalX - tx;
+    double yError = goalY - ty;
+
+    xError *= 2.0;
+    yError *= 6.0;
+
+    double yVel = MathUtil.clamp(yError, -1, 1);
+    double xVel = MathUtil.clamp(xError, -1, 1);
+
+    return new SwerveRequest.RobotCentric()
+        .withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
+        .withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+        .withDeadband(DriveConstants.kMaxSpeed * 0.01)
+        .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
+}
+
+
+public SwerveRequest pointAtTag() {
+    double tx = getTX();
+    double ty = getTY();
+
+    // Compute angle to tag relative to robot forward
+    double angleToTag = Math.toDegrees(Math.atan2(ty, tx));
+
+    return new SwerveRequest.RobotCentricFacingAngle()
+        .withTargetDirection(Rotation2d.fromDegrees(angleToTag))
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+        .withDeadband(0)
+        .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01)
+        .withVelocityX(0) // stop linear movement
+        .withVelocityY(0);
+}
+
+
+public SwerveRequest driveAndPointAtTag() {
+  double tx = getTX();
+  double ty = getTY();
+
+  //Compute angle to tag relative to robot forward
+  double angleToTag = Math.toDegrees(Math.atan2(ty, tx));
+
+  //Scale for speed
+  double xVel = MathUtil.clamp(tx * 2.0, -1.0, 1.0); // X = forward/back
+  double yVel = MathUtil.clamp(ty * 6.0, -1.0, 1.0); // Y = left/right
+
+  return new SwerveRequest.RobotCentricFacingAngle()
+      .withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
+      .withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
+      .withTargetDirection(Rotation2d.fromDegrees(angleToTag))
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+      .withDeadband(DriveConstants.kMaxSpeed * 0.01)
+      .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
+}
+
+
   @Override
   public void periodic() {
     LimelightHelpers.SetRobotOrientation(
@@ -99,10 +172,9 @@ public class VisionSubsystem extends SubsystemBase {
   private void setUpShuffleboard() {
     tab = Shuffleboard.getTab("VisionApriltag");
 
-    LLFeed =
-        new HttpCamera(
-            getLimelightName(),
-            "http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
+    LLFeed = new HttpCamera(
+        getLimelightName(),
+        "http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
     tab.add("Limelight Feed", LLFeed).withWidget("Camera Stream").withPosition(0, 0).withSize(4, 4);
 
     tab.addDouble("Tx", () -> this.getTX());
