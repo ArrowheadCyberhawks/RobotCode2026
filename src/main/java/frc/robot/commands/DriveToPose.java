@@ -58,13 +58,13 @@ public class DriveToPose extends Command {
     private static final double driveMaxVelocity = 2; //replace with constant value when safe to use lol
     private static final double driveMaxAcceleration = 1;
     private static final double turnKp = 6.0;
-    private static final double turnKi = 0.15;
+    private static final double turnKi = 0.2;
     private static final double turnKd = 0.0;
     private static final double turnMaxVelocity = RotationsPerSecond.of(1).in(RadiansPerSecond);
     private static final double turnMaxAcceleration = RotationsPerSecond.of(0.5).in(RadiansPerSecond);
     private static final double driveTolerance = 0.05;
-    private static final double thetaTolerance = 0.01;
-    private static final int timeout = 50;
+    private static final double thetaTolerance = 0.005;
+    private static final int timeout = 60; // (theoretically) 3 seconds at 20ms loop period
 
     private static final TrapezoidProfile.Constraints driveConstraints = new TrapezoidProfile.Constraints(driveMaxVelocity, driveMaxAcceleration);
     private static final TrapezoidProfile.Constraints turnConstraints = new TrapezoidProfile.Constraints(turnMaxVelocity, turnMaxAcceleration);
