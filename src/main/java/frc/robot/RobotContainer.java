@@ -7,10 +7,13 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.numbers.*;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -50,7 +53,7 @@ public class RobotContainer {
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	private VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
+	private VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
 	//private QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
 
 
@@ -93,12 +96,12 @@ public class RobotContainer {
 			point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
 		));
 
-		joystick.leftBumper().whileTrue(drivetrain.applyRequest(() -> visionSubsystem.pointAtTag()));
-		joystick.rightBumper().whileTrue(drivetrain.applyRequest(() -> visionSubsystem.alignToTag()));
+		joystick.leftBumper().whileTrue(drivetrain.applyRequest(visionSubsystem::pointAtTag));
+		joystick.rightBumper().whileTrue(drivetrain.applyRequest(visionSubsystem::alignToTag));
 		joystick.a().whileTrue(
 			new DriveToPose(
 				drivetrain,
-				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
+				() -> new Pose2d(10, 5, new Rotation2d(0)), // always drive to origin
 				driveFacingAngleRequest)
 		);
 
@@ -122,16 +125,14 @@ public class RobotContainer {
 
 	public void updateVisionPose() {
 		LimelightHelpers.PoseEstimate limelightMeasurement = visionSubsystem.getPoseEstimate();
-
+		System.out.println("current robot pose: " + drivetrain.getPose());
 		if (!limelightMeasurement.pose.equals(new Pose2d())) {
-			drivetrain.addVisionMeasurement(limelightMeasurement.pose, limelightMeasurement.timestampSeconds);
-			System.out.println("limelight pose valid: " + limelightMeasurement.pose);
+			drivetrain.addVisionMeasurement(limelightMeasurement.pose, Utils.fpgaToCurrentTime(limelightMeasurement.timestampSeconds));//, VecBuilder.fill(.5,.5,9999999));
+			// horrible inefficient garbage telemetry code
+			SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
+			SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurement.pose.getX(),
+			limelightMeasurement.pose.getY(), limelightMeasurement.pose.getRotation().getDegrees() });
 		}
-
-		// horrible inefficient garbage telemetry code
-		SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
-		SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurement.pose.getX(),
-				limelightMeasurement.pose.getY(), limelightMeasurement.pose.getRotation().getDegrees() });
 	}
 
 }

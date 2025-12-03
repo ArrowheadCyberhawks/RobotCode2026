@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
+import javax.sound.sampled.SourceDataLine;
+
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -30,52 +32,59 @@ public class VisionSubsystem extends SubsystemBase {
 
 
   public VisionSubsystem(DoubleSupplier rotationSupplier) {
-    setUpShuffleboard();
-    this.rotationSupplier = rotationSupplier;
+	setUpShuffleboard();
+	this.rotationSupplier = rotationSupplier;
+  }
+
+  @Override
+  public void periodic() {
+	System.out.println("robot orientation: " + rotationSupplier.getAsDouble());
+	LimelightHelpers.SetRobotOrientation(
+		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
   }
 
   private String getLimelightName() {
-    return "limelight"; //replace in a constants file somewhere
+	return "limelight"; //replace in a constants file somewhere
   }
 
   public double getTX() {
-    return LimelightHelpers.getTX(getLimelightName());
+	return LimelightHelpers.getTX(getLimelightName());
   }
 
   public double getTY() {
-    return LimelightHelpers.getTY(getLimelightName());
+	return LimelightHelpers.getTY(getLimelightName());
   }
 
   public Pose2d getPose2dFromLimelight() {
-    return LimelightHelpers.getBotPose2d(getLimelightName());
+	return LimelightHelpers.getBotPose2d(getLimelightName());
   }
 
   public Pose2d getMegaTag2Pose2dFromLimelight() {
-    return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName()).pose;
+	return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName()).pose;
   }
 
   public Pose3d getPose3dTargetSpaceFromLimelight() {
-    return (LimelightHelpers.getBotPose3d_TargetSpace(getLimelightName()));
+	return (LimelightHelpers.getBotPose3d_TargetSpace(getLimelightName()));
   }
 
   public PoseEstimate getPoseEstimate() {
-    return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName());
+	return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName());
   }
 
   public double getLatencyCapture() {
-    return LimelightHelpers.getLatency_Capture(getLimelightName());
+	return LimelightHelpers.getLatency_Capture(getLimelightName());
   }
 
   public double getLatencyPipeline() {
-    return LimelightHelpers.getLatency_Pipeline(getLimelightName());
+	return LimelightHelpers.getLatency_Pipeline(getLimelightName());
   }
 
   public boolean hasTarget() {
-    return LimelightHelpers.getTV(getLimelightName());
+	return LimelightHelpers.getTV(getLimelightName());
   }
 
   public double getAprilTagId() {
-    return LimelightHelpers.getFiducialID(getLimelightName());
+	return LimelightHelpers.getFiducialID(getLimelightName());
   }
 
   // public void setPipeline(String pipeline) {
@@ -83,62 +92,62 @@ public class VisionSubsystem extends SubsystemBase {
   // }
 
   public void SetIMUMode(int mode) {
-    LimelightHelpers.SetIMUMode(getLimelightName(), mode);
+	LimelightHelpers.SetIMUMode(getLimelightName(), mode);
   }
 
   public double getDistanceToTarget() {
-    if (!hasTarget()) {
-      return lastDistance;
-    }
-    double cameraHeight = 22;
-    double targetHeight = 56.375;
-    double heightDiff = targetHeight - cameraHeight;
-    double cameraAngle = 23;
-    double theta = Math.toRadians(cameraAngle + getTY());
-    lastDistance = heightDiff / Math.tan(theta);
-    return lastDistance;
+	if (!hasTarget()) {
+	  return lastDistance;
+	}
+	double cameraHeight = 22;
+	double targetHeight = 56.375;
+	double heightDiff = targetHeight - cameraHeight;
+	double cameraAngle = 23;
+	double theta = Math.toRadians(cameraAngle + getTY());
+	lastDistance = heightDiff / Math.tan(theta);
+	return lastDistance;
   }
 
 
   public SwerveRequest alignToTag() {
-    double tx = getTX();
-    double ty = getTY();
+	double tx = getTX();
+	double ty = getTY();
 
-    double goalX = 0.25; //random num for testing
-    double goalY = 0.10;
+	double goalX = 0.25; //random num for testing
+	double goalY = 0.10;
 
-    double xError = goalX - tx;
-    double yError = goalY - ty;
+	double xError = goalX - tx;
+	double yError = goalY - ty;
 
-    xError *= 2.0;
-    yError *= 6.0;
+	xError *= 2.0;
+	yError *= 6.0;
 
-    double yVel = MathUtil.clamp(yError, -1, 1);
-    double xVel = MathUtil.clamp(xError, -1, 1);
+	double yVel = MathUtil.clamp(yError, -1, 1);
+	double xVel = MathUtil.clamp(xError, -1, 1);
 
-    return new SwerveRequest.RobotCentric()
-        .withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
-        .withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withDeadband(DriveConstants.kMaxSpeed * 0.01)
-        .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
+	return new SwerveRequest.RobotCentric()
+		.withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
+		.withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
+		.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+		.withDeadband(DriveConstants.kMaxSpeed * 0.01)
+		.withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
 }
 
 
 public SwerveRequest pointAtTag() {
-    double tx = getTX();
-    double ty = getTY();
+	double tx = getTX();
+	double ty = getTY();
 
-    // Compute angle to tag relative to robot forward
-    double angleToTag = Math.toDegrees(Math.atan2(ty, tx));
+	// Compute angle to tag relative to robot forward
+	double angleToTag = Math.toDegrees(Math.atan2(ty, tx));
 
-    return new SwerveRequest.RobotCentricFacingAngle()
-        .withTargetDirection(Rotation2d.fromDegrees(angleToTag))
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withDeadband(0)
-        .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01)
-        .withVelocityX(0) // stop linear movement
-        .withVelocityY(0);
+	return new SwerveRequest.RobotCentricFacingAngle()
+		.withTargetDirection(Rotation2d.fromDegrees(angleToTag))
+		.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+		.withDeadband(0)
+		.withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01)
+		.withVelocityX(0) // stop linear movement
+		.withVelocityY(0);
 }
 
 
@@ -154,36 +163,30 @@ public SwerveRequest driveAndPointAtTag() {
   double yVel = MathUtil.clamp(ty * 6.0, -1.0, 1.0); // Y = left/right
 
   return new SwerveRequest.RobotCentricFacingAngle()
-      .withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
-      .withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
-      .withTargetDirection(Rotation2d.fromDegrees(angleToTag))
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-      .withDeadband(DriveConstants.kMaxSpeed * 0.01)
-      .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
+	  .withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
+	  .withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
+	  .withTargetDirection(Rotation2d.fromDegrees(angleToTag))
+	  .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+	  .withDeadband(DriveConstants.kMaxSpeed * 0.01)
+	  .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
 }
 
 
-  @Override
-  public void periodic() {
-    LimelightHelpers.SetRobotOrientation(
-        getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
-  }
-
   private void setUpShuffleboard() {
-    tab = Shuffleboard.getTab("VisionApriltag");
+	tab = Shuffleboard.getTab("VisionApriltag");
 
-    LLFeed = new HttpCamera(
-        getLimelightName(),
-        "http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
-    tab.add("Limelight Feed", LLFeed).withWidget("Camera Stream").withPosition(0, 0).withSize(4, 4);
+	LLFeed = new HttpCamera(
+		getLimelightName(),
+		"http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
+	tab.add("Limelight Feed", LLFeed).withWidget("Camera Stream").withPosition(0, 0).withSize(4, 4);
 
-    tab.addDouble("Tx", () -> this.getTX());
-    tab.addDouble("Ty", () -> this.getTY());
-    tab.addDouble("Distance", () -> this.getDistanceToTarget());
-    tab.addDouble("Latency Capture", () -> this.getLatencyCapture());
-    tab.addDouble("Latency Pipeline", () -> this.getLatencyPipeline());
-    tab.addBoolean("Has Target", () -> this.hasTarget());
+	tab.addDouble("Tx", () -> this.getTX());
+	tab.addDouble("Ty", () -> this.getTY());
+	tab.addDouble("Distance", () -> this.getDistanceToTarget());
+	tab.addDouble("Latency Capture", () -> this.getLatencyCapture());
+	tab.addDouble("Latency Pipeline", () -> this.getLatencyPipeline());
+	tab.addBoolean("Has Target", () -> this.hasTarget());
 
-    tab.addDouble("April Tag", () -> this.getAprilTagId());
+	tab.addDouble("April Tag", () -> this.getAprilTagId());
   }
 }
