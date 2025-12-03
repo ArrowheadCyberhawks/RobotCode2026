@@ -39,7 +39,7 @@ public class RobotContainer {
 			.withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-	private final SwerveRequest.FieldCentricFacingAngle driveFacingAngleRequest = new SwerveRequest.FieldCentricFacingAngle()
+	private final SwerveRequest.FieldCentric driveFacingAngleRequest = new SwerveRequest.FieldCentric()
 			.withDeadband(MaxSpeed * 0.01)
 			.withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
@@ -125,8 +125,8 @@ public class RobotContainer {
 
 	public void updateVisionPose() {
 		LimelightHelpers.PoseEstimate limelightMeasurement = visionSubsystem.getPoseEstimate();
-		System.out.println("current robot pose: " + drivetrain.getPose());
-		if (!limelightMeasurement.pose.equals(new Pose2d())) {
+		
+		if (limelightMeasurement != null && !limelightMeasurement.pose.equals(new Pose2d())) {
 			drivetrain.addVisionMeasurement(limelightMeasurement.pose, Utils.fpgaToCurrentTime(limelightMeasurement.timestampSeconds));//, VecBuilder.fill(.5,.5,9999999));
 			// horrible inefficient garbage telemetry code
 			SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());

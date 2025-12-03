@@ -44,7 +44,7 @@ import java.util.function.Supplier;
  */
 public class DriveToPose extends Command {
     public final CommandSwerveDrivetrain drivetrain;
-    public final SwerveRequest.FieldCentricFacingAngle driveRequest;
+    public final SwerveRequest.FieldCentric driveRequest;
     private final Supplier<Pose2d> poseSupplier;
     private Pose2d targetPose;
     private int atTargetCount = 0;
@@ -53,18 +53,25 @@ public class DriveToPose extends Command {
     private Timer timer;
 
     private static final double driveKp = 7.5;
-    private static final double driveKd = 0.0;
     private static final double driveKi = 0.0;
+    private static final double driveKd = 0.0;
     private static final double driveMaxVelocity = 2; //replace with constant value when safe to use lol
     private static final double driveMaxAcceleration = 1;
+    private static final double turnKp = 6.0;
+    private static final double turnKi = 0.15;
+    private static final double turnKd = 0.0;
+    private static final double turnMaxVelocity = RotationsPerSecond.of(1).in(RadiansPerSecond);
+    private static final double turnMaxAcceleration = RotationsPerSecond.of(0.5).in(RadiansPerSecond);
     private static final double driveTolerance = 0.05;
-    private static final double thetaTolerance = 5.0;
-    private static final double timeout = 5.0;
+    private static final double thetaTolerance = 0.01;
+    private static final int timeout = 50;
 
     private static final TrapezoidProfile.Constraints driveConstraints = new TrapezoidProfile.Constraints(driveMaxVelocity, driveMaxAcceleration);
+    private static final TrapezoidProfile.Constraints turnConstraints = new TrapezoidProfile.Constraints(turnMaxVelocity, turnMaxAcceleration);
 
     private final ProfiledPIDController xController = new ProfiledPIDController(driveKp, driveKi, driveKd, driveConstraints, DriveConstants.kLoopPeriodSeconds);
     private final ProfiledPIDController yController = new ProfiledPIDController(driveKp, driveKi, driveKd, driveConstraints, DriveConstants.kLoopPeriodSeconds);
+    private final ProfiledPIDController thetaController = new ProfiledPIDController(turnKp, turnKi, turnKd, turnConstraints, DriveConstants.kLoopPeriodSeconds);
 
     /**
      * Constructs a new DriveToPose command that drives the robot in a straight line
@@ -78,7 +85,7 @@ public class DriveToPose extends Command {
     public DriveToPose(
             CommandSwerveDrivetrain drivetrain,
             Supplier<Pose2d> poseSupplier,
-            SwerveRequest.FieldCentricFacingAngle driveRequest) {
+            SwerveRequest.FieldCentric driveRequest) {
         this.driveRequest = driveRequest;
         this.drivetrain = drivetrain;
         this.poseSupplier = poseSupplier;
@@ -98,11 +105,14 @@ public class DriveToPose extends Command {
         Pose2d currentPose = drivetrain.getPose();
         xController.reset(currentPose.getX());
         yController.reset(currentPose.getY());
+        thetaController.reset(currentPose.getRotation().getRadians());
         xController.setTolerance(driveTolerance);
         yController.setTolerance(driveTolerance);
+        thetaController.setTolerance(thetaTolerance);
         this.targetPose = poseSupplier.get();
         xController.setGoal(this.targetPose.getX());
         yController.setGoal(this.targetPose.getY());
+        thetaController.setGoal(this.targetPose.getRotation().getRadians());
 
         // "horrible inefficient garbage telemetry code" - Grant
         SmartDashboard.putNumberArray("Robot Pose", new double[] { targetPose.getX(), targetPose.getY(), targetPose.getRotation().getDegrees() });
@@ -124,14 +134,16 @@ public class DriveToPose extends Command {
 
         double xVelocity = xController.calculate(currentPose.getX());
         double yVelocity = yController.calculate(currentPose.getY());
+        double thetaVelocity = thetaController.calculate(currentPose.getRotation().getRadians());
         if (xController.atGoal()) xVelocity = 0;
         if (yController.atGoal()) yVelocity = 0;
+        if (thetaController.atGoal()) thetaVelocity = 0;
 
         drivetrain.setControl(
             driveRequest
                 .withVelocityX(xVelocity) // Drive forward with negative Y (forward)
                 .withVelocityY(yVelocity) // Drive left with negative X (left)
-                .withTargetDirection(targetPose.getRotation()));
+                .withRotationalRate(thetaVelocity));
     }
 
     /**
@@ -159,7 +171,7 @@ public class DriveToPose extends Command {
     }
 
     private boolean isThetaAtGoal() {
-        return Math.abs(targetPose.getRotation().minus(drivetrain.getPose().getRotation()).getDegrees()) < thetaTolerance;
+        return Math.abs(targetPose.getRotation().minus(drivetrain.getPose().getRotation()).getRadians()) < thetaTolerance;
     }
 
     /**
@@ -176,7 +188,7 @@ public class DriveToPose extends Command {
                 driveRequest
                         .withVelocityX(0)
                         .withVelocityY(0)
-                        .withTargetDirection(drivetrain.getPose().getRotation()));
+                        .withRotationalRate(0));
         running = false;
     }
 }
