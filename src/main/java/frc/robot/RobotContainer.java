@@ -53,8 +53,8 @@ public class RobotContainer {
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	private VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
-	//private QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
+	private final VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
+	private final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
 
 
 	public RobotContainer() {

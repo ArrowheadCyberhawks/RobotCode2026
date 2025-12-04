@@ -1,6 +1,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -66,7 +69,7 @@ public class QuestNavSubsystem extends SubsystemBase {
                 // Feed into drivetrain estimator
                 drivetrain.addVisionMeasurement(
                     robotPose.toPose2d(),
-                    timestamp,
+                    Utils.fpgaToCurrentTime(timestamp),
                     QUESTNAV_STD_DEVS
                 );
             }

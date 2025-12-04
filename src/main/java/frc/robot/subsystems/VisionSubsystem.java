@@ -38,13 +38,24 @@ public class VisionSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-	System.out.println("robot orientation: " + rotationSupplier.getAsDouble());
 	LimelightHelpers.SetRobotOrientation(
 		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
   }
 
-  private String getLimelightName() {
+  /**
+   * Gets the name of the limelight instance to use.
+   * @return The limelight name.
+   */
+  public static String getLimelightName() {
 	return "limelight"; //replace in a constants file somewhere
+  }
+
+  /**
+   * Sets the limelight throttle to reduce processing load and manage heat output.
+   * @param framesToSkip Number of frames to skip between processing. 0 = process every frame, 1 = skip every other frame, etc.
+   */
+  public static void setThrottle(double framesToSkip) {
+	LimelightHelpers.setLimelightNTDouble(getLimelightName(), "throttle_set", framesToSkip);
   }
 
   public double getTX() {
