@@ -30,12 +30,13 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void disabledPeriodic() {
-		VisionSubsystem.setThrottle(100);
+		VisionSubsystem.setThrottle(200);
 	}
 
 	@Override
 	public void disabledExit() {
 		VisionSubsystem.setThrottle(0);
+		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
 	}
 
 	@Override

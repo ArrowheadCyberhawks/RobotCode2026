@@ -87,8 +87,8 @@ public class QuestNavSubsystem extends SubsystemBase {
     }
 
     /** Allows external reset of the QuestNav pose. */
-    public void resetPose(Pose3d newRobotPose) {
-        Pose3d newQuestPose = newRobotPose.transformBy(ROBOT_TO_QUEST);
+    public void resetPose(Pose2d newRobotPose) {
+        Pose3d newQuestPose = new Pose3d(newRobotPose).transformBy(ROBOT_TO_QUEST);
         questNav.setPose(newQuestPose);
     }
 }

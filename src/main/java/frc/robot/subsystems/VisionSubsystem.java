@@ -78,7 +78,11 @@ public class VisionSubsystem extends SubsystemBase {
 	return (LimelightHelpers.getBotPose3d_TargetSpace(getLimelightName()));
   }
 
-  public PoseEstimate getPoseEstimate() {
+  public PoseEstimate getPoseEstimateMT1() {
+	return LimelightHelpers.getBotPoseEstimate_wpiBlue(getLimelightName());
+  }
+
+  public PoseEstimate getPoseEstimateMT2() {
 	return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName());
   }
 

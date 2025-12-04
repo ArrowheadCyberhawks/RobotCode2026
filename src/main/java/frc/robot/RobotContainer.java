@@ -53,8 +53,8 @@ public class RobotContainer {
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	private final VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
-	private final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
+	public final VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
+	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
 
 
 	public RobotContainer() {
@@ -124,14 +124,18 @@ public class RobotContainer {
 	}
 
 	public void updateVisionPose() {
-		LimelightHelpers.PoseEstimate limelightMeasurement = visionSubsystem.getPoseEstimate();
+		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = visionSubsystem.getPoseEstimateMT1();
+		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = visionSubsystem.getPoseEstimateMT2();
 		
-		if (limelightMeasurement != null && !limelightMeasurement.pose.equals(new Pose2d())) {
-			drivetrain.addVisionMeasurement(limelightMeasurement.pose, Utils.fpgaToCurrentTime(limelightMeasurement.timestampSeconds));//, VecBuilder.fill(.5,.5,9999999));
+		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
+			drivetrain.addVisionMeasurement(limelightMeasurementMT1.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT1.timestampSeconds), VecBuilder.fill(999999,999999,1));
+		}
+		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
+			drivetrain.addVisionMeasurement(limelightMeasurementMT2.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds), VecBuilder.fill(.5,.5,9999999));
 			// horrible inefficient garbage telemetry code
 			SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
-			SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurement.pose.getX(),
-			limelightMeasurement.pose.getY(), limelightMeasurement.pose.getRotation().getDegrees() });
+			SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
+			limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
 		}
 	}
 
