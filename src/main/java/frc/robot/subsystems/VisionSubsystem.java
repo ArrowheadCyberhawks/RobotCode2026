@@ -38,8 +38,7 @@ public class VisionSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-	LimelightHelpers.SetRobotOrientation(
-		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
+	updateRobotOrientation();
   }
 
   /**
@@ -57,6 +56,14 @@ public class VisionSubsystem extends SubsystemBase {
   public static void setThrottle(double framesToSkip) {
 	LimelightHelpers.setLimelightNTDouble(getLimelightName(), "throttle_set", framesToSkip);
   }
+
+  /**
+   * Updates the robot orientation in the limelight based on the supplied rotation supplier.
+   */
+  public void updateRobotOrientation() {
+	LimelightHelpers.SetRobotOrientation(
+		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
+	}
 
   public double getTX() {
 	return LimelightHelpers.getTX(getLimelightName());
@@ -106,7 +113,11 @@ public class VisionSubsystem extends SubsystemBase {
   // LimelightHelpers.setPipelineIndex(getLimelightName(), pipeline.ordinal());
   // }
 
-  public void SetIMUMode(int mode) {
+  /**
+   * Sets the IMU mode of the limelight.
+   * @param mode The IMU mode to set. 0 = external yaw only, 1 = sync internal yaw to external yaw, 2 = use internal yaw only.
+   */
+  public static void SetIMUMode(int mode) {
 	LimelightHelpers.SetIMUMode(getLimelightName(), mode);
   }
 

@@ -26,16 +26,19 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void disabledInit() {
+		VisionSubsystem.SetIMUMode(1);
 	}
 
 	@Override
 	public void disabledPeriodic() {
-		VisionSubsystem.setThrottle(200);
+		VisionSubsystem.setThrottle(60);
+		m_robotContainer.updateVisionPoseMT1();
 	}
 
 	@Override
 	public void disabledExit() {
 		VisionSubsystem.setThrottle(0);
+		VisionSubsystem.SetIMUMode(2);
 		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
 	}
 

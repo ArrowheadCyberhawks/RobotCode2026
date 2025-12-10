@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static frc.robot.Constants.*;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -12,14 +13,17 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.numbers.*;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -30,25 +34,21 @@ import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
-	private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-	private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
-																						// max angular velocity
-
 	/* Setting up bindings for necessary control of the swerve drive platform */
-	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-			.withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+	private final SwerveRequest.FieldCentric teleDrive = new SwerveRequest.FieldCentric()
+			.withDeadband(DriveConstants.kDriveDeadband * DriveConstants.kMaxSpeed).withRotationalDeadband(DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
 	private final SwerveRequest.FieldCentric driveFacingAngleRequest = new SwerveRequest.FieldCentric()
-			.withDeadband(MaxSpeed * 0.01)
+			.withDeadband(DriveConstants.kMaxSpeed * 0.01)
 			.withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-	private final Telemetry logger = new Telemetry(MaxSpeed);
+	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed);
 
-	private final CommandXboxController joystick = new CommandXboxController(0);
+	private final CommandXboxController joystick = new CommandXboxController(IOConstants.kDriverControllerPortUSB);
 
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -56,10 +56,13 @@ public class RobotContainer {
 	public final VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
 
+	//slew limiter object 
+	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
+	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
+	SlewRateLimiter rotationLimiter = new SlewRateLimiter(DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	public RobotContainer() {
 		configureBindings();
-		visionSubsystem.SetIMUMode(1);
 
 		// Set the logger to log to the first flashdrive plugged in
 		SignalLogger.setPath("/media/sda1/");
@@ -69,7 +72,7 @@ public class RobotContainer {
 	}
 
 	public void periodic() {
-		updateVisionPose();
+		updateVisionPoseMT2();
 	}
 
 	private void configureBindings() {
@@ -78,9 +81,9 @@ public class RobotContainer {
 		drivetrain.setDefaultCommand(
 			// Drivetrain will execute this command periodically
 			drivetrain.applyRequest(() ->
-				drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-					.withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-					.withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+				teleDrive.withVelocityX(xLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier, joystick.getRightTriggerAxis()) * -joystick.getLeftY() * DriveConstants.kMaxSpeed)) // Drive forward with negative Y (forward)
+					.withVelocityY(yLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier, joystick.getRightTriggerAxis()) * -joystick.getLeftX() * DriveConstants.kMaxSpeed)) // Drive left with negative X (left)
+					.withRotationalRate(rotationLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kTurnSlowModifier, joystick.getRightTriggerAxis()) * -joystick.getRightX() * DriveConstants.kMaxAngularRate)) // Drive counterclockwise with negative X (left)
 			)
 		);
 
@@ -116,6 +119,11 @@ public class RobotContainer {
 		// reset the field-centric heading on b button press
 		joystick.b().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
+		joystick.start().whileTrue(new RunCommand(this::updateVisionPoseMT1)
+			.beforeStarting(() -> VisionSubsystem.SetIMUMode(1))
+			.finallyDo(() -> VisionSubsystem.SetIMUMode(2))
+		);
+
 		drivetrain.registerTelemetry(logger::telemeterize);
 	}
 
@@ -123,13 +131,17 @@ public class RobotContainer {
 		return Commands.print("No autonomous command configured");
 	}
 
-	public void updateVisionPose() {
+	public void updateVisionPoseMT1() {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = visionSubsystem.getPoseEstimateMT1();
-		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = visionSubsystem.getPoseEstimateMT2();
 		
 		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
 			drivetrain.addVisionMeasurement(limelightMeasurementMT1.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT1.timestampSeconds), VecBuilder.fill(999999,999999,1));
 		}
+	}
+
+	public void updateVisionPoseMT2() {
+		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = visionSubsystem.getPoseEstimateMT2();
+
 		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
 			drivetrain.addVisionMeasurement(limelightMeasurementMT2.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds), VecBuilder.fill(.5,.5,9999999));
 			// horrible inefficient garbage telemetry code
