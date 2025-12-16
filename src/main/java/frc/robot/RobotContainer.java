@@ -12,6 +12,8 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
@@ -20,6 +22,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,6 +30,8 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -50,6 +55,8 @@ public class RobotContainer {
 
 	private final CommandXboxController joystick = new CommandXboxController(IOConstants.kDriverControllerPortUSB);
 
+	private final SendableChooser<Command> autoChooser;
+
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
@@ -62,7 +69,14 @@ public class RobotContainer {
 	SlewRateLimiter rotationLimiter = new SlewRateLimiter(DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	public RobotContainer() {
-		configureBindings();
+
+		autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        SmartDashboard.putData("Auto Mode", autoChooser);
+
+        configureBindings();
+
+        // Warmup PathPlanner to avoid Java pauses
+        FollowPathCommand.warmupCommand().schedule();
 
 		// Set the logger to log to the first flashdrive plugged in
 		SignalLogger.setPath("/media/sda1/");
@@ -128,8 +142,9 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return Commands.print("No autonomous command configured");
-	}
+        /* Run the path selected from the auto chooser */
+        return autoChooser.getSelected();
+    }
 
 	public void updateVisionPoseMT1() {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = visionSubsystem.getPoseEstimateMT1();
@@ -150,5 +165,7 @@ public class RobotContainer {
 			limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
 		}
 	}
+
+	
 
 }
