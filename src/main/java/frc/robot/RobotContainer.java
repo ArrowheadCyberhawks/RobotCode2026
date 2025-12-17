@@ -4,11 +4,9 @@
 
 package frc.robot;
 
-import static frc.robot.Constants.*;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -16,17 +14,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.numbers.*;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -36,7 +29,7 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.QuestNavSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -60,7 +53,7 @@ public class RobotContainer {
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	public final VisionSubsystem visionSubsystem = new VisionSubsystem(() -> drivetrain.getPose().getRotation().getDegrees());
+	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(() -> drivetrain.getPose().getRotation().getDegrees(), drivetrain);
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
 
 	//slew limiter object 
@@ -83,10 +76,6 @@ public class RobotContainer {
 
 		// Explicitly start the logger
 		SignalLogger.start();
-	}
-
-	public void periodic() {
-		updateVisionPoseMT2();
 	}
 
 	private void configureBindings() {
@@ -113,8 +102,8 @@ public class RobotContainer {
 			point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
 		));
 
-		joystick.leftBumper().whileTrue(drivetrain.applyRequest(visionSubsystem::pointAtTag));
-		joystick.rightBumper().whileTrue(drivetrain.applyRequest(visionSubsystem::alignToTag));
+		joystick.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
+		joystick.rightBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::alignToTag));
 		joystick.a().whileTrue(
 			new DriveToPose(
 				drivetrain,
@@ -133,9 +122,8 @@ public class RobotContainer {
 		// reset the field-centric heading on b button press
 		joystick.b().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-		joystick.start().whileTrue(new RunCommand(this::updateVisionPoseMT1)
-			.beforeStarting(() -> VisionSubsystem.SetIMUMode(1))
-			.finallyDo(() -> VisionSubsystem.SetIMUMode(2))
+		joystick.start().whileTrue(limelightSubsystem.startRun(() -> LimelightSubsystem.SetIMUMode(1), limelightSubsystem::updateVisionPoseMT1)
+			.finallyDo(() -> LimelightSubsystem.SetIMUMode(2))
 		);
 
 		drivetrain.registerTelemetry(logger::telemeterize);
@@ -145,27 +133,4 @@ public class RobotContainer {
         /* Run the path selected from the auto chooser */
         return autoChooser.getSelected();
     }
-
-	public void updateVisionPoseMT1() {
-		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = visionSubsystem.getPoseEstimateMT1();
-		
-		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
-			drivetrain.addVisionMeasurement(limelightMeasurementMT1.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT1.timestampSeconds), VecBuilder.fill(999999,999999,1));
-		}
-	}
-
-	public void updateVisionPoseMT2() {
-		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = visionSubsystem.getPoseEstimateMT2();
-
-		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
-			drivetrain.addVisionMeasurement(limelightMeasurementMT2.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds), VecBuilder.fill(.5,.5,9999999));
-			// horrible inefficient garbage telemetry code
-			SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
-			SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
-			limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
-		}
-	}
-
-	
-
 }

@@ -2,43 +2,49 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
-import javax.sound.sampled.SourceDataLine;
-
+import com.ctre.phoenix6.Utils;
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentricFacingAngle;
-
 import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.LimelightHelpers.PoseEstimate;
 
 
-public class VisionSubsystem extends SubsystemBase {
+public class LimelightSubsystem extends SubsystemBase {
   private ShuffleboardTab tab;
   private double lastDistance;
   private DoubleSupplier rotationSupplier;
+  private CommandSwerveDrivetrain drivetrain;
 
   private HttpCamera LLFeed;
 
 
-  public VisionSubsystem(DoubleSupplier rotationSupplier) {
+  public LimelightSubsystem(DoubleSupplier rotationSupplier, CommandSwerveDrivetrain drivetrain) {
 	setUpShuffleboard();
 	this.rotationSupplier = rotationSupplier;
+	this.drivetrain = drivetrain;
   }
 
   @Override
   public void periodic() {
 	updateRobotOrientation();
+	updateVisionPoseMT2();
+	if(DriverStation.isDisabled()) {
+		updateVisionPoseMT1();
+	}
   }
 
   /**
@@ -63,6 +69,26 @@ public class VisionSubsystem extends SubsystemBase {
   public void updateRobotOrientation() {
 	LimelightHelpers.SetRobotOrientation(
 		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
+  }
+
+  public void updateVisionPoseMT1() {
+		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = getPoseEstimateMT1();
+		
+		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
+			drivetrain.addVisionMeasurement(limelightMeasurementMT1.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT1.timestampSeconds), VecBuilder.fill(999999,999999,1));
+		}
+	}
+
+	public void updateVisionPoseMT2() {
+		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = getPoseEstimateMT2();
+
+		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
+			drivetrain.addVisionMeasurement(limelightMeasurementMT2.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds), VecBuilder.fill(.5,.5,9999999));
+			// horrible inefficient garbage telemetry code
+			SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
+			SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
+			limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
+		}
 	}
 
   public double getTX() {

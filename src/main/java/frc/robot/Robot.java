@@ -7,7 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
 
 public class Robot extends TimedRobot {
 	private Command m_autonomousCommand;
@@ -21,24 +21,22 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotPeriodic() {
 		CommandScheduler.getInstance().run();
-		m_robotContainer.periodic();
 	}
 
 	@Override
 	public void disabledInit() {
-		VisionSubsystem.SetIMUMode(1);
+		LimelightSubsystem.SetIMUMode(1);
+		LimelightSubsystem.setThrottle(60);
 	}
 
 	@Override
 	public void disabledPeriodic() {
-		VisionSubsystem.setThrottle(60);
-		m_robotContainer.updateVisionPoseMT1();
 	}
 
 	@Override
 	public void disabledExit() {
-		VisionSubsystem.setThrottle(0);
-		VisionSubsystem.SetIMUMode(2);
+		LimelightSubsystem.setThrottle(0);
+		LimelightSubsystem.SetIMUMode(2);
 		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
 	}
 
