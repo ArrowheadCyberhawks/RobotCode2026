@@ -76,6 +76,7 @@ public class RobotContainer {
 
 		// Explicitly start the logger
 		SignalLogger.start();
+		
 	}
 
 	private void configureBindings() {
