@@ -118,7 +118,7 @@ public class RobotContainer {
 		joystick.a().whileTrue(
 			new DriveToPose(
 				drivetrain,
-				() -> new Pose2d(10, 5, new Rotation2d(0)), // always drive to origin
+				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
 				driveFacingAngleRequest)
 		);
 
