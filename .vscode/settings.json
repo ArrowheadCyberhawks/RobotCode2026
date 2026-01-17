@@ -57,5 +57,5 @@
     "edu.wpi.first.math.**.proto.*",
     "edu.wpi.first.math.**.struct.*",
   ],
-  "wpilib.autoStartRioLog": false
+  "java.dependency.enableDependencyCheckup": false
 }
