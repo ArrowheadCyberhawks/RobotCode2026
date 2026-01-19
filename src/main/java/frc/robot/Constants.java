@@ -1,58 +1,31 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-
-//import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-//import com.pathplanner.lib.config.PIDConstants;
-
-import edu.wpi.first.units.measure.*;
-//import frc.robot.commons.TagUtils;
-import frc.robot.generated.TunerConstants;
+import edu.wpi.first.wpilibj.RobotBase;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
- * globally (i.e. public static). Do not put anything functional in this class.
- *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
- * constants are needed, to reduce verbosity.
+ * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
+ * on a roboRIO. Change the value of "simMode" to switch between "sim" (physics sim) and "replay"
+ * (log replay from a file).
  */
-
 public final class Constants {
+  public static final Mode simMode = Mode.SIM;
+  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+  public static enum Mode {
+    /** Running on a real robot. */
+    REAL,
 
-  public static class IOConstants {
-    public static final int kDriverControllerPortUSB = 0;
-    public static final int kManipulatorControllerPortUSB = 1;
-    public static final int kDriverControllerPortBT = 2;
-    public static final int kManipulatorControllerPortBT = 3;
+    /** Running a physics simulator. */
+    SIM,
+
+    /** Replaying from a log file. */
+    REPLAY
   }
-
-
-  public static class DriveConstants {
-    public static final double kMaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-    public static final double kMaxAngularRate = RotationsPerSecond.of(1).in(RadiansPerSecond);
-    public static final LinearAcceleration kMaxAcceleration = MetersPerSecondPerSecond.of(kMaxSpeed*5.0);
-    public static final AngularAcceleration kMaxAngularAcceleration = RadiansPerSecondPerSecond.of(kMaxAngularRate*8.0);
-
-    public static final double kDriveDeadband = 0.1;
-    public static final double kRotationDeadband = 0.05;
-
-    public static final double kLoopPeriodSeconds = 0.02;
-
-    public static final double kDriveSlowModifier = 0.25;
-    public static final double kTurnSlowModifier = 0.5;
-  }
-
-  public final class FieldObjects {
-    public static final String ROBOT = "RobotPose";
-    public static final String LIMELIGHT = "LimelightPose";
-    public static final String QUEST = "QuestPose";
-  }
-  
-
 }
