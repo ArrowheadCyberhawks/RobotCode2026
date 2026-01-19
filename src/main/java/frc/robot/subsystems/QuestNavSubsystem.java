@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.FieldObjects;
+import frc.robot.LimelightHelpers;
 
 import com.ctre.phoenix6.Utils;
 
@@ -11,7 +13,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
@@ -22,6 +24,9 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     private final QuestNav questNav;
     private final CommandSwerveDrivetrain drivetrain;
+    private final Field2d field2d;
+
+    
 
     /** Transform from robot center → Quest mount (tune to your actual mount) */
     private static final Transform3d ROBOT_TO_QUEST = new Transform3d(
@@ -42,9 +47,10 @@ public class QuestNavSubsystem extends SubsystemBase {
             0.035 // rotation (rad)
         );
 
-    public QuestNavSubsystem(CommandSwerveDrivetrain drivetrain) {
+    public QuestNavSubsystem(CommandSwerveDrivetrain drivetrain, Field2d field2d) {
         this.questNav = new QuestNav();
         this.drivetrain = drivetrain;
+        this.field2d = field2d;
     }
 
     @Override
@@ -72,6 +78,8 @@ public class QuestNavSubsystem extends SubsystemBase {
                     Utils.fpgaToCurrentTime(timestamp),
                     QUESTNAV_STD_DEVS
                 );
+
+                field2d.getObject(FieldObjects.QUEST).setPose(robotPose.toPose2d());
             }
         }
     }

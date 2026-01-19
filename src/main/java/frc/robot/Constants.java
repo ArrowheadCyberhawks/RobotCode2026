@@ -48,4 +48,11 @@ public final class Constants {
     public static final double kTurnSlowModifier = 0.5;
   }
 
+  public final class FieldObjects {
+    public static final String ROBOT = "RobotPose";
+    public static final String LIMELIGHT = "LimelightPose";
+    public static final String QUEST = "QuestPose";
+  }
+  
+
 }

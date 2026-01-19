@@ -17,13 +17,16 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.FieldObjects;
 import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
@@ -52,9 +55,13 @@ public class RobotContainer {
 
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+	private Field2d field2d;
+
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(() -> drivetrain.getPose().getRotation().getDegrees(), drivetrain);
-	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain);
+	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(() -> drivetrain.getPose().getRotation().getDegrees(), drivetrain, field2d);
+	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
+
+
 
 	//slew limiter object 
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -65,6 +72,7 @@ public class RobotContainer {
 
 		autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
+		constructField();
 
         configureBindings();
 
@@ -134,4 +142,10 @@ public class RobotContainer {
         /* Run the path selected from the auto chooser */
         return autoChooser.getSelected();
     }
+
+	private void constructField() {
+		SmartDashboard.putData("Field", field2d);
+	}
+
+	
 }

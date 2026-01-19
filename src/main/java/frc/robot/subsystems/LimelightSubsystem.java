@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.Utils;
@@ -16,10 +17,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.FieldObjects;
 import frc.robot.LimelightHelpers.PoseEstimate;
 
 
@@ -28,20 +31,23 @@ public class LimelightSubsystem extends SubsystemBase {
   private double lastDistance;
   private DoubleSupplier rotationSupplier;
   private CommandSwerveDrivetrain drivetrain;
+  private final Field2d field2d;
 
   private HttpCamera LLFeed;
 
 
-  public LimelightSubsystem(DoubleSupplier rotationSupplier, CommandSwerveDrivetrain drivetrain) {
+  public LimelightSubsystem(DoubleSupplier rotationSupplier, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
 	setUpShuffleboard();
 	this.rotationSupplier = rotationSupplier;
 	this.drivetrain = drivetrain;
+	this.field2d = field2d;
   }
 
   @Override
   public void periodic() {
 	updateRobotOrientation();
 	updateVisionPoseMT2();
+	updateField();
 	if(DriverStation.isDisabled()) {
 		updateVisionPoseMT1();
 	}
@@ -235,6 +241,14 @@ public SwerveRequest driveAndPointAtTag() {
 	  .withDeadband(DriveConstants.kMaxSpeed * 0.01)
 	  .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
 }
+
+  private void updateField() {
+		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = getPoseEstimateMT2();
+
+		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
+			field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurementMT2.pose);
+		}
+  }
 
 
   private void setUpShuffleboard() {
