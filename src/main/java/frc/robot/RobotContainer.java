@@ -27,7 +27,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.vision.QuestNavSubsystem;
+import frc.robot.subsystems.questnav.QuestNavSubsystem;
+import frc.robot.subsystems.questnav.QuestNavSubsystemBase;
+import frc.robot.subsystems.questnav.QuestNavSubsystemSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
@@ -45,8 +47,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Vision vision;
-  public final QuestNavSubsystem questNav;
-
+  public final QuestNavSubsystemBase questNav;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -74,6 +75,7 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 new VisionIOLimelight(camera0Name, drive::getRotation));
 
+        questNav = new QuestNavSubsystem(drive);
 
         break;
 
@@ -92,6 +94,8 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
                     camera0Name, VisionConstants.robotToCamera0, drive::getPose));
+        // Use no-op QuestNav in simulation
+        questNav = new QuestNavSubsystemSim(drive);
         break;
 
       default:
@@ -106,11 +110,11 @@ public class RobotContainer {
 
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
 
+        // Use no-op QuestNav in replay/default
+        questNav = new QuestNavSubsystemSim(drive);
+
         break;
     }
-    
-    questNav = new QuestNavSubsystem(drive);
-
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
