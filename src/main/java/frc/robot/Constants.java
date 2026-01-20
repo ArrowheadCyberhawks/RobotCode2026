@@ -28,4 +28,16 @@ public final class Constants {
     /** Replaying from a log file. */
     REPLAY
   }
+
+  public final class FieldObjects {
+    public static final String ROBOT = "RobotPose";
+    public static final String LIMELIGHT = "LimelightPose";
+    public static final String QUEST = "QuestPose";
+  }
+
+  public static boolean disableHAL = false;
+
+  public static void disableHAL() {
+    disableHAL = true;
+  }
 }
