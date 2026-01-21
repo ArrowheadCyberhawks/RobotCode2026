@@ -73,7 +73,7 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOLimelight(camera0Name, drive::getRotation));
+                new VisionIOLimelight(limelight0Name, drive::getRotation));
 
         questNav = new QuestNavSubsystem(drive);
 
@@ -93,7 +93,7 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
-                    camera0Name, VisionConstants.robotToCamera0, drive::getPose));
+                    limelight0Name, VisionConstants.robotToLimelight0, drive::getPose));
         // Use no-op QuestNav in simulation
         questNav = new QuestNavSubsystemSim(drive);
         break;
