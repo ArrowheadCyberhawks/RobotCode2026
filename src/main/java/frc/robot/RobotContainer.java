@@ -30,9 +30,11 @@ import frc.robot.Constants.FieldObjects;
 import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.QuestNavSubsystem;
-import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystemNeo; //TEMP TURRET
+import frc.robot.subsystems.vision.LimelightSubsystem;
+import frc.robot.subsystems.vision.QuestNavSubsystem;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -61,8 +63,9 @@ public class RobotContainer {
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(() -> drivetrain.getPose().getRotation().getDegrees(), drivetrain, field2d);
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
 
-
-
+	//public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(() -> drivetrain.getPose(), () -> drivetrain.getKinematics().toChassisSpeeds());
+	public final ShooterSubsystemNeo shooterSubsystem = new ShooterSubsystemNeo(() -> drivetrain.getPose(), () -> drivetrain.getKinematics().toChassisSpeeds());
+	
 	//slew limiter object 
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
