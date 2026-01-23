@@ -21,17 +21,17 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.FieldObjects;
 import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
+//import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystemNeo; //TEMP TURRET
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
@@ -62,25 +62,23 @@ public class RobotContainer {
 	// public final VisionSubsystem visionSubsystem = new VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(() -> drivetrain.getPose().getRotation().getDegrees(), drivetrain, field2d);
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
-
-	//public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(() -> drivetrain.getPose(), () -> drivetrain.getKinematics().toChassisSpeeds());
-	public final ShooterSubsystemNeo shooterSubsystem = new ShooterSubsystemNeo(() -> drivetrain.getPose(), () -> drivetrain.getKinematics().toChassisSpeeds());
 	
+	//public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(() -> drivetrain.getPose(), () -> drivetrain.getKinematics().toChassisSpeeds());
+	public final ShooterSubsystemNeo shooterSubsystem = new ShooterSubsystemNeo(drivetrain::getPose, () -> drivetrain.getState().Speeds);
 	//slew limiter object 
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter rotationLimiter = new SlewRateLimiter(DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	public RobotContainer() {
-
 		autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
-		constructField();
+		//constructField();
 
         configureBindings();
 
         // Warmup PathPlanner to avoid Java pauses
-        FollowPathCommand.warmupCommand().schedule();
+        CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
 		// Set the logger to log to the first flashdrive plugged in
 		SignalLogger.setPath("/media/sda1/");
@@ -146,9 +144,9 @@ public class RobotContainer {
         return autoChooser.getSelected();
     }
 
-	private void constructField() {
-		SmartDashboard.putData("Field", field2d);
-	}
+	// private void constructField() {
+	// 	SmartDashboard.putData("Field", field2d);
+	// }
 
 	
 }

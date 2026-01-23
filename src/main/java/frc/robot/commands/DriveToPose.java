@@ -10,8 +10,6 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.Constants.*;
-
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;

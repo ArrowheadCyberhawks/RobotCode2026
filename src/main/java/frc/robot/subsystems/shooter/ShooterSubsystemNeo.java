@@ -1,30 +1,29 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Pose2d;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.units.measure.Angle;
 import java.util.function.Supplier;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodPosition;
@@ -40,11 +39,10 @@ import frc.robot.Constants.FieldConstants;
  //NOTE: Copilot Turned ShooterSubsystem into ShooterSubsystemNeo, so I have yet to check if everything will work yet
 public class ShooterSubsystemNeo extends SubsystemBase {
 
-  private final SparkMax hood;
+  private final SparkMax hoodMotor;
   private final SparkMax turnMotor;
 
-  private final PIDController hoodPid;
-  private final PIDController turretPid;
+  private final SparkClosedLoopController hoodController, turretController;
 
   private final RelativeEncoder hoodEncoder;
   private final RelativeEncoder turretEncoder;
@@ -57,11 +55,11 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   public ShooterSubsystemNeo(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     // create motors
-    hood = new SparkMax(ShooterConstants.kHoodMotorId, MotorType.kBrushless);
+    hoodMotor = new SparkMax(ShooterConstants.kHoodMotorId, MotorType.kBrushless);
     turnMotor = new SparkMax(ShooterConstants.kTurnMotorId, MotorType.kBrushless);
 
     // encoders
-    hoodEncoder = hood.getEncoder();
+    hoodEncoder = hoodMotor.getEncoder();
     turretEncoder = turnMotor.getEncoder();
 
     hoodConfig = new SparkMaxConfig();
@@ -69,8 +67,8 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
 
     // PID controllers
-    hoodPid = new PIDController(ShooterConstants.kPHood, ShooterConstants.kIHood, ShooterConstants.kDHood);
-    turretPid = new PIDController(ShooterConstants.kPTurret, ShooterConstants.kITurret, ShooterConstants.kDTurret);
+    hoodController = hoodMotor.getClosedLoopController();
+    turretController = turnMotor.getClosedLoopController();
 
     configureHood();
     configureTurret();
@@ -89,35 +87,40 @@ public class ShooterSubsystemNeo extends SubsystemBase {
   //configuring stuff doesn't work but i'm too lazy to actually fix it for the neo test
 
   private void configureHood() {
-    hoodConfig.idleMode(IdleMode.kBrake);
-    // WPILib PIDController gains already set in constructor; nothing else to do here
+    hoodConfig.encoder.positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
+    hoodConfig.idleMode(IdleMode.kBrake)
+      .inverted(true)
+      .closedLoop
+        .p(ShooterConstants.kPHood)
+        .i(ShooterConstants.kIHood)
+        .d(ShooterConstants.kDHood)
+        .allowedClosedLoopError(ShooterConstants.kHoodAllowedError, ClosedLoopSlot.kSlot0);
+    hoodConfig.softLimit
+      .forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
+      .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
+    hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
   private void configureTurret() {
+    turretConfig.encoder.positionConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI);
     turretConfig.idleMode(IdleMode.kBrake);
-    // PID gains set in constructor
+    turretConfig.closedLoop
+      .p(ShooterConstants.kPTurret)
+      .i(ShooterConstants.kITurret)
+      .d(ShooterConstants.kDTurret)
+      .allowedClosedLoopError(ShooterConstants.kTurretAllowedError, ClosedLoopSlot.kSlot0);
+    turnMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
 
   // Turret
-  public void moveTurretToRadians(double radians) {
-    // convert desired turret radians -> motor rotations
-    double turretRotations = radians / (2.0 * Math.PI);
-    double motorRotations = turretRotations * ShooterConstants.kTurretGearRatio;
-    // Use two-arg calculate(current, setpoint) to compute output directly
-    double control = turretPid.calculate(turretEncoder.getPosition(), motorRotations);
-    double percent = MathUtil.clamp(control, -1.0, 1.0);
-    turnMotor.set(percent);
+  public void setTurretTarget(Angle targetTurretAngle) {
+    turretController.setSetpoint(targetTurretAngle.in(Radians), ControlType.kPosition);
   }
 
-  public void moveTurretToDegrees(double degrees) {
-    moveTurretToRadians(Math.toRadians(degrees));
-  }
-
-  public void setTurretVoltage(double volts) {
-    // Spark supports percent output; approximate by dividing by 12V
-    double percent = volts / 12.0;
-    turnMotor.set(percent);
+  public void setTurretVoltage(Voltage volts) {
+    // Spark supports percent output; approximate by 
+    turnMotor.setVoltage(volts);
   }
 
   public void stopTurret() {
@@ -132,9 +135,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   public Rotation2d getTurretRotation() {
     try {
-      double rotations = turretEncoder.getPosition();
-      double turretRotations = rotations / ShooterConstants.kTurretGearRatio;
-      return Rotation2d.fromRadians(turretRotations * 2.0 * Math.PI);
+      return Rotation2d.fromRadians(turretEncoder.getPosition());
     } catch (Exception e) {
       return new Rotation2d();
     }
@@ -142,27 +143,19 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   // Hood
   public void moveHoodTo(HoodPosition pos) {
-    double target = degreesToMotorRotations(pos.degrees);
-    double control = hoodPid.calculate(hoodEncoder.getPosition(), target);
-    double percent = MathUtil.clamp(control, -1.0, 1.0);
-    hood.set(percent);
+    setHoodTarget(Degrees.of(pos.degrees));
   }
 
-  public void moveHoodToDegrees(double degrees) {
-    double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
-        Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
-    double target = degreesToMotorRotations(clipped);
-    double control = hoodPid.calculate(hoodEncoder.getPosition(), target);
-    double percent = MathUtil.clamp(control, -1.0, 1.0);
-    hood.set(percent);
+  public void setHoodTarget(Angle targetHoodAngle) {
+    hoodController.setSetpoint(targetHoodAngle.in(Radians), ControlType.kPosition);
   }
 
   public void stopHood() {
-    hood.stopMotor();
+    hoodMotor.stopMotor();
   }
 
-  public double getHoodDegrees() {
-    return motorRotationsToDegrees(hoodEncoder.getPosition());
+  public Rotation2d getHoodRotation() {
+    return Rotation2d.fromRadians(hoodEncoder.getPosition());
   }
 
   public void resetHoodEncoderToDegrees(double degrees) {
@@ -173,17 +166,13 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     return (degrees / 360.0) * ShooterConstants.kHoodGearRatio;
   }
 
-  private double motorRotationsToDegrees(double motorRot) {
-    return (motorRot / ShooterConstants.kHoodGearRatio) * 360.0;
-  }
-
   /**
    * Aim and apply a shot using ShooterCalculator. Mirrors ShooterSubsystem behavior.
    */
   public void aimAndShoot(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
-  Translation3d currentTarget = edu.wpi.first.wpilibj.DriverStation.getAlliance().orElse(edu.wpi.first.wpilibj.DriverStation.Alliance.Blue) == edu.wpi.first.wpilibj.DriverStation.Alliance.Blue
-    ? FieldConstants.HUB_BLUE
-    : FieldConstants.HUB_RED;
+    Translation3d currentTarget = edu.wpi.first.wpilibj.DriverStation.getAlliance().orElse(edu.wpi.first.wpilibj.DriverStation.Alliance.Blue) == edu.wpi.first.wpilibj.DriverStation.Alliance.Blue
+      ? FieldConstants.HUB_BLUE
+      : FieldConstants.HUB_RED;
 
     Pose2d robot = poseSupplier.get();
     ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
@@ -192,13 +181,9 @@ public class ShooterSubsystemNeo extends SubsystemBase {
         robot, fieldSpeeds, currentTarget, ShooterConstants.Calculator.kLookaheadIterations);
 
     Angle hoodAngle = ShotCalc.calculateHoodAngle(robot, calculatedShot.getTarget());
-    double desiredAngle = hoodAngle.in(Radians);
 
-    moveTurretToRadians(desiredAngle);
-
-    double hoodRad = calculatedShot.getHoodAngle().in(Radians);
-    double hoodDeg = Math.toDegrees(hoodRad);
-    moveHoodToDegrees(hoodDeg);
+    setTurretTarget(hoodAngle);
+    setHoodTarget(calculatedShot.getHoodAngle());
 
     AngularVelocity flyAng = ShotCalc.linearToAngularVelocity(calculatedShot.getExitVelocity(),
         ShooterConstants.Calculator.kFlywheelRadius);
@@ -213,12 +198,12 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Shooter/Turret Radians", getTurretRotation().getRadians());
-    SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
+    SmartDashboard.putNumber("Shooter/Turret Degrees", getTurretRotation().getDegrees());
+    SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodRotation().getDegrees());
 
     // Call aimAndShoot if suppliers are present
-    if (targetPoseSupplier != null && chassisSpeedsSupplier != null) {
-      aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
-    }
+    aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
+    // setTurretTarget(Rotation2d.kZero.getMeasure());
+    // setHoodTarget(Rotation2d.kCW_90deg.getMeasure());
   }
 }

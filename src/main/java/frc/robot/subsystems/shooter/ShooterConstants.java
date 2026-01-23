@@ -8,9 +8,9 @@ public final class ShooterConstants {
 
     // CAN IDs
     public static final int kFlywheelMotorId = 20;
-    public static final int kHoodMotorId = 21;
+    public static final int kHoodMotorId = 13;
     // Turret motors (merged into shooter)
-    public static final int kTurnMotorId = 7;
+    public static final int kTurnMotorId = 14;
     public static final int kShootMotorId = 22;
 
     // Flywheel (velocity control)
@@ -21,24 +21,26 @@ public final class ShooterConstants {
     public static final double kVFlywheel = 0.12;
     public static final double kFlywheelRpsShoot = 80.0;
     // Turret gear ratio (turn motor rotations per turret rotation)
-    public static final double kTurretGearRatio = 46.8;
+    public static final double kTurretGearRatio = 1/12.8;
     // Turret PID (units: volts per radian)
-    public static final double kPTurret = 6.0;
+    public static final double kPTurret = 0.5;
     public static final double kITurret = 0.0;
-    public static final double kDTurret = 0.3;
+    public static final double kDTurret = 0.0;
+    public static final double kTurretAllowedError = 0.02;
     // Maximum voltage to apply to turret motor
     public static final double kMaxTurretVolts = 6.0;
 
     // === Hood (Motion Magic) ===
-    public static final double kHoodGearRatio = 100.0;
+    public static final double kHoodGearRatio = 1/8.16;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
-    public static final double kPHood = 60.0;
+    public static final double kPHood = 0.5;
     public static final double kIHood = 0.0;
-    public static final double kDHood = 4.0;
+    public static final double kDHood = 0.0;
     public static final double kVHood = 0.0;
     public static final double kAHood = 0.0;
     public static final double kGHood = 0.4;
+    public static final double kHoodAllowedError = 0.02;
 
     public static final double kHoodMinDegrees = 0.0;
     public static final double kHoodMaxDegrees = 70.0;
