@@ -3,8 +3,6 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
-
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.PersistMode;
@@ -87,10 +85,13 @@ public class ShooterSubsystemNeo extends SubsystemBase {
   //configuring stuff doesn't work but i'm too lazy to actually fix it for the neo test
 
   private void configureHood() {
-    hoodConfig.encoder.positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
+    hoodConfig.encoder
+      .positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
     hoodConfig.idleMode(IdleMode.kBrake)
       .inverted(true)
       .closedLoop
+        .positionWrappingEnabled(true)
+        .positionWrappingInputRange(-Math.PI, Math.PI)
         .p(ShooterConstants.kPHood)
         .i(ShooterConstants.kIHood)
         .d(ShooterConstants.kDHood)

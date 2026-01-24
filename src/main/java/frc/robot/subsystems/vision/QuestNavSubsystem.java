@@ -3,7 +3,8 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldObjects;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.LimelightHelpers;
+
+import static edu.wpi.first.units.Units.Centimeters;
 
 import com.ctre.phoenix6.Utils;
 
@@ -31,10 +32,10 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     /** Transform from robot center → Quest mount (tune to your actual mount) */
     private static final Transform3d ROBOT_TO_QUEST = new Transform3d(
-        0.0, // x offset
-        0.0, // y offset
-        0.0, // z offset
-        new edu.wpi.first.math.geometry.Rotation3d(0.0, 0.0, 0.0) // rotation offset
+        Centimeters.of(0), // x offset
+        Centimeters.of(27.5), // y offset
+        Centimeters.of(0), // z offset
+        new edu.wpi.first.math.geometry.Rotation3d(0.0, 0.0, Math.PI/2) // rotation offset
     );
 
     /** Last known robot pose from QuestNav */
@@ -80,7 +81,8 @@ public class QuestNavSubsystem extends SubsystemBase {
                     QUESTNAV_STD_DEVS
                 );
 
-                // field2d.getObject(FieldObjects.QUEST).setPose(robotPose.toPose2d());
+                
+                field2d.getObject(FieldObjects.QUEST).setPose(robotPose.toPose2d());
             }
         }
     }

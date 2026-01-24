@@ -1,6 +1,5 @@
 package frc.robot.subsystems.vision;
 
-import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.Utils;
@@ -11,9 +10,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -47,10 +48,11 @@ public class LimelightSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 	updateRobotOrientation();
-	updateVisionPoseMT2();
-	updateField();
+	// updateVisionPoseMT2(); megatag2 is broken so just disable it
+	//updateVisionPoseMT1(false);
+	updateField(false);
 	if(DriverStation.isDisabled()) {
-		updateVisionPoseMT1();
+		updateVisionPoseMT1(true);
 	}
   }
 
@@ -78,11 +80,17 @@ public class LimelightSubsystem extends SubsystemBase {
 		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
   }
 
-  public void updateVisionPoseMT1() {
+  public void updateVisionPoseMT1(boolean rotationOnly) {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = getPoseEstimateMT1();
 		
 		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
-			drivetrain.addVisionMeasurement(limelightMeasurementMT1.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT1.timestampSeconds), VecBuilder.fill(999999,999999,1));
+			Vector<N3> measurementStdDevs;
+			if (rotationOnly) {
+				measurementStdDevs = VecBuilder.fill(999999,999999,1);
+			} else {
+				measurementStdDevs = VecBuilder.fill(.5,.5,1);
+			}
+			drivetrain.addVisionMeasurement(limelightMeasurementMT1.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT1.timestampSeconds), measurementStdDevs);
 		}
 	}
 
@@ -243,12 +251,12 @@ public SwerveRequest driveAndPointAtTag() {
 	  .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
 }
 
-  private void updateField() {
-		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = getPoseEstimateMT2();
+  private void updateField(boolean useMegaTag2) {
+		LimelightHelpers.PoseEstimate limelightMeasurement = useMegaTag2 ? getPoseEstimateMT2() : getPoseEstimateMT1();
 
-		// if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
-		// 	field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurementMT2.pose);
-		// }
+		if (limelightMeasurement != null && !limelightMeasurement.pose.equals(Pose2d.kZero)) {
+			field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurement.pose);
+		}
   }
 
 

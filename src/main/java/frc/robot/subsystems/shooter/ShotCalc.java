@@ -65,7 +65,7 @@ public class ShotCalc {
 
         Translation2d direction = target.toTranslation2d().minus(turretTranslation);
 
-        return Radians.of(MathUtil.inputModulus(direction.getAngle().minus(robot.getRotation()).getRadians(), 0, 2 * Math.PI));
+        return direction.getAngle().minus(robot.getRotation()).getMeasure();
     }
 
     // Move a target a set time in the future along a velocity defined by fieldSpeeds
