@@ -246,9 +246,9 @@ public SwerveRequest driveAndPointAtTag() {
   private void updateField() {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = getPoseEstimateMT2();
 
-		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
-			field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurementMT2.pose);
-		}
+		// if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
+		// 	field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurementMT2.pose);
+		// }
   }
 
 

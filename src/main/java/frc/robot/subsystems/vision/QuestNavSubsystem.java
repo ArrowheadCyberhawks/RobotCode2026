@@ -80,7 +80,7 @@ public class QuestNavSubsystem extends SubsystemBase {
                     QUESTNAV_STD_DEVS
                 );
 
-                field2d.getObject(FieldObjects.QUEST).setPose(robotPose.toPose2d());
+                // field2d.getObject(FieldObjects.QUEST).setPose(robotPose.toPose2d());
             }
         }
     }

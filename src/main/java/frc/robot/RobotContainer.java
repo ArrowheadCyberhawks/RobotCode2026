@@ -13,10 +13,12 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
+import edu.wpi.first.hal.DriverStationJNI;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -51,7 +53,11 @@ public class RobotContainer {
 
 	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed);
 
-	private final CommandXboxController joystick = new CommandXboxController(IOConstants.kDriverControllerPortUSB);
+	//check if bluetooth controller is connected, if so use it
+	private final CommandXboxController driverControllerBT = new CommandXboxController(IOConstants.kDriverControllerPortBT);
+	private final CommandXboxController driverController = driverControllerBT.isConnected() 
+		? driverControllerBT 
+		: new CommandXboxController(IOConstants.kDriverControllerPortUSB);
 
 	private final SendableChooser<Command> autoChooser;
 
@@ -94,9 +100,9 @@ public class RobotContainer {
 		drivetrain.setDefaultCommand(
 			// Drivetrain will execute this command periodically
 			drivetrain.applyRequest(() ->
-				teleDrive.withVelocityX(xLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier, joystick.getRightTriggerAxis()) * -joystick.getLeftY() * DriveConstants.kMaxSpeed)) // Drive forward with negative Y (forward)
-					.withVelocityY(yLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier, joystick.getRightTriggerAxis()) * -joystick.getLeftX() * DriveConstants.kMaxSpeed)) // Drive left with negative X (left)
-					.withRotationalRate(rotationLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kTurnSlowModifier, joystick.getRightTriggerAxis()) * -joystick.getRightX() * DriveConstants.kMaxAngularRate)) // Drive counterclockwise with negative X (left)
+				teleDrive.withVelocityX(xLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier, driverController.getRightTriggerAxis()) * -driverController.getLeftY() * DriveConstants.kMaxSpeed)) // Drive forward with negative Y (forward)
+					.withVelocityY(yLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier, driverController.getRightTriggerAxis()) * -driverController.getLeftX() * DriveConstants.kMaxSpeed)) // Drive left with negative X (left)
+					.withRotationalRate(rotationLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kTurnSlowModifier, driverController.getRightTriggerAxis()) * -driverController.getRightX() * DriveConstants.kMaxAngularRate)) // Drive counterclockwise with negative X (left)
 			)
 		);
 
@@ -107,14 +113,14 @@ public class RobotContainer {
 			drivetrain.applyRequest(() -> idle).ignoringDisable(true)
 		);
 
-		joystick.x().whileTrue(drivetrain.applyRequest(() -> brake));
-		joystick.y().whileTrue(drivetrain.applyRequest(() ->
-			point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+		driverController.x().whileTrue(drivetrain.applyRequest(() -> brake));
+		driverController.y().whileTrue(drivetrain.applyRequest(() ->
+			point.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))
 		));
 
-		joystick.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
-		joystick.rightBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::alignToTag));
-		joystick.a().whileTrue(
+		driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
+		driverController.rightBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::alignToTag));
+		driverController.a().whileTrue(
 			new DriveToPose(
 				drivetrain,
 				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
@@ -124,15 +130,15 @@ public class RobotContainer {
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
-		joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-		joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-		joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-		joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+		driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+		driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+		driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+		driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
 		// reset the field-centric heading on b button press
-		joystick.b().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(drivetrain.getRotation3d().toRotation2d().rotateBy(Rotation2d.kCW_Pi_2))));// i don't know why the 90 degree rotation is necessary but it is
 
-		joystick.start().whileTrue(limelightSubsystem.startRun(() -> LimelightSubsystem.SetIMUMode(1), limelightSubsystem::updateVisionPoseMT1)
+		driverController.start().whileTrue(limelightSubsystem.startRun(() -> LimelightSubsystem.SetIMUMode(1), limelightSubsystem::updateVisionPoseMT1)
 			.finallyDo(() -> LimelightSubsystem.SetIMUMode(2))
 		);
 

@@ -23,7 +23,7 @@ public final class ShooterConstants {
     // Turret gear ratio (turn motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/12.8;
     // Turret PID (units: volts per radian)
-    public static final double kPTurret = 0.5;
+    public static final double kPTurret = 1.0;
     public static final double kITurret = 0.0;
     public static final double kDTurret = 0.0;
     public static final double kTurretAllowedError = 0.02;

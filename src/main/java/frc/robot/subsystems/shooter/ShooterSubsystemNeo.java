@@ -103,8 +103,9 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   private void configureTurret() {
     turretConfig.encoder.positionConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI);
-    turretConfig.idleMode(IdleMode.kBrake);
-    turretConfig.closedLoop
+    turretConfig.idleMode(IdleMode.kBrake)
+      .inverted(true)
+      .closedLoop
       .p(ShooterConstants.kPTurret)
       .i(ShooterConstants.kITurret)
       .d(ShooterConstants.kDTurret)
