@@ -204,7 +204,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodRotation().getDegrees());
 
     // Call aimAndShoot if suppliers are present
-    aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
+    // aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
     // setTurretTarget(Rotation2d.kZero.getMeasure());
     // setHoodTarget(Rotation2d.kCW_90deg.getMeasure());
   }

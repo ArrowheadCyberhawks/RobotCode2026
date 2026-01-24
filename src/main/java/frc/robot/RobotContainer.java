@@ -42,18 +42,18 @@ import frc.robot.subsystems.vision.QuestNavSubsystem;
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
 	private final SwerveRequest.FieldCentric teleDrive = new SwerveRequest.FieldCentric()
-		.withDeadband(DriveConstants.kDriveDeadband * DriveConstants.kMaxSpeed)
-		.withRotationalDeadband(DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate) // Add a 10% deadband
+		.withDeadband(DriveConstants.kDriveDeadband * DriveConstants.kMaxSpeed.in(MetersPerSecond))
+		.withRotationalDeadband(DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate.in(RadiansPerSecond)) // Add a 10% deadband
 		.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
 	private final SwerveRequest.FieldCentric driveFacingAngleRequest = new SwerveRequest.FieldCentric()
-		.withDeadband(DriveConstants.kMaxSpeed * 0.01)
+		.withDeadband(DriveConstants.kMaxSpeed.in(MetersPerSecond) * 0.01)
 		.withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed);
+	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed.in(MetersPerSecond));
 
 	// check if bluetooth controller is connected, if so use it
 	private final CommandXboxController driverControllerBT = new CommandXboxController(
@@ -113,13 +113,13 @@ public class RobotContainer {
 			drivetrain.applyRequest(() -> teleDrive
 				.withVelocityX(xLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier,
 					driverController.getRightTriggerAxis()) * -driverController.getLeftY()
-					* DriveConstants.kMaxSpeed)) // Drive forward with negative Y (forward)
+					* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive forward with negative Y (forward)
 				.withVelocityY(yLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier,
 					driverController.getRightTriggerAxis()) * -driverController.getLeftX()
-					* DriveConstants.kMaxSpeed)) // Drive left with negative X (left)
+					* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with negative X (left)
 				.withRotationalRate(rotationLimiter.calculate(MathUtil.interpolate(1,
 					DriveConstants.kTurnSlowModifier, driverController.getRightTriggerAxis())
-					* -driverController.getRightX() * DriveConstants.kMaxAngularRate)) // Drive counterclockwise with negative X (left)
+					* -driverController.getRightX() * DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive counterclockwise with negative X (left)
 			)
 		);
 
@@ -150,7 +150,7 @@ public class RobotContainer {
 
 		// reset the field-centric heading on b button press
 		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
-			drivetrain.getRotation3d().toRotation2d()))); // i don't know why the 90 degree rotation is necessary but it is
+			drivetrain.getPose().getRotation()))); // i don't know why the 90 degree rotation is necessary but it is
 
 		driverController.start()
 			.whileTrue(limelightSubsystem

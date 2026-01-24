@@ -1,5 +1,7 @@
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.Utils;
@@ -15,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -49,7 +52,7 @@ public class LimelightSubsystem extends SubsystemBase {
   public void periodic() {
 	updateRobotOrientation();
 	// updateVisionPoseMT2(); megatag2 is broken so just disable it
-	//updateVisionPoseMT1(false);
+	updateVisionPoseMT1(false);
 	updateField(false);
 	if(DriverStation.isDisabled()) {
 		updateVisionPoseMT1(true);
@@ -189,15 +192,15 @@ public class LimelightSubsystem extends SubsystemBase {
 	xError *= 2.0;
 	yError *= 6.0;
 
-	double yVel = MathUtil.clamp(yError, -1, 1);
-	double xVel = MathUtil.clamp(xError, -1, 1);
+	xError = MathUtil.clamp(xError, -1, 1);
+	yError = MathUtil.clamp(yError, -1, 1);
 
 	return new SwerveRequest.RobotCentric()
-		.withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
-		.withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
+		.withVelocityX(DriveConstants.kMaxSpeed.times(6.0).unaryMinus().times(xError))
+		.withVelocityY(DriveConstants.kMaxSpeed.times(6.0).times(yError))
 		.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-		.withDeadband(DriveConstants.kMaxSpeed * 0.01)
-		.withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
+		.withDeadband(DriveConstants.kMaxSpeed.times(0.01))
+		.withRotationalDeadband(DriveConstants.kMaxAngularRate.times(0.01));
 }
 
 
@@ -212,7 +215,7 @@ public SwerveRequest pointAtTag() {
 		.withTargetDirection(Rotation2d.fromDegrees(angleToTag))
 		.withDriveRequestType(DriveRequestType.OpenLoopVoltage)
 		.withDeadband(0)
-		.withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01)
+		.withRotationalDeadband(DriveConstants.kMaxAngularRate.times(0.01))
 		.withVelocityX(0) // stop linear movement
 		.withVelocityY(0);
 }
@@ -233,7 +236,19 @@ public SwerveRequest pointAtTag() {
 
 public SwerveRequest driveAndPointAtTag() {
   double tx = getTX();
-  double ty = getTY();
+double ty = getTY();
+
+double goalX = 0.25; //random num for testing
+double goalY = 0.10;
+
+double xError = goalX - tx;
+double yError = goalY - ty;
+
+xError *= 2.0;
+yError *= 6.0;
+
+xError = MathUtil.clamp(xError, -1, 1);
+yError = MathUtil.clamp(yError, -1, 1);
 
   //Compute angle to tag relative to robot forward
   double angleToTag = Math.toDegrees(Math.atan2(ty, tx));
@@ -243,12 +258,12 @@ public SwerveRequest driveAndPointAtTag() {
   double yVel = MathUtil.clamp(ty * 6.0, -1.0, 1.0); // Y = left/right
 
   return new SwerveRequest.RobotCentricFacingAngle()
-	  .withVelocityX(-xVel * (DriveConstants.kMaxSpeed / 6.0))
-	  .withVelocityY(yVel * (DriveConstants.kMaxSpeed / 6.0))
+	  .withVelocityX(DriveConstants.kMaxSpeed.div(6.0).times(-xVel))
+	  .withVelocityY(DriveConstants.kMaxSpeed.div(6.0).times(yVel))
 	  .withTargetDirection(Rotation2d.fromDegrees(angleToTag))
 	  .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-	  .withDeadband(DriveConstants.kMaxSpeed * 0.01)
-	  .withRotationalDeadband(DriveConstants.kMaxAngularRate * 0.01);
+	  .withDeadband(DriveConstants.kMaxSpeed.times(0.01))
+	  .withRotationalDeadband(DriveConstants.kMaxAngularRate.times(0.01));
 }
 
   private void updateField(boolean useMegaTag2) {
