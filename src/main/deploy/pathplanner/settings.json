@@ -1,9 +1,18 @@
 {
-  "robotWidth": 0.9,
-  "robotLength": 0.9,
+  "robotWidth": 0.81915,
+  "robotLength": 0.81915,
   "holonomicMode": true,
-  "pathFolders": [],
-  "autoFolders": [],
+  "pathFolders": [
+    "Cycles",
+    "Depot",
+    "Sweepers"
+  ],
+  "autoFolders": [
+    "Center",
+    "Left",
+    "PID",
+    "Right"
+  ],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
