@@ -52,8 +52,9 @@ public class LimelightSubsystem extends SubsystemBase {
   public void periodic() {
 	updateRobotOrientation();
 	// updateVisionPoseMT2(); megatag2 is broken so just disable it
-	updateVisionPoseMT1(false);
-	updateField(false);
+	//updateVisionPoseMT1(false);
+	updateVisionPoseMT2();
+	updateField(true);
 	if(DriverStation.isDisabled()) {
 		updateVisionPoseMT1(true);
 	}
@@ -89,7 +90,7 @@ public class LimelightSubsystem extends SubsystemBase {
 		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
 			Vector<N3> measurementStdDevs;
 			if (rotationOnly) {
-				measurementStdDevs = VecBuilder.fill(999999,999999,1);
+				measurementStdDevs = VecBuilder.fill(999999,999999,0.1);
 			} else {
 				measurementStdDevs = VecBuilder.fill(.5,.5,1);
 			}
