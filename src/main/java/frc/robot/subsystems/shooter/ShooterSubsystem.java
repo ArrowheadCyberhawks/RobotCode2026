@@ -11,6 +11,7 @@ import com.ctre.phoenix6.controls.VelocityDutyCycle;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.shooter.ShooterConstants.Calculator.ShotData;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodPosition;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -24,6 +25,10 @@ import frc.robot.Constants.FieldConstants;
 import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.Rotations;
 // import edu.wpi.first.units.measure.Voltage; // not needed; use VoltageOut constructor directly
+
+//TODO: Add turret zeroing routine
+//TODO: Only shoot when all components are at setpoint - but change tolerance based on distance so that due to angle the shot will be the same
+
 
 public class ShooterSubsystem extends SubsystemBase {
 
@@ -88,9 +93,9 @@ public class ShooterSubsystem extends SubsystemBase {
     Pose2d robot = poseSupplier.get();
     ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
 
-    ShotCalc.ShotData calculatedShot = ShotCalc.iterativeMovingShotFromFunnelClearance(
+    ShotData calculatedShot = ShotCalculator.iterativeMovingShotFromFunnelClearance(
         robot, fieldSpeeds, currentTarget, ShooterConstants.Calculator.kLookaheadIterations);
-    Angle hoodAngle = ShotCalc.calculateHoodAngle(robot, calculatedShot.getTarget());
+    Angle hoodAngle = ShotCalculator.calculateHoodAngle(robot, calculatedShot.getTarget());
     double desiredAngle = hoodAngle.in(edu.wpi.first.units.Units.Radians);
 
     // Command turret with Motion Magic (convert desired turret radians -> motor rotations)
@@ -102,13 +107,13 @@ public class ShooterSubsystem extends SubsystemBase {
     moveHoodToDegrees(hoodDeg);
 
     // Flywheel
-    AngularVelocity flyAng = ShotCalc.linearToAngularVelocity(calculatedShot.getExitVelocity(),
+    AngularVelocity flyAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
         ShooterConstants.Calculator.kFlywheelRadius);
     double flyRps = flyAng.in(edu.wpi.first.units.Units.RadiansPerSecond) / (2.0 * Math.PI);
     setFlywheelRPS(flyRps);
 
     // Shooter secondary wheel
-    AngularVelocity shootAng = ShotCalc.linearToAngularVelocity(calculatedShot.getExitVelocity(),
+    AngularVelocity shootAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
         ShooterConstants.Calculator.kShootRadius);
     double shootRps = shootAng.in(edu.wpi.first.units.Units.RadiansPerSecond) / (2.0 * Math.PI);
     setShootWheelRPS(shootRps);
@@ -119,8 +124,21 @@ public class ShooterSubsystem extends SubsystemBase {
    * @param radians desired turret angle (radians, field-relative as computed by calculator)
    */
   public void moveTurretToRadians(double radians) {
-    // Convert desired turret radians to motor rotations
-    double turretRotations = radians / (2.0 * Math.PI);
+
+    //double turretRotations = shortestRad / (2.0 * Math.PI); //has wrapping
+
+    // switch back to the earlier version when switching back over to talons
+    // CTRE has a Continuous Mechanism Wrap closed-loop config, so we do not need to find the shortest path
+    // This prevents commanding the long rotation across the 0/2pi boundary.
+    double currentRad = getTurretRotation().getRadians();
+    double rawDiff = radians - currentRad;
+    // put in range of [-pi, pi]
+    double delta = Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff));
+    double shortestRad = currentRad + delta;
+    // Convert desired turret radians (shortest equivalent) to motor rotations
+    double turretRotations = shortestRad / (2.0 * Math.PI);
+
+
     double motorRotations = turretRotations * ShooterConstants.kTurretGearRatio;
     turnMotor.setControl(turretRequest.withPosition(motorRotations));
   }
@@ -194,6 +212,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private void configureTurret() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
+    cfg.ClosedLoopGeneral.ContinuousWrap = true;
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     cfg.Slot0.kP = ShooterConstants.kPTurret;
     cfg.Slot0.kI = ShooterConstants.kITurret;

@@ -164,6 +164,7 @@ public class LimelightSubsystem extends SubsystemBase {
    */
   public static void SetIMUMode(int mode) {
 	LimelightHelpers.SetIMUMode(getLimelightName(), mode);
+	LimelightHelpers.SetIMUAssistAlpha(getLimelightName(), 0.01);
   }
 
   public double getDistanceToTarget() {

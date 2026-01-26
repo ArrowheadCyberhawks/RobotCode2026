@@ -150,16 +150,15 @@ public class RobotContainer {
 
 		// reset the field-centric heading on b button press
 		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
-			drivetrain.getState().Pose.getRotation()
+			drivetrain.getState().Pose.getRotation() //drivetrain.getPose().getRotation()
+		)));
 
-			//drivetrain.getPose().getRotation()
-			))); // i don't know why the 90 degree rotation is necessary but it is
-
+		driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
 		driverController.start()
 			.whileTrue(limelightSubsystem
 				.startRun(() -> LimelightSubsystem.SetIMUMode(1), () -> limelightSubsystem.updateVisionPoseMT1(true))
-				.finallyDo(() -> LimelightSubsystem.SetIMUMode(2))
+				.finallyDo(() -> LimelightSubsystem.SetIMUMode(4))
 		);
 
 		driverController.back()

@@ -67,5 +67,7 @@ public final class Constants {
 }
   
   public static boolean tuningMode = false;
+  // When true, avoid using hardware-dependent WPILib/robot APIs (useful for unit tests)
+  public static boolean disableHAL = false;
 
 }

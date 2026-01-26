@@ -14,6 +14,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
+import frc.robot.subsystems.shooter.ShooterConstants.Calculator.ShotData;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,7 +32,7 @@ public class ShotCalcTest {
         LinearVelocity v = MetersPerSecond.of(10.0);
         Angle angle = Radians.of(0.0);
         Distance d = Meters.of(10.0);
-        Time t = ShotCalc.calculateTimeOfFlight(v, angle, d);
+        Time t = ShotCalculator.calculateTimeOfFlight(v, angle, d);
         assertEquals(1.0, t.in(Seconds), 1e-9);
     }
 
@@ -39,7 +41,7 @@ public class ShotCalcTest {
     public void testGetDistanceToTarget() {
         Pose2d robot = new Pose2d();
         Translation3d target = new Translation3d(3.0, 4.0, 1.0);
-        Distance d = ShotCalc.getDistanceToTarget(robot, target);
+        Distance d = ShotCalculator.getDistanceToTarget(robot, target);
         // distance between (0,0) and (3,4) is 5 meters
         assertEquals(5.0, d.in(Meters), 1e-9);
     }
@@ -53,11 +55,11 @@ public class ShotCalcTest {
         // replicate the internal calculation to compute expected angle
         double g = MetersPerSecondPerSecond.of(9.81).in(InchesPerSecondPerSecond);
         double v = vel.in(InchesPerSecond);
-        double xDist = ShotCalc.getDistanceToTarget(robot, target).in(Inches);
+        double xDist = ShotCalculator.getDistanceToTarget(robot, target).in(Inches);
         double yDist = Meters.of(target.getZ()).in(Inches) - Meters.of(ShooterConstants.Calculator.kRobotToTurretTransform.getTranslation().getZ()).in(Inches);
         double expected = Math.atan(((v * v) + Math.sqrt(Math.pow(v, 4) - g * (g * xDist * xDist + 2 * yDist * v * v))) / (g * xDist));
 
-        Angle calc = ShotCalc.calculateAngleFromVelocity(robot, vel, target);
+        Angle calc = ShotCalculator.calculateAngleFromVelocity(robot, vel, target);
         assertEquals(expected, calc.in(Radians), 1e-9);
     }
 
@@ -66,7 +68,7 @@ public class ShotCalcTest {
         Translation3d target = new Translation3d(1.0, 2.0, 3.0);
         ChassisSpeeds speeds = new ChassisSpeeds(1.0, 2.0, 0.0);
         Time t = Seconds.of(2.0);
-        Translation3d predicted = ShotCalc.predictTargetPos(target, speeds, t);
+        Translation3d predicted = ShotCalculator.predictTargetPos(target, speeds, t);
         assertEquals(1.0 - 1.0 * 2.0, predicted.getX(), 1e-9);
         assertEquals(2.0 - 2.0 * 2.0, predicted.getY(), 1e-9);
         assertEquals(3.0, predicted.getZ(), 1e-9);
@@ -77,7 +79,7 @@ public class ShotCalcTest {
         Distance distance = Meters.of(2.0);
         double expected = ShooterConstants.Calculator.kBaseVel.in(InchesPerSecond)
             + ShooterConstants.Calculator.kVelMultiplier * Math.pow(distance.in(Inches), ShooterConstants.Calculator.kVelPower);
-        LinearVelocity out = ShotCalc.scaleLinearVelocity(distance);
+        LinearVelocity out = ShotCalculator.scaleLinearVelocity(distance);
         assertEquals(expected, out.in(InchesPerSecond), 1e-9);
     }
 
@@ -85,7 +87,7 @@ public class ShotCalcTest {
     public void testCalculateShotFromFunnelClearance_basicSanity() {
         Pose2d robot = new Pose2d();
         Translation3d target = new Translation3d(5.0, 0.0, 1.2);
-        ShotCalc.ShotData sd = ShotCalc.calculateShotFromFunnelClearance(robot, target, target);
+        ShotData sd = ShotCalculator.calculateShotFromFunnelClearance(robot, target, target);
         // basic sanity checks: finite, positive exit velocity and angle in [0,2pi)
         double v = sd.getExitVelocity().in(MetersPerSecond);
         double ang = sd.getHoodAngle().in(Radians);
@@ -96,8 +98,8 @@ public class ShotCalcTest {
     public void testLinearAngularRoundTrip() {
         LinearVelocity v = MetersPerSecond.of(2.0);
         Distance r = Meters.of(0.05);
-        AngularVelocity av = ShotCalc.linearToAngularVelocity(v, r);
-        LinearVelocity v2 = ShotCalc.angularToLinearVelocity(av, r);
+        AngularVelocity av = ShotCalculator.linearToAngularVelocity(v, r);
+        LinearVelocity v2 = ShotCalculator.angularToLinearVelocity(av, r);
         assertEquals(v.in(MetersPerSecond), v2.in(MetersPerSecond), 1e-9);
     }
 
@@ -110,7 +112,7 @@ public class ShotCalcTest {
         double turretX = turretPose3.getX();
         double turretY = turretPose3.getY();
         Translation3d target = new Translation3d(turretX + 5.0, turretY, turretPose3.getZ());
-    Angle hood = ShotCalc.calculateHoodAngle(robot, target);
+    Angle hood = ShotCalculator.calculateHoodAngle(robot, target);
     double actual = hood.in(Radians);
     // Print the value so the Gradle test runner shows it in console output for quick diagnosis
     System.out.println("ShotCalcTest: calculated hood angle (radians) = " + actual);
@@ -122,7 +124,7 @@ public class ShotCalcTest {
     @Test
     public void testShotDataConstructorAndAccessors() {
         Translation3d target = new Translation3d(1.0, 2.0, 3.0);
-        ShotCalc.ShotData sd = new ShotCalc.ShotData(MetersPerSecond.of(12.34), Radians.of(0.5), target);
+        ShotData sd = new ShotData(MetersPerSecond.of(12.34), Radians.of(0.5), target);
         assertEquals(12.34, sd.getExitVelocity().in(MetersPerSecond), 1e-9);
         assertEquals(0.5, sd.getHoodAngle().in(Radians), 1e-9);
         assertEquals(target.getX(), sd.getTarget().getX(), 1e-9);
@@ -136,8 +138,8 @@ public class ShotCalcTest {
         Translation3d target = new Translation3d(5.0, 0.0, 1.0);
         ChassisSpeeds zeroSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
-        ShotCalc.ShotData base = ShotCalc.calculateShotFromFunnelClearance(robot, target, target);
-        ShotCalc.ShotData iter = ShotCalc.iterativeMovingShotFromFunnelClearance(robot, zeroSpeeds, target, 3);
+        ShotData base = ShotCalculator.calculateShotFromFunnelClearance(robot, target, target);
+        ShotData iter = ShotCalculator.iterativeMovingShotFromFunnelClearance(robot, zeroSpeeds, target, 3);
 
         // With zero field speeds, iterative solution should match the non-iterative one
         assertEquals(base.getExitVelocity().in(MetersPerSecond), iter.getExitVelocity().in(MetersPerSecond), 1e-6);

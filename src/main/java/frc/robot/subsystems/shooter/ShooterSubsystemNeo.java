@@ -24,6 +24,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.units.measure.Angle;
 import java.util.function.Supplier;
+
+import frc.robot.subsystems.shooter.ShooterConstants.Calculator.ShotData;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodPosition;
 import frc.robot.Constants.FieldConstants;
 
@@ -117,7 +119,16 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   // Turret
   public void setTurretTarget(Angle targetTurretAngle) {
-    turretController.setSetpoint(targetTurretAngle.in(Radians), ControlType.kPosition);
+        // CTRE has a Continuous Mechanism Wrap closed-loop config, so we do not need to find the shortest path
+    // This prevents commanding the long rotation across the 0/2pi boundary.
+    Angle currentRad = getTurretRotation().getMeasure();
+    double rawDiff = targetTurretAngle.in(Radians) - currentRad.in(Radians);
+    // put in range of [-pi, pi]
+    Angle delta = Angle.ofBaseUnits(Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff)), Radians);
+    Angle shortestRad = Angle.ofBaseUnits(currentRad.in(Radians) + delta.in(Radians), Radians);
+    // Convert desired turret radians (shortest equivalent) to motor rotations
+    double turretRotations = shortestRad.in(Radians) / (2.0 * Math.PI);
+    turretController.setSetpoint(turretRotations, ControlType.kPosition);
   }
 
   public void setTurretVoltage(Voltage volts) {
@@ -179,20 +190,20 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     Pose2d robot = poseSupplier.get();
     ChassisSpeeds fieldSpeeds = fieldSpeedsSupplier.get();
 
-    ShotCalc.ShotData calculatedShot = ShotCalc.iterativeMovingShotFromFunnelClearance(
+    ShotData calculatedShot = ShotCalculator.iterativeMovingShotFromFunnelClearance(
         robot, fieldSpeeds, currentTarget, ShooterConstants.Calculator.kLookaheadIterations);
 
-    Angle hoodAngle = ShotCalc.calculateHoodAngle(robot, calculatedShot.getTarget());
+    Angle hoodAngle = ShotCalculator.calculateHoodAngle(robot, calculatedShot.getTarget());
 
     setTurretTarget(hoodAngle);
     setHoodTarget(calculatedShot.getHoodAngle());
 
-    AngularVelocity flyAng = ShotCalc.linearToAngularVelocity(calculatedShot.getExitVelocity(),
+    AngularVelocity flyAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
         ShooterConstants.Calculator.kFlywheelRadius);
     double flyRps = flyAng.in(RadiansPerSecond) / (2.0 * Math.PI);
 
 
-    AngularVelocity shootAng = ShotCalc.linearToAngularVelocity(calculatedShot.getExitVelocity(),
+    AngularVelocity shootAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
         ShooterConstants.Calculator.kShootRadius);
     double shootRps = shootAng.in(RadiansPerSecond) / (2.0 * Math.PI);
 

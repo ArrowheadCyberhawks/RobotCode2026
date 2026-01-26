@@ -1,5 +1,13 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
+
 /**
  * Shooter constants and enums.
  */
@@ -92,7 +100,37 @@ public final class ShooterConstants {
     // Default values (meters) - adjust to your hardware
     public static final edu.wpi.first.units.measure.Distance kFlywheelRadius = edu.wpi.first.units.Units.Meters.of(0.05);
     public static final edu.wpi.first.units.measure.Distance kShootRadius = edu.wpi.first.units.Units.Meters.of(0.05);
-        
+
+    public record ShotData(double exitVelocity, double hoodAngle, Translation3d target) {
+        public ShotData(LinearVelocity exitVelocity, Angle hoodAngle, Translation3d target) {
+            this(exitVelocity.in(MetersPerSecond), hoodAngle.in(Radians), target);
+        }
+
+        public LinearVelocity getExitVelocity() {
+            return MetersPerSecond.of(this.exitVelocity);
+        }
+
+        public Angle getHoodAngle() {
+            return Radians.of(this.hoodAngle);
+        }
+
+        public Translation3d getTarget() {
+            return this.target;
+        }
+    }
+
+    public static final InterpolatingDoubleTreeMap kDistanceToVelocity = new InterpolatingDoubleTreeMap();
+    public static final InterpolatingDoubleTreeMap kDistanceToAngle = new InterpolatingDoubleTreeMap();
+
+
+    static {
+        // distance (meters) to m/s or radians
+        // no, interpolating tree maps do not support using the units class directly, I tried (easier to do doubles anyways)
+        kDistanceToVelocity.put(1.5, 12.0); // m/s
+        kDistanceToAngle.put(1.5, 0.42); // radians
+        kDistanceToVelocity.put(2.5, 14.0);
+        kDistanceToAngle.put(2.5, 0.50);
+    }
 
     }
 }

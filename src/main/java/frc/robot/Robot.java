@@ -54,7 +54,7 @@ public class Robot extends LoggedRobot {
 	@Override
 	public void disabledExit() {
 		LimelightSubsystem.setThrottle(0);
-		LimelightSubsystem.SetIMUMode(2);
+		LimelightSubsystem.SetIMUMode(4);
 		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
 	}
 
