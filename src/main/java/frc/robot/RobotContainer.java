@@ -88,11 +88,17 @@ public class RobotContainer {
 		DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	public RobotContainer() {
+		constructField();
+		configureBindings();
+
+		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
+		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
+			drivetrain.resetPose(pose);
+			questNav.resetPose(pose);
+		});
+		
 		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Tests"));
 
-		constructField();
-
-		configureBindings();
 
 		// Warmup PathPlanner to avoid Java pauses
 		CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
@@ -181,5 +187,7 @@ public class RobotContainer {
 	public void updateField2d() {
 		field2d.setRobotPose(drivetrain.getPose());
 	}
+
+	
 
 }

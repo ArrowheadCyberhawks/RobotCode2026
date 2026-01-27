@@ -9,6 +9,12 @@
           "data": {
             "pathName": "PID Forward"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "PID Backward"
+          }
         }
       ]
     }
