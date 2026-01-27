@@ -51,9 +51,8 @@ public class LimelightSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 	updateRobotOrientation();
-	// updateVisionPoseMT2(); megatag2 is broken so just disable it
+	updateVisionPoseMT2(); // megatag2 is broken so just disable it
 	//updateVisionPoseMT1(false);
-	updateVisionPoseMT2();
 	updateField(true);
 	if(DriverStation.isDisabled()) {
 		updateVisionPoseMT1(true);
@@ -90,7 +89,7 @@ public class LimelightSubsystem extends SubsystemBase {
 		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
 			Vector<N3> measurementStdDevs;
 			if (rotationOnly) {
-				measurementStdDevs = VecBuilder.fill(999999,999999,0.1);
+				measurementStdDevs = VecBuilder.fill(999999,999999,0.5);
 			} else {
 				measurementStdDevs = VecBuilder.fill(.5,.5,1);
 			}
@@ -104,9 +103,9 @@ public class LimelightSubsystem extends SubsystemBase {
 		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
 			drivetrain.addVisionMeasurement(limelightMeasurementMT2.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds), VecBuilder.fill(.5,.5,9999999));
 			// horrible inefficient garbage telemetry code
-			SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
-			SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
-			limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
+			// SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
+			// SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
+			// limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
 		}
 	}
 
@@ -164,14 +163,14 @@ public class LimelightSubsystem extends SubsystemBase {
    */
   public static void SetIMUMode(int mode) {
 	LimelightHelpers.SetIMUMode(getLimelightName(), mode);
-	LimelightHelpers.SetIMUAssistAlpha(getLimelightName(), 0.01);
+	LimelightHelpers.SetIMUAssistAlpha(getLimelightName(), 0.001);
   }
 
   public double getDistanceToTarget() {
 	if (!hasTarget()) {
 	  return lastDistance;
 	}
-	double cameraHeight = 22;
+	double cameraHeight = 22; // ✨ magic numbers ✨
 	double targetHeight = 56.375;
 	double heightDiff = targetHeight - cameraHeight;
 	double cameraAngle = 23;

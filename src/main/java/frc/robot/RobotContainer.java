@@ -158,7 +158,7 @@ public class RobotContainer {
 		driverController.start()
 			.whileTrue(limelightSubsystem
 				.startRun(() -> LimelightSubsystem.SetIMUMode(1), () -> limelightSubsystem.updateVisionPoseMT1(true))
-				.finallyDo(() -> LimelightSubsystem.SetIMUMode(4))
+				.finallyDo(() -> LimelightSubsystem.SetIMUMode(3))
 		);
 
 		driverController.back()
