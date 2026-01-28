@@ -208,7 +208,7 @@ public class ShooterSubsystem extends SubsystemBase {
     } catch (Exception e) {
       return new Rotation2d();
     }
-    }
+  }
 
   private void configureTurret() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();

@@ -121,14 +121,15 @@ public class ShooterSubsystemNeo extends SubsystemBase {
   public void setTurretTarget(Angle targetTurretAngle) {
         // CTRE has a Continuous Mechanism Wrap closed-loop config, so we do not need to find the shortest path
     // This prevents commanding the long rotation across the 0/2pi boundary.
-    Angle currentRad = getTurretRotation().getMeasure();
-    double rawDiff = targetTurretAngle.in(Radians) - currentRad.in(Radians);
-    // put in range of [-pi, pi]
-    Angle delta = Angle.ofBaseUnits(Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff)), Radians);
-    Angle shortestRad = Angle.ofBaseUnits(currentRad.in(Radians) + delta.in(Radians), Radians);
-    // Convert desired turret radians (shortest equivalent) to motor rotations
-    double turretRotations = shortestRad.in(Radians) / (2.0 * Math.PI);
-    turretController.setSetpoint(turretRotations, ControlType.kPosition);
+    // Angle currentRad = getTurretRotation().getMeasure();
+    // double rawDiff = targetTurretAngle.in(Radians) - currentRad.in(Radians);
+    // // put in range of [-pi, pi]
+    // Angle delta = Angle.ofBaseUnits(Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff)), Radians);
+    // Angle shortestRad = Angle.ofBaseUnits(currentRad.in(Radians) + delta.in(Radians), Radians);
+    // // Convert desired turret radians (shortest equivalent) to motor rotations
+    // double turretRotations = shortestRad.in(Radians) / (2.0 * Math.PI);
+    // turretController.setSetpoint(turretRotations, ControlType.kPosition);
+    turretController.setSetpoint(targetTurretAngle.in(Radians), ControlType.kPosition);
   }
 
   public void setTurretVoltage(Voltage volts) {
@@ -215,7 +216,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodRotation().getDegrees());
 
     // Call aimAndShoot if suppliers are present
-    // aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
+    aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
     // setTurretTarget(Rotation2d.kZero.getMeasure());
     // setHoodTarget(Rotation2d.kCW_90deg.getMeasure());
   }

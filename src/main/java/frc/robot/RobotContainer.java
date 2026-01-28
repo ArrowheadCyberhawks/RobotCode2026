@@ -42,12 +42,12 @@ import frc.robot.subsystems.vision.QuestNavSubsystem;
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
 	private final SwerveRequest.FieldCentric teleDrive = new SwerveRequest.FieldCentric()
-		.withDeadband(DriveConstants.kDriveDeadband * DriveConstants.kMaxSpeed.in(MetersPerSecond))
+		// .withDeadband(DriveConstants.kDriveDeadband * DriveConstants.kMaxSpeed.in(MetersPerSecond))
 		.withRotationalDeadband(DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate.in(RadiansPerSecond)) // Add a 10% deadband
 		.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
 	private final SwerveRequest.FieldCentric driveFacingAngleRequest = new SwerveRequest.FieldCentric()
-		.withDeadband(DriveConstants.kMaxSpeed.in(MetersPerSecond) * 0.01)
+		// .withDeadband(DriveConstants.kMaxSpeed.in(MetersPerSecond) * 0.01)
 		.withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -84,8 +84,7 @@ public class RobotContainer {
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
-	SlewRateLimiter rotationLimiter = new SlewRateLimiter(
-		DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
+	SlewRateLimiter rotationLimiter = new SlewRateLimiter(DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	public RobotContainer() {
 		constructField();
@@ -117,15 +116,36 @@ public class RobotContainer {
 		drivetrain.setDefaultCommand(
 			// Drivetrain will execute this command periodically
 			drivetrain.applyRequest(() -> teleDrive
-				.withVelocityX(xLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier,
-					driverController.getRightTriggerAxis()) * -driverController.getLeftY()
-					* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive forward with negative Y (forward)
-				.withVelocityY(yLimiter.calculate(MathUtil.interpolate(1, DriveConstants.kDriveSlowModifier,
-					driverController.getRightTriggerAxis()) * -driverController.getLeftX()
-					* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with negative X (left)
-				.withRotationalRate(rotationLimiter.calculate(MathUtil.interpolate(1,
-					DriveConstants.kTurnSlowModifier, driverController.getRightTriggerAxis())
-					* -driverController.getRightX() * DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive counterclockwise with negative X (left)
+				.withVelocityX(
+					xLimiter.calculate(
+						MathUtil.interpolate(1,
+							DriveConstants.kDriveSlowModifier,
+							driverController.getRightTriggerAxis()
+						)
+						* MathUtil.applyDeadband(-driverController.getLeftY(), DriveConstants.kDriveDeadband)
+						* DriveConstants.kMaxSpeed.in(MetersPerSecond)
+					)
+				) // Drive forward with negative Y (forward)
+				.withVelocityY(
+					yLimiter.calculate(
+						MathUtil.interpolate(1,
+							DriveConstants.kDriveSlowModifier,
+							driverController.getRightTriggerAxis()
+						)
+						* MathUtil.applyDeadband(-driverController.getLeftX(), DriveConstants.kDriveDeadband)
+						* DriveConstants.kMaxSpeed.in(MetersPerSecond)
+					)
+				) // Drive left with negative X (left)
+				.withRotationalRate(
+					rotationLimiter.calculate(
+						MathUtil.interpolate(1,
+							DriveConstants.kTurnSlowModifier,
+							driverController.getRightTriggerAxis()
+						)
+						* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
+						* DriveConstants.kMaxAngularRate.in(RadiansPerSecond)
+					)
+				) // Drive counterclockwise with negative X (left)
 			)
 		);
 

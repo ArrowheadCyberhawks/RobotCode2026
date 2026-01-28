@@ -41,7 +41,7 @@ public final class Constants {
     public static final LinearAcceleration kMaxAcceleration = kMaxSpeed.times(5.0).per(Second);
     public static final AngularAcceleration kMaxAngularAcceleration = kMaxAngularRate.times(8.0).per(Second);
 
-    public static final double kDriveDeadband = 0.1;
+    public static final double kDriveDeadband = 0.05;
     public static final double kRotationDeadband = 0.05;
 
     public static final double kLoopPeriodSeconds = 0.02;
