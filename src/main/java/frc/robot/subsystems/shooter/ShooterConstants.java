@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 
@@ -36,7 +37,7 @@ public final class ShooterConstants {
     public static final double kDTurret = 0.0;
     public static final double kTurretAllowedError = 0.02;
     // Maximum voltage to apply to turret motor
-    public static final double kMaxTurretVolts = 6.0;
+    public static final double kMaxTurretVolts = 6.0; 
 
     // === Hood (Motion Magic) ===
     public static final double kHoodGearRatio = 1/8.16;
@@ -58,13 +59,15 @@ public final class ShooterConstants {
     public static final double kShootHoodTarget = 35.0;
 
     public enum HoodPosition {
-        STOW(0.0),
-        LOW(20.0),
-        MID(35.0),
-        HIGH(55.0);
+        STOW(Degrees.of(0.0)),
+        LOW(Degrees.of(20.0)),
+        MID(Degrees.of(35.0)),
+        HIGH(Degrees.of(55.0));
 
-        public final double degrees;
-        HoodPosition(double degrees) { this.degrees = degrees; }
+        public final Angle angle;
+        HoodPosition(Angle angle) { this.angle = angle; }
+        public Angle getAngle() { return angle; }
+        public double getDegrees() { return angle.in(Degrees); }
     }
 
     // Turret Motion Magic tuning (motor rotations/sec and rotations/sec^2)

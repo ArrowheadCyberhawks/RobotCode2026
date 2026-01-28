@@ -1,5 +1,10 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Degrees;
+
+import edu.wpi.first.units.measure.Angle;
+import frc.robot.util.LoggedTunableNumber;
+
 public final class IntakeConstants {
 
     // CAN IDs
@@ -8,39 +13,68 @@ public final class IntakeConstants {
 
     // Gear ratio: motor rotations per pivot rotation
     // Example: 100:1 reduction → 100 motor revs = 1 pivot rev
-    public static final double kPivotGearRatio = 100.0;
+    public static final double kPivotGearRatio = 1/100.0;
 
-    // Motion Magic constraints (motor-side, rotations)
-    public static final double kPivotCruiseRps = 2.0;     // motor rotations/sec
-    public static final double kPivotAccelRps2 = 4.0;    // motor rotations/sec^2
+    // Smart Motion constraints (rotations/sec)
+    public static final LoggedTunableNumber kPivotMaxVelocityRps = 
+        new LoggedTunableNumber("Intake/Pivot/MaxVelocityRps", 2.0);
+    public static final LoggedTunableNumber kPivotMaxAccelRps2 = 
+        new LoggedTunableNumber("Intake/Pivot/MaxAccelRps2", 4.0);
 
-    // PID + FF
-    public static final double kPPivot = 60.0;
-    public static final double kIPivot = 0.0;
-    public static final double kDPivot = 4.0;
-    public static final double kGPivot = 0.4;  // gravity feedforward
-    public static final double kVPivot = 0.0;
-    public static final double kAPivot = 0.0;
+    // PID + FF for pivot (position control)
+    public static final LoggedTunableNumber kPPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kP", 0.5);
+    public static final LoggedTunableNumber kIPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
+    public static final LoggedTunableNumber kDPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kD", 0.0);
+    public static final LoggedTunableNumber kGPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kG", 0.4);
+    public static final LoggedTunableNumber kVPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kV", 0.0);
+    public static final LoggedTunableNumber kAPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kA", 0.0);
+
+    // Pivot position tolerance (radians)
+    public static final LoggedTunableNumber kPivotToleranceRadians = 
+        new LoggedTunableNumber("Intake/Pivot/ToleranceRadians", 0.02);
+
+    // Pivot soft limits (degrees)
+    public static final double kPivotMinDegrees = -5.0;
+    public static final double kPivotMaxDegrees = 120.0;
 
     // Roller PID (velocity control)
-    public static final double kPRoller = 0.12;
-    public static final double kIRoller = 0.0;
-    public static final double kDRoller = 0.001;
-    public static final double kVRoller = 0.12;
+    public static final LoggedTunableNumber kPRoller = 
+        new LoggedTunableNumber("Intake/Roller/kP", 0.0001);
+    public static final LoggedTunableNumber kIRoller = 
+        new LoggedTunableNumber("Intake/Roller/kI", 0.0);
+    public static final LoggedTunableNumber kDRoller = 
+        new LoggedTunableNumber("Intake/Roller/kD", 0.0);
+    public static final LoggedTunableNumber kVRoller = 
+        new LoggedTunableNumber("Intake/Roller/kV", 0.00018);
 
-    // Roller speeds (RPS)
-    public static final double kIntakeRps = 40.0;
-    public static final double kOuttakeRps = -40.0;
+    // Roller speeds (RPM)
+    public static final LoggedTunableNumber kIntakeRpm = 
+        new LoggedTunableNumber("Intake/Roller/IntakeRpm", 2400.0);
+    public static final LoggedTunableNumber kOuttakeRpm = 
+        new LoggedTunableNumber("Intake/Roller/OuttakeRpm", -2400.0);
 
+    // Control mode selection
+    public static final boolean kUseSmartMotion = true;  // true = Smart Motion, false = simple PID
 
     public enum IntakePosition {
-        STOWED(0.0),
-        INTAKE(55.0);
+        STOWED(Degrees.of(0.0)),
+        INTAKE(Degrees.of(55.0)),
+        EJECT(Degrees.of(45.0));
 
-        public final double degrees;
+        public final Angle angle;
 
-        IntakePosition(double degrees) {
-            this.degrees = degrees;
+        IntakePosition(Angle angle) {
+            this.angle = angle;
+        }
+
+        public Angle getAngle() {
+            return angle;
         }
     }
 

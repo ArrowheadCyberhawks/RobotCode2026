@@ -56,7 +56,7 @@ public class ShooterSubsystem extends SubsystemBase {
     configureHood();
     configureTurret();
     // Zero hood at known position (STOW)
-    resetHoodEncoderToDegrees(HoodPosition.STOW.degrees);
+    resetHoodEncoderToDegrees(HoodPosition.STOW.getDegrees());
 
     this.targetPoseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
@@ -67,6 +67,30 @@ public class ShooterSubsystem extends SubsystemBase {
 
   // Turret Motion Magic tunables (exposed for convenience)
   SmartDashboard.putNumber("Shooter/Turret/MaxVolts", ShooterConstants.kMaxTurretVolts);
+  }
+
+  private void configureFlywheel() {
+    TalonFXConfiguration cfg = new TalonFXConfiguration();
+    cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    cfg.Slot0.kP = ShooterConstants.kPFlywheel;
+    cfg.Slot0.kI = ShooterConstants.kIFlywheel;
+    cfg.Slot0.kD = ShooterConstants.kDFlywheel;
+    cfg.Slot0.kV = ShooterConstants.kVFlywheel;
+    flywheel.getConfigurator().apply(cfg);
+  }
+
+  private void configureHood() {
+    TalonFXConfiguration cfg = new TalonFXConfiguration();
+    cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    cfg.Slot0.kP = ShooterConstants.kPHood;
+    cfg.Slot0.kI = ShooterConstants.kIHood;
+    cfg.Slot0.kD = ShooterConstants.kDHood;
+    cfg.Slot0.kV = ShooterConstants.kVHood;
+    cfg.Slot0.kA = ShooterConstants.kAHood;
+    cfg.Slot0.kG = ShooterConstants.kGHood;
+    cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kHoodCruiseRps;
+    cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kHoodAccelRps2;
+    hood.getConfigurator().apply(cfg);
   }
 
   /**
@@ -147,30 +171,6 @@ public class ShooterSubsystem extends SubsystemBase {
     moveTurretToRadians(Math.toRadians(degrees));
   }
 
-  private void configureFlywheel() {
-    TalonFXConfiguration cfg = new TalonFXConfiguration();
-    cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    cfg.Slot0.kP = ShooterConstants.kPFlywheel;
-    cfg.Slot0.kI = ShooterConstants.kIFlywheel;
-    cfg.Slot0.kD = ShooterConstants.kDFlywheel;
-    cfg.Slot0.kV = ShooterConstants.kVFlywheel;
-    flywheel.getConfigurator().apply(cfg);
-  }
-
-  private void configureHood() {
-    TalonFXConfiguration cfg = new TalonFXConfiguration();
-    cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    cfg.Slot0.kP = ShooterConstants.kPHood;
-    cfg.Slot0.kI = ShooterConstants.kIHood;
-    cfg.Slot0.kD = ShooterConstants.kDHood;
-    cfg.Slot0.kV = ShooterConstants.kVHood;
-    cfg.Slot0.kA = ShooterConstants.kAHood;
-    cfg.Slot0.kG = ShooterConstants.kGHood;
-    cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kHoodCruiseRps;
-    cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kHoodAccelRps2;
-    hood.getConfigurator().apply(cfg);
-  }
-
   // Flywheel control
   public void setFlywheelRPS(double rps) {
     double motorRps = rps * ShooterConstants.kFlywheelGearRatio;
@@ -234,7 +234,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void moveHoodTo(HoodPosition pos) {
-    hood.setControl(hoodRequest.withPosition(degreesToMotorRotations(pos.degrees)));
+    hood.setControl(hoodRequest.withPosition(degreesToMotorRotations(pos.getDegrees())));
   }
 
   public void moveHoodToDegrees(double degrees) {

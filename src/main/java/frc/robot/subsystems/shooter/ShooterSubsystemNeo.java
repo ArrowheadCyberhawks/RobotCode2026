@@ -28,16 +28,28 @@ import java.util.function.Supplier;
 import frc.robot.subsystems.shooter.ShooterConstants.Calculator.ShotData;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodPosition;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.util.LoggedTunableNumber;
 
 /**
  * Spark (REV CANSparkMax) backed shooter subsystem. Mirrors the public API
  * of the TalonFX-backed `ShooterSubsystem` so callers can switch implementations.
- *
- * Note: This file requires REV Robotics libraries on the classpath.
  */
 
- //NOTE: Copilot Turned ShooterSubsystem into ShooterSubsystemNeo, so I have yet to check if everything will work yet
 public class ShooterSubsystemNeo extends SubsystemBase {
+
+  // Tunable PID constants for Turret
+  private final LoggedTunableNumber turretKP = new LoggedTunableNumber("Shooter/Turret/kP", ShooterConstants.kPTurret);
+  private final LoggedTunableNumber turretKI = new LoggedTunableNumber("Shooter/Turret/kI", ShooterConstants.kITurret);
+  private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Shooter/Turret/kD", ShooterConstants.kDTurret);
+  private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Shooter/Turret/Tolerance", ShooterConstants.kTurretAllowedError);
+  private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Shooter/Turret/MaxPercentOutput", 0.5);
+
+  // Tunable PID constants for Hood
+  private final LoggedTunableNumber hoodKP = new LoggedTunableNumber("Shooter/Hood/kP", ShooterConstants.kPHood);
+  private final LoggedTunableNumber hoodKI = new LoggedTunableNumber("Shooter/Hood/kI", ShooterConstants.kIHood);
+  private final LoggedTunableNumber hoodKD = new LoggedTunableNumber("Shooter/Hood/kD", ShooterConstants.kDHood);
+  private final LoggedTunableNumber hoodKG = new LoggedTunableNumber("Shooter/Hood/kG", ShooterConstants.kGHood);
+  private final LoggedTunableNumber hoodTolerance = new LoggedTunableNumber("Shooter/Hood/Tolerance", ShooterConstants.kHoodAllowedError);
 
   private final SparkMax hoodMotor;
   private final SparkMax turnMotor;
@@ -65,8 +77,11 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     hoodConfig = new SparkMaxConfig();
     turretConfig = new SparkMaxConfig();
 
+    
+
 
     // PID controllers
+
     hoodController = hoodMotor.getClosedLoopController();
     turretController = turnMotor.getClosedLoopController();
 
@@ -74,7 +89,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     configureTurret();
 
     // Zero hood at known position
-    resetHoodEncoderToDegrees(HoodPosition.STOW.degrees);
+    resetHoodEncoderToDegrees(0.0);
 
     this.targetPoseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
@@ -88,16 +103,16 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   private void configureHood() {
     hoodConfig.encoder
-      .positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
+      .positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI); // convert motor position to radians of the hood
     hoodConfig.idleMode(IdleMode.kBrake)
       .inverted(true)
       .closedLoop
         .positionWrappingEnabled(true)
         .positionWrappingInputRange(-Math.PI, Math.PI)
-        .p(ShooterConstants.kPHood)
-        .i(ShooterConstants.kIHood)
-        .d(ShooterConstants.kDHood)
-        .allowedClosedLoopError(ShooterConstants.kHoodAllowedError, ClosedLoopSlot.kSlot0);
+        .p(hoodKP.get())
+        .i(hoodKI.get())
+        .d(hoodKD.get())
+        .allowedClosedLoopError(hoodTolerance.get(), ClosedLoopSlot.kSlot0);
     hoodConfig.softLimit
       .forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
       .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
@@ -109,26 +124,17 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     turretConfig.idleMode(IdleMode.kBrake)
       .inverted(true)
       .closedLoop
-      .p(ShooterConstants.kPTurret)
-      .i(ShooterConstants.kITurret)
-      .d(ShooterConstants.kDTurret)
-      .allowedClosedLoopError(ShooterConstants.kTurretAllowedError, ClosedLoopSlot.kSlot0);
+      .outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
+      .p(turretKP.get())
+      .i(turretKI.get())
+      .d(turretKD.get())
+      .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
     turnMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
 
   // Turret
   public void setTurretTarget(Angle targetTurretAngle) {
-        // CTRE has a Continuous Mechanism Wrap closed-loop config, so we do not need to find the shortest path
-    // This prevents commanding the long rotation across the 0/2pi boundary.
-    // Angle currentRad = getTurretRotation().getMeasure();
-    // double rawDiff = targetTurretAngle.in(Radians) - currentRad.in(Radians);
-    // // put in range of [-pi, pi]
-    // Angle delta = Angle.ofBaseUnits(Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff)), Radians);
-    // Angle shortestRad = Angle.ofBaseUnits(currentRad.in(Radians) + delta.in(Radians), Radians);
-    // // Convert desired turret radians (shortest equivalent) to motor rotations
-    // double turretRotations = shortestRad.in(Radians) / (2.0 * Math.PI);
-    // turretController.setSetpoint(turretRotations, ControlType.kPosition);
     turretController.setSetpoint(targetTurretAngle.in(Radians), ControlType.kPosition);
   }
 
@@ -157,7 +163,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   // Hood
   public void moveHoodTo(HoodPosition pos) {
-    setHoodTarget(Degrees.of(pos.degrees));
+    setHoodTarget(pos.getAngle());
   }
 
   public void setHoodTarget(Angle targetHoodAngle) {
@@ -212,6 +218,10 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Update PID constants if they've changed in NetworkTables
+    updateTurretPID();
+    updateHoodPID();
+
     SmartDashboard.putNumber("Shooter/Turret Degrees", getTurretRotation().getDegrees());
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodRotation().getDegrees());
 
@@ -219,5 +229,51 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
     // setTurretTarget(Rotation2d.kZero.getMeasure());
     // setHoodTarget(Rotation2d.kCW_90deg.getMeasure());
+  }
+
+  /**
+   * Updates the turret PID constants from NetworkTables if they've changed.
+   * This allows live tuning via AdvantageScope or SmartDashboard.
+   */
+  private void updateTurretPID() {
+    // Check if any values changed (using hashCode as ID)
+    int id = this.hashCode();
+    if (turretKP.hasChanged(id) || turretKI.hasChanged(id) || 
+        turretKD.hasChanged(id) || turretTolerance.hasChanged(id)) {
+      
+      turretConfig.closedLoop
+          .p(turretKP.get())
+          .i(turretKI.get())
+          .d(turretKD.get())
+          .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
+      
+      turnMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+      
+      SmartDashboard.putString("Shooter/Turret/Status", 
+          String.format("Updated: P=%.3f I=%.3f D=%.3f", turretKP.get(), turretKI.get(), turretKD.get()));
+    }
+  }
+
+  /**
+   * Updates the hood PID constants from NetworkTables if they've changed.
+   * This allows live tuning via AdvantageScope or SmartDashboard.
+   */
+  private void updateHoodPID() {
+    // Check if any values changed (using hashCode as ID)
+    int id = this.hashCode();
+    if (hoodKP.hasChanged(id) || hoodKI.hasChanged(id) || 
+        hoodKD.hasChanged(id) || hoodKG.hasChanged(id) || hoodTolerance.hasChanged(id)) {
+      
+      hoodConfig.closedLoop
+          .p(hoodKP.get())
+          .i(hoodKI.get())
+          .d(hoodKD.get())
+          .allowedClosedLoopError(hoodTolerance.get(), ClosedLoopSlot.kSlot0);
+      
+      hoodMotor.configure(hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+      
+      SmartDashboard.putString("Shooter/Hood/Status", 
+          String.format("Updated: P=%.3f I=%.3f D=%.3f G=%.3f", hoodKP.get(), hoodKI.get(), hoodKD.get(), hoodKG.get()));
+    }
   }
 }

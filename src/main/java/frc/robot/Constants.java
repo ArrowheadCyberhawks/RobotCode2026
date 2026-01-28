@@ -66,7 +66,8 @@ public final class Constants {
     public static final Distance FUNNEL_HEIGHT = Inches.of(72 - 56.4);
 }
   
-  public static boolean tuningMode = false;
+  // Set to true to enable tunable numbers in NetworkTables under /Tuning/
+  public static boolean tuningMode = true;
   // When true, avoid using hardware-dependent WPILib/robot APIs (useful for unit tests)
   public static boolean disableHAL = false;
 
