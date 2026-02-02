@@ -29,7 +29,6 @@ import static edu.wpi.first.units.Units.Rotations;
 //TODO: Add turret zeroing routine
 //TODO: Only shoot when all components are at setpoint - but change tolerance based on distance so that due to angle the shot will be the same
 
-
 public class ShooterSubsystem extends SubsystemBase {
 
   private final TalonFX flywheel = new TalonFX(ShooterConstants.kFlywheelMotorId);
@@ -65,8 +64,8 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Flywheel Target", ShooterConstants.kShootFlywheelTarget);
     SmartDashboard.putNumber("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
 
-  // Turret Motion Magic tunables (exposed for convenience)
-  SmartDashboard.putNumber("Shooter/Turret/MaxVolts", ShooterConstants.kMaxTurretVolts);
+    // Turret Motion Magic tunables (exposed for convenience)
+    SmartDashboard.putNumber("Shooter/Turret/MaxVolts", ShooterConstants.kMaxTurretVolts);
   }
 
   private void configureFlywheel() {
@@ -122,7 +121,8 @@ public class ShooterSubsystem extends SubsystemBase {
     Angle hoodAngle = ShotCalculator.calculateHoodAngle(robot, calculatedShot.getTarget());
     double desiredAngle = hoodAngle.in(edu.wpi.first.units.Units.Radians);
 
-    // Command turret with Motion Magic (convert desired turret radians -> motor rotations)
+    // Command turret with Motion Magic (convert desired turret radians -> motor
+    // rotations)
     moveTurretToRadians(desiredAngle);
 
     // Hood (convert to degrees)
@@ -145,14 +145,17 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /**
    * Move turret to an absolute angle (radians) using Motion Magic.
-   * @param radians desired turret angle (radians, field-relative as computed by calculator)
+   * 
+   * @param radians desired turret angle (radians, field-relative as computed by
+   *                calculator)
    */
   public void moveTurretToRadians(double radians) {
 
-    //double turretRotations = shortestRad / (2.0 * Math.PI); //has wrapping
+    // double turretRotations = shortestRad / (2.0 * Math.PI); //has wrapping
 
     // switch back to the earlier version when switching back over to talons
-    // CTRE has a Continuous Mechanism Wrap closed-loop config, so we do not need to find the shortest path
+    // CTRE has a Continuous Mechanism Wrap closed-loop config, so we do not need to
+    // find the shortest path
     // This prevents commanding the long rotation across the 0/2pi boundary.
     double currentRad = getTurretRotation().getRadians();
     double rawDiff = radians - currentRad;
@@ -161,7 +164,6 @@ public class ShooterSubsystem extends SubsystemBase {
     double shortestRad = currentRad + delta;
     // Convert desired turret radians (shortest equivalent) to motor rotations
     double turretRotations = shortestRad / (2.0 * Math.PI);
-
 
     double motorRotations = turretRotations * ShooterConstants.kTurretGearRatio;
     turnMotor.setControl(turretRequest.withPosition(motorRotations));
@@ -195,6 +197,12 @@ public class ShooterSubsystem extends SubsystemBase {
     turnMotor.setControl(neutralOut);
   }
 
+  /**
+   * Keeps the
+   * controller's internal position value bounded to a single rotation which
+   * is convenient when the system only cares about the turret angle moduled
+   * to [0, 2pi) rather than the absolute number of revolutions.
+   */
   public void resetTurretEncoder() {
     double rot = turnMotor.getPosition().getValue().in(Rotations);
     turnMotor.setPosition(rot % 1.0);
@@ -270,7 +278,7 @@ public class ShooterSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
 
     // Update PID tunables
-  // (turret now uses Motion Magic; PID tunables removed)
+    // (turret now uses Motion Magic; PID tunables removed)
 
     aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
   }
