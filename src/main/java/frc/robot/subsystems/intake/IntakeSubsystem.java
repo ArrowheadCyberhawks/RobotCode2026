@@ -14,6 +14,7 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -40,7 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private SparkFlexConfig pivotConfig;
     private SparkFlexConfig rollerConfig;
 
-    // RoboRIO-side control
+    // Controllers
     private final ProfiledPIDController pivotController;
     private final SimpleMotorFeedforward pivotFeedforward;
     
@@ -109,7 +110,7 @@ public class IntakeSubsystem extends SubsystemBase {
             .forwardSoftLimitEnabled(true)
             .reverseSoftLimitEnabled(true);
 
-        // Apply configuration (no closed-loop config needed - we're using RoboRIO-side control)
+        // Apply configuration
         pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
@@ -248,7 +249,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     private void updatePivotControl() {
         // Get current position
-        double currentPosition = getPivotAngle_Relative().in(Radians);
+        double currentPosition = getPivotAngle_Absolute().in(Radians);
         
         // Calculate PID output
         double pidOutput = pivotController.calculate(currentPosition);
@@ -287,7 +288,7 @@ public class IntakeSubsystem extends SubsystemBase {
             // This is a crude approach; for better control, tune kV
             double maxRPM = 5000.0; // Adjust based on your motor's free speed
             double voltage = (rollerTargetRPM / maxRPM) * 12.0;
-            voltage = Math.max(-12.0, Math.min(12.0, voltage));
+            voltage = MathUtil.clamp(voltage, -12.0, 12.0);
             rollerMotor.setVoltage(voltage);
         } else {
             rollerMotor.stopMotor();
@@ -309,18 +310,20 @@ public class IntakeSubsystem extends SubsystemBase {
             pivotController.setI(IntakeConstants.kIPivot.get());
             pivotController.setD(IntakeConstants.kDPivot.get());
             pivotController.setConstraints(
-                new TrapezoidProfile.Constraints(
-                    IntakeConstants.kPivotMaxVelocityRps.get(),
-                    IntakeConstants.kPivotMaxAccelRps2.get()
-                )
+            new TrapezoidProfile.Constraints(
+                IntakeConstants.kPivotMaxVelocityRps.get(),
+                IntakeConstants.kPivotMaxAccelRps2.get()
+            )
             );
             pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
             
+            long timestamp = System.currentTimeMillis();
             SmartDashboard.putString("Intake/Pivot/Status", 
-                String.format("Updated: P=%.3f I=%.3f D=%.3f G=%.3f MaxV=%.2f MaxA=%.2f", 
-                    IntakeConstants.kPPivot.get(), IntakeConstants.kIPivot.get(), 
-                    IntakeConstants.kDPivot.get(), IntakeConstants.kGPivot.get(),
-                    IntakeConstants.kPivotMaxVelocityRps.get(), IntakeConstants.kPivotMaxAccelRps2.get()));
+            String.format("Updated [%d]: P=%.3f I=%.3f D=%.3f G=%.3f MaxV=%.2f MaxA=%.2f", 
+                timestamp,
+                IntakeConstants.kPPivot.get(), IntakeConstants.kIPivot.get(), 
+                IntakeConstants.kDPivot.get(), IntakeConstants.kGPivot.get(),
+                IntakeConstants.kPivotMaxVelocityRps.get(), IntakeConstants.kPivotMaxAccelRps2.get()));
         }
     }
 }
