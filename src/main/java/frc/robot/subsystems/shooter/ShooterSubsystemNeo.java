@@ -113,7 +113,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     hoodConfig.softLimit
       .forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
       .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
-    hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   private void configureTurret() {
@@ -126,7 +126,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
       .i(turretKI.get())
       .d(turretKD.get())
       .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
-    turnMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    turnMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
 
@@ -136,7 +136,6 @@ public class ShooterSubsystemNeo extends SubsystemBase {
   }
 
   public void setTurretVoltage(Voltage volts) {
-    // Spark supports percent output; approximate by 
     turnMotor.setVoltage(volts);
   }
 
