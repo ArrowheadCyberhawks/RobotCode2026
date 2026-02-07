@@ -1,8 +1,6 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.PersistMode;
@@ -20,7 +18,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.units.measure.Angle;
 import java.util.function.Supplier;
@@ -201,18 +198,20 @@ public class ShooterSubsystemNeo extends SubsystemBase {
         robot, fieldSpeeds, currentTarget, ShooterConstants.Calculator.kLookaheadIterations);
 
     Angle hoodAngle = ShotCalculator.calculateHoodAngle(robot, calculatedShot.getTarget());
-
+    
     setTurretTarget(hoodAngle);
     setHoodTarget(calculatedShot.getHoodAngle());
 
-    AngularVelocity flyAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
-        ShooterConstants.Calculator.kFlywheelRadius);
-    double flyRps = flyAng.in(RadiansPerSecond) / (2.0 * Math.PI);
+    // Remove these for now
+    //
+    // AngularVelocity flyAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
+    //     ShooterConstants.Calculator.kFlywheelRadius);
+    // double flyRps = flyAng.in(RadiansPerSecond) / (2.0 * Math.PI);
 
 
-    AngularVelocity shootAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
-        ShooterConstants.Calculator.kShootRadius);
-    double shootRps = shootAng.in(RadiansPerSecond) / (2.0 * Math.PI);
+    // AngularVelocity shootAng = ShotCalculator.linearToAngularVelocity(calculatedShot.getExitVelocity(),
+    //     ShooterConstants.Calculator.kShootRadius);
+    // double shootRps = shootAng.in(RadiansPerSecond) / (2.0 * Math.PI);
 
   }
 
@@ -227,8 +226,6 @@ public class ShooterSubsystemNeo extends SubsystemBase {
 
     // Call aimAndShoot if suppliers are present
     aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
-    // setTurretTarget(Rotation2d.kZero.getMeasure());
-    // setHoodTarget(Rotation2d.kCW_90deg.getMeasure());
   }
 
   /**
