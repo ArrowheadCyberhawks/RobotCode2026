@@ -1,20 +1,22 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
 
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkClosedLoopController;
 
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.Angle;
@@ -23,21 +25,26 @@ import frc.robot.subsystems.intake.IntakeConstants.IntakePosition;
 
 /**
  * Intake subsystem using REV Spark Flex motor controllers.
- * Supports both simple PID position control and Smart Motion for the pivot.
+ * Uses RoboRIO-side ProfiledPIDController for smooth motion profiling.
  */
 public class IntakeSubsystem extends SubsystemBase {
 
     private final SparkFlex pivotMotor;
     private final SparkFlex rollerMotor;
 
-    private final SparkClosedLoopController pivotController;
-    private final SparkClosedLoopController rollerController;
-
     private final RelativeEncoder pivotEncoder;
     private final RelativeEncoder rollerEncoder;
 
+    private final CANcoder pivotAbsoluteEncoder; // Optional: for absolute position feedback
+
     private SparkFlexConfig pivotConfig;
     private SparkFlexConfig rollerConfig;
+
+    // RoboRIO-side control
+    private final ProfiledPIDController pivotController;
+    private final SimpleMotorFeedforward pivotFeedforward;
+    
+    private double rollerTargetRPM = 0.0;
 
     public IntakeSubsystem() {
         // Create motors
@@ -52,18 +59,36 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotConfig = new SparkFlexConfig();
         rollerConfig = new SparkFlexConfig();
 
-        // Get closed loop controllers
-        pivotController = pivotMotor.getClosedLoopController();
-        rollerController = rollerMotor.getClosedLoopController();
+        // Create absolute encoder
+        pivotAbsoluteEncoder = new CANcoder(IntakeConstants.kPivotAbsoluteEncoderId);
+
+        // Create ProfiledPIDController with trapezoidal motion profile
+        pivotController = new ProfiledPIDController(
+            IntakeConstants.kPPivot.get(),
+            IntakeConstants.kIPivot.get(),
+            IntakeConstants.kDPivot.get(),
+            new TrapezoidProfile.Constraints(
+                IntakeConstants.kPivotMaxVelocityRps.get(),
+                IntakeConstants.kPivotMaxAccelRps2.get()
+            )
+        );
+        pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
+
+        // Create feedforward for gravity and velocity compensation
+        pivotFeedforward = new SimpleMotorFeedforward(
+            0.0,  // kS - static friction (usually not needed for position control)
+            IntakeConstants.kVPivot.get(),
+            IntakeConstants.kAPivot.get()
+        );
 
         // Configure motors
         configurePivot();
         configureRoller();
 
         // Zero pivot at known position (stowed = 0 degrees)
-        resetPivotEncoderToDegrees(0.0);
+        syncEncoders();
 
-        SmartDashboard.putBoolean("Intake/UseSmartMotion", IntakeConstants.kUseSmartMotion);
+        SmartDashboard.putBoolean("Intake/UseProfiledPID", true);
     }
 
     private void configurePivot() {
@@ -84,22 +109,7 @@ public class IntakeSubsystem extends SubsystemBase {
             .forwardSoftLimitEnabled(true)
             .reverseSoftLimitEnabled(true);
 
-        // PID configuration
-        pivotConfig.closedLoop
-            .p(IntakeConstants.kPPivot.get(), ClosedLoopSlot.kSlot0)
-            .i(IntakeConstants.kIPivot.get(), ClosedLoopSlot.kSlot0)
-            .d(IntakeConstants.kDPivot.get(), ClosedLoopSlot.kSlot0)
-            .outputRange(-1.0, 1.0, ClosedLoopSlot.kSlot0)
-            .allowedClosedLoopError(IntakeConstants.kPivotToleranceRadians.get(), ClosedLoopSlot.kSlot0);
-
-        // Smart Motion configuration
-        pivotConfig.closedLoop
-            .maxMotion
-                .maxVelocity(IntakeConstants.kPivotMaxVelocityRps.get(), ClosedLoopSlot.kSlot0)
-                .maxAcceleration(IntakeConstants.kPivotMaxAccelRps2.get(), ClosedLoopSlot.kSlot0)
-                .allowedClosedLoopError(IntakeConstants.kPivotToleranceRadians.get(), ClosedLoopSlot.kSlot0);
-
-        // Apply configuration
+        // Apply configuration (no closed-loop config needed - we're using RoboRIO-side control)
         pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
@@ -113,15 +123,7 @@ public class IntakeSubsystem extends SubsystemBase {
             .idleMode(IdleMode.kCoast)
             .inverted(false);
 
-        // Velocity PID
-        rollerConfig.closedLoop
-            .p(IntakeConstants.kPRoller.get(), ClosedLoopSlot.kSlot0)
-            .i(IntakeConstants.kIRoller.get(), ClosedLoopSlot.kSlot0)
-            .d(IntakeConstants.kDRoller.get(), ClosedLoopSlot.kSlot0)
-            .velocityFF(IntakeConstants.kVRoller.get(), ClosedLoopSlot.kSlot0)
-            .outputRange(-1.0, 1.0, ClosedLoopSlot.kSlot0);
-
-        // Apply configuration
+        // Apply configuration (roller uses simple voltage control)
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
@@ -135,53 +137,55 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Set the pivot to a specific angle using either Smart Motion or simple PID.
+     * Set the pivot to a specific angle using ProfiledPIDController.
      */
     public void setPivotTarget(Angle targetAngle) {
         double targetRadians = targetAngle.in(Radians);
-        
-        if (IntakeConstants.kUseSmartMotion) {
-            pivotController.setReference(targetRadians, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
-        } else {
-            pivotController.setReference(targetRadians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-        }
+        pivotController.setGoal(targetRadians);
     }
 
     /**
-     * Stop the pivot motor.
+     * Stop the pivot motor and reset the controller.
      */
     public void stopPivot() {
         pivotMotor.stopMotor();
+        pivotController.reset(getPivotAngle_Relative().in(Radians));
     }
 
     /**
-     * Get the current pivot angle.
+     * Get the current pivot angle from the motor's relative encoder.
      */
-    public Rotation2d getPivotRotation() {
-        return Rotation2d.fromRadians(pivotEncoder.getPosition());
+    public Angle getPivotAngle_Relative() {
+        return Radians.of(pivotEncoder.getPosition());
     }
 
     /**
-     * Get the current pivot angle in degrees.
+     * Get the current pivot angle from the absolute encoder.
      */
-    public double getPivotDegrees() {
-        return getPivotRotation().getDegrees();
+    public Angle getPivotAngle_Absolute() {
+        return Rotations.of(pivotAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
     }
 
     /**
      * Reset the pivot encoder to a specific angle in degrees.
      */
-    public void resetPivotEncoderToDegrees(double degrees) {
-        double radians = Math.toRadians(degrees);
+    public void resetPivotEncoderToAngle(Angle angle) {
+        double radians = angle.in(Radians);
         pivotEncoder.setPosition(radians);
+        pivotController.reset(radians);
+    }
+
+    public void syncEncoders() {
+        double absoluteRadians = getPivotAngle_Absolute().in(Radians);
+        pivotEncoder.setPosition(absoluteRadians);
+        pivotController.reset(absoluteRadians);
     }
 
     /**
      * Check if the pivot is at the target position (within tolerance).
      */
     public boolean isPivotAtTarget() {
-        // This would require storing the target position - simplified for now
-        return true; // TODO: implement proper target tracking
+        return pivotController.atGoal();
     }
 
     // === Roller Control Methods ===
@@ -190,27 +194,28 @@ public class IntakeSubsystem extends SubsystemBase {
      * Run the roller at intake speed (into robot).
      */
     public void runIntake() {
-        rollerController.setReference(IntakeConstants.kIntakeRpm.get(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+        rollerTargetRPM = IntakeConstants.kIntakeRpm.get();
     }
 
     /**
      * Run the roller at outtake speed (out of robot).
      */
     public void runOuttake() {
-        rollerController.setReference(IntakeConstants.kOuttakeRpm.get(), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+        rollerTargetRPM = IntakeConstants.kOuttakeRpm.get();
     }
 
     /**
      * Stop the roller motor.
      */
     public void stopRoller() {
+        rollerTargetRPM = 0.0;
         rollerMotor.stopMotor();
     }
 
     /**
      * Get the current roller velocity in RPM.
      */
-    public AngularVelocity getRollerVelocityRpm() {
+    public AngularVelocity getRollerVelocity() {
         return RPM.of(rollerEncoder.getVelocity());
     }
 
@@ -218,14 +223,75 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Run the ProfiledPIDController and apply output to motor
+        updatePivotControl();
+        
+        // Update roller control
+        updateRollerControl();
+        
         // Update PID constants if they've changed
         updatePivotPID();
-        updateRollerPID();
 
         // Telemetry
-        SmartDashboard.putNumber("Intake/Pivot Degrees", getPivotDegrees());
-        SmartDashboard.putNumber("Intake/Pivot Radians", pivotEncoder.getPosition());
-        SmartDashboard.putNumber("Intake/Roller RPM", getRollerVelocityRpm().in(RPM));
+        SmartDashboard.putNumber("Intake/Pivot Relative Degrees", getPivotAngle_Relative().in(Degrees));
+        SmartDashboard.putNumber("Intake/Pivot Absolute Degrees", getPivotAngle_Absolute().in(Degrees));
+        SmartDashboard.putNumber("Intake/Pivot Target Degrees", Math.toDegrees(pivotController.getGoal().position));
+        SmartDashboard.putNumber("Intake/Pivot Setpoint Degrees", Math.toDegrees(pivotController.getSetpoint().position));
+        SmartDashboard.putNumber("Intake/Pivot Error Degrees", Math.toDegrees(pivotController.getPositionError()));
+        SmartDashboard.putBoolean("Intake/Pivot At Goal", pivotController.atGoal());
+        SmartDashboard.putNumber("Intake/Roller RPM", getRollerVelocity().in(RPM));
+        SmartDashboard.putNumber("Intake/Roller Target RPM", rollerTargetRPM);
+    }
+
+    /**
+     * Runs the ProfiledPIDController and applies the output to the pivot motor.
+     */
+    private void updatePivotControl() {
+        // Get current position
+        double currentPosition = getPivotAngle_Relative().in(Radians);
+        
+        // Calculate PID output
+        double pidOutput = pivotController.calculate(currentPosition);
+        
+        // Calculate feedforward (gravity compensation based on position)
+        // The feedforward should include a gravity term that varies with angle
+        double setpointVelocity = pivotController.getSetpoint().velocity;
+        double feedforward = pivotFeedforward.calculate(setpointVelocity);
+        
+        // Add gravity compensation (kG * cos(angle))
+        double gravityCompensation = IntakeConstants.kGPivot.get() * Math.cos(currentPosition);
+        
+        // Combine PID and feedforward
+        double totalOutput = pidOutput + feedforward + gravityCompensation;
+        
+        // Clamp output to [-12, 12] volts
+        totalOutput = Math.max(-12.0, Math.min(12.0, totalOutput));
+        
+        // Apply to motor
+        pivotMotor.setVoltage(totalOutput);
+        
+        SmartDashboard.putNumber("Intake/Pivot/PID Output", pidOutput);
+        SmartDashboard.putNumber("Intake/Pivot/FF Output", feedforward);
+        SmartDashboard.putNumber("Intake/Pivot/Gravity Output", gravityCompensation);
+        SmartDashboard.putNumber("Intake/Pivot/Total Output", totalOutput);
+    }
+
+    /**
+     * Updates the roller motor control with simple voltage-based speed control.
+     */
+    private void updateRollerControl() {
+        // Simple proportional control for roller
+        // For better control, you could add a PID controller here too
+        if (Math.abs(rollerTargetRPM) > 10.0) {
+            // Very simple: target RPM / max RPM * 12V
+            // This is a crude approach; for better control, tune kV
+            double maxRPM = 5000.0; // Adjust based on your motor's free speed
+            double voltage = (rollerTargetRPM / maxRPM) * 12.0;
+            voltage = Math.max(-12.0, Math.min(12.0, voltage));
+            rollerMotor.setVoltage(voltage);
+        } else {
+            rollerMotor.stopMotor();
+        }
     }
 
     /**
@@ -238,48 +304,23 @@ public class IntakeSubsystem extends SubsystemBase {
             IntakeConstants.kPivotToleranceRadians.hasChanged(id) ||
             IntakeConstants.kPivotMaxVelocityRps.hasChanged(id) || IntakeConstants.kPivotMaxAccelRps2.hasChanged(id)) {
             
-            pivotConfig.closedLoop
-                .p(IntakeConstants.kPPivot.get(), ClosedLoopSlot.kSlot0)
-                .i(IntakeConstants.kIPivot.get(), ClosedLoopSlot.kSlot0)
-                .d(IntakeConstants.kDPivot.get(), ClosedLoopSlot.kSlot0)
-                .allowedClosedLoopError(IntakeConstants.kPivotToleranceRadians.get(), ClosedLoopSlot.kSlot0);
-            
-            if (IntakeConstants.kUseSmartMotion) {
-                pivotConfig.closedLoop
-                    .maxMotion
-                        .maxVelocity(IntakeConstants.kPivotMaxVelocityRps.get(), ClosedLoopSlot.kSlot0)
-                        .maxAcceleration(IntakeConstants.kPivotMaxAccelRps2.get(), ClosedLoopSlot.kSlot0);
-            }
-            
-            pivotMotor.configure(pivotConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+            // Update ProfiledPIDController parameters
+            pivotController.setP(IntakeConstants.kPPivot.get());
+            pivotController.setI(IntakeConstants.kIPivot.get());
+            pivotController.setD(IntakeConstants.kDPivot.get());
+            pivotController.setConstraints(
+                new TrapezoidProfile.Constraints(
+                    IntakeConstants.kPivotMaxVelocityRps.get(),
+                    IntakeConstants.kPivotMaxAccelRps2.get()
+                )
+            );
+            pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
             
             SmartDashboard.putString("Intake/Pivot/Status", 
-                String.format("Updated: P=%.3f I=%.3f D=%.3f G=%.3f", 
+                String.format("Updated: P=%.3f I=%.3f D=%.3f G=%.3f MaxV=%.2f MaxA=%.2f", 
                     IntakeConstants.kPPivot.get(), IntakeConstants.kIPivot.get(), 
-                    IntakeConstants.kDPivot.get(), IntakeConstants.kGPivot.get()));
-        }
-    }
-
-    /**
-     * Updates the roller PID constants from NetworkTables if they've changed.
-     */
-    private void updateRollerPID() {
-        int id = this.hashCode();
-        if (IntakeConstants.kPRoller.hasChanged(id) || IntakeConstants.kIRoller.hasChanged(id) || 
-            IntakeConstants.kDRoller.hasChanged(id) || IntakeConstants.kVRoller.hasChanged(id)) {
-            
-            rollerConfig.closedLoop
-                .p(IntakeConstants.kPRoller.get(), ClosedLoopSlot.kSlot0)
-                .i(IntakeConstants.kIRoller.get(), ClosedLoopSlot.kSlot0)
-                .d(IntakeConstants.kDRoller.get(), ClosedLoopSlot.kSlot0)
-                .velocityFF(IntakeConstants.kVRoller.get(), ClosedLoopSlot.kSlot0);
-            
-            rollerMotor.configure(rollerConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-            
-            SmartDashboard.putString("Intake/Roller/Status", 
-                String.format("Updated: P=%.4f I=%.4f D=%.4f V=%.5f", 
-                    IntakeConstants.kPRoller.get(), IntakeConstants.kIRoller.get(), 
-                    IntakeConstants.kDRoller.get(), IntakeConstants.kVRoller.get()));
+                    IntakeConstants.kDPivot.get(), IntakeConstants.kGPivot.get(),
+                    IntakeConstants.kPivotMaxVelocityRps.get(), IntakeConstants.kPivotMaxAccelRps2.get()));
         }
     }
 }

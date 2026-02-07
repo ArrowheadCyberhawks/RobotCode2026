@@ -13,7 +13,7 @@ public final class IntakeConstants {
 
     // Gear ratio: motor rotations per pivot rotation
     // Example: 100:1 reduction → 100 motor revs = 1 pivot rev
-    public static final double kPivotGearRatio = 1/100.0;
+    public static final double kPivotGearRatio = 1/100.0; //TODO: Update with actual gear ratio
 
     // Smart Motion constraints (rotations/sec)
     public static final LoggedTunableNumber kPivotMaxVelocityRps = 
@@ -59,8 +59,7 @@ public final class IntakeConstants {
     public static final LoggedTunableNumber kOuttakeRpm = 
         new LoggedTunableNumber("Intake/Roller/OuttakeRpm", -2400.0);
 
-    // Control mode selection
-    public static final boolean kUseSmartMotion = true;  // true = Smart Motion, false = simple PID
+    public static final int kPivotAbsoluteEncoderId = 56; // CAN ID for the absolute encoder (e.g., CANCoder)
 
     public enum IntakePosition {
         STOWED(Degrees.of(0.0)),
