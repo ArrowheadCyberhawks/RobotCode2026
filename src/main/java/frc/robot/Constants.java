@@ -70,5 +70,7 @@ public final class Constants {
   public static boolean tuningMode = true;
   // When true, avoid using hardware-dependent WPILib/robot APIs (useful for unit tests)
   public static boolean disableHAL = false;
+  public static final double loopPeriodSecs = 0.02;
+
 
 }
