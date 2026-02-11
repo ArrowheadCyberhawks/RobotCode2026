@@ -33,6 +33,7 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Hopper.HopperSubsystem;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 //import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystemNeo; //TEMP TURRET
@@ -54,6 +55,8 @@ public class RobotContainer {
 	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
 	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed.in(MetersPerSecond));
+
+	private final HopperSubsystem hopperSubsystem = new HopperSubsystem();
 
 	// check if bluetooth controller is connected, if so use it
 	private final CommandXboxController driverControllerBT = new CommandXboxController(
@@ -167,6 +170,9 @@ public class RobotContainer {
 		);
 
 		drivetrain.registerTelemetry(logger::telemeterize);
+
+		//run hopper motors at half speed while right trigger is held
+		driverController.rightTrigger().whileTrue(hopperSubsystem.runHopperMotors(0.5));
 	}
 
 	public Command getAutonomousCommand() {
