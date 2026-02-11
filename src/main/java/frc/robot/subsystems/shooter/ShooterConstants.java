@@ -18,11 +18,11 @@ public final class ShooterConstants {
     private ShooterConstants() {}
 
     // CAN IDs
-    public static final int kFlywheelMotorId = 20;
+    public static final int kFlywheelMotor1Id = 20;
     public static final int kHoodMotorId = 13;
     // Turret motors (merged into shooter)
     public static final int kTurnMotorId = 14;
-    public static final int kShootMotorId = 22;
+    public static final int kFlywheelMotor2Id = 22;
 
     // Flywheel (velocity control)
     public static final double kFlywheelGearRatio = 1.0;
@@ -30,7 +30,7 @@ public final class ShooterConstants {
     public static final double kIFlywheel = 0.0;
     public static final double kDFlywheel = 0.001;
     public static final double kVFlywheel = 0.12;
-    public static final double kFlywheelRpsShoot = 80.0;
+    public static final double kFlywheelShootRPM = 80.0;
     // Turret gear ratio (turn motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/12.8;
     // Turret PID (units: volts per radian)
@@ -57,7 +57,7 @@ public final class ShooterConstants {
     public static final double kHoodMaxDegrees = 70.0;
 
     // Default targets (used for SmartDashboard defaults)
-    public static final double kShootFlywheelTarget = kFlywheelRpsShoot;
+    public static final double kShootFlywheelTarget = kFlywheelShootRPM;
     public static final double kShootHoodTarget = 35.0;
 
     public enum HoodPosition {

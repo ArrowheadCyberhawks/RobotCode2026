@@ -1,15 +1,20 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RPM;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkBaseConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkClosedLoopController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import java.util.function.Supplier;
 
 import frc.robot.subsystems.shooter.ShooterConstants.Calculator.ShotData;
@@ -48,16 +54,27 @@ public class ShooterSubsystemNeo extends SubsystemBase {
   private final LoggedTunableNumber hoodKG = new LoggedTunableNumber("Shooter/Hood/kG", ShooterConstants.kGHood);
   private final LoggedTunableNumber hoodTolerance = new LoggedTunableNumber("Shooter/Hood/Tolerance", ShooterConstants.kHoodAllowedError);
 
-  private final SparkMax hoodMotor;
-  private final SparkMax turnMotor;
+  // Tunable PID constants for Flywheel
+  private final LoggedTunableNumber flywheelKP = new LoggedTunableNumber("Shooter/Flywheel/kP", ShooterConstants.kPFlywheel);
+  private final LoggedTunableNumber flywheelKI = new LoggedTunableNumber("Shooter/Flywheel/kI", ShooterConstants.kIFlywheel);
+  private final LoggedTunableNumber flywheelKD = new LoggedTunableNumber("Shooter/Flywheel/kD", ShooterConstants.kDFlywheel);
+  private final LoggedTunableNumber flywheelKV = new LoggedTunableNumber("Shooter/Flywheel/kV", ShooterConstants.kVFlywheel);
+  private final LoggedTunableNumber flywheelTargetRPM = new LoggedTunableNumber("Shooter/Flywheel/TargetRPM", ShooterConstants.kFlywheelShootRPM);
 
-  private final SparkClosedLoopController hoodController, turretController;
+  private final SparkBase hoodMotor;
+  private final SparkBase turretMotor;
+  private final SparkBase flywheelMotor1;
+  private final SparkBase flywheelMotor2;
+
+  private final SparkClosedLoopController hoodController, turretController, flywheelController;
 
   private final RelativeEncoder hoodEncoder;
   private final RelativeEncoder turretEncoder;
+  private final RelativeEncoder flywheelEncoder;
 
-  private SparkMaxConfig hoodConfig;
-  private SparkMaxConfig turretConfig;
+  private SparkBaseConfig hoodConfig;
+  private SparkBaseConfig turretConfig;
+  private SparkBaseConfig flywheelConfig;
 
   private Supplier<Pose2d> targetPoseSupplier;
   private Supplier<ChassisSpeeds> chassisSpeedsSupplier;
@@ -65,35 +82,33 @@ public class ShooterSubsystemNeo extends SubsystemBase {
   public ShooterSubsystemNeo(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     // create motors
     hoodMotor = new SparkMax(ShooterConstants.kHoodMotorId, MotorType.kBrushless);
-    turnMotor = new SparkMax(ShooterConstants.kTurnMotorId, MotorType.kBrushless);
+    turretMotor = new SparkFlex(ShooterConstants.kTurnMotorId, MotorType.kBrushless);
+    flywheelMotor1 = new SparkFlex(ShooterConstants.kFlywheelMotor1Id, MotorType.kBrushless);
+    flywheelMotor2 = new SparkFlex(ShooterConstants.kFlywheelMotor2Id, MotorType.kBrushless);
 
     // encoders
     hoodEncoder = hoodMotor.getEncoder();
-    turretEncoder = turnMotor.getEncoder();
+    turretEncoder = turretMotor.getEncoder();
+    flywheelEncoder = flywheelMotor1.getEncoder();
 
     hoodConfig = new SparkMaxConfig();
-    turretConfig = new SparkMaxConfig();
-
-    
-
+    turretConfig = new SparkFlexConfig();
+    flywheelConfig = new SparkFlexConfig();
 
     // PID controllers
-
     hoodController = hoodMotor.getClosedLoopController();
-    turretController = turnMotor.getClosedLoopController();
+    turretController = turretMotor.getClosedLoopController();
+    flywheelController = flywheelMotor1.getClosedLoopController();
 
     configureHood();
     configureTurret();
+    configureFlywheel();
 
     // Zero hood at known position
     resetHoodEncoderToDegrees(0.0);
 
     this.targetPoseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
-
-    SmartDashboard.putNumber("Shooter/Flywheel Target", ShooterConstants.kShootFlywheelTarget);
-    SmartDashboard.putNumber("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
-    SmartDashboard.putNumber("Shooter/Turret/MaxVolts", ShooterConstants.kMaxTurretVolts);
   }
 
   //configuring stuff doesn't work but i'm too lazy to actually fix it for the neo test
@@ -126,21 +141,51 @@ public class ShooterSubsystemNeo extends SubsystemBase {
       .i(turretKI.get())
       .d(turretKD.get())
       .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
-    turnMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    turretMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  }
+
+  private void configureFlywheel() {
+    // Configure main flywheel motor with velocity PID
+    flywheelConfig.encoder
+      .velocityConversionFactor(ShooterConstants.kFlywheelGearRatio); // Encoder natively returns RPM
+    flywheelConfig.idleMode(IdleMode.kCoast)
+      .inverted(false);
+    
+    // Configure PID for velocity control
+    flywheelConfig.closedLoop
+        .p(flywheelKP.get(), ClosedLoopSlot.kSlot0)
+        .i(flywheelKI.get(), ClosedLoopSlot.kSlot0)
+        .d(flywheelKD.get(), ClosedLoopSlot.kSlot0);
+    
+    // Configure feedforward for velocity control (kV in Volts per RPM)
+    flywheelConfig.closedLoop
+        .feedForward
+            .kV(flywheelKV.get(), ClosedLoopSlot.kSlot0);
+    
+    flywheelMotor1.configure(flywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    
+    // Configure follower motor (inverted)
+    SparkFlexConfig followerConfig = new SparkFlexConfig();
+    followerConfig.follow(flywheelMotor1, true); // true = inverted
+    followerConfig.idleMode(IdleMode.kCoast);
+    flywheelMotor2.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
 
-  // Turret
+  /**
+   * Set target azimuth for the turret. The controller will rotate the turret to the specified angle.
+   * @param targetTurretAngle
+   */
   public void setTurretTarget(Angle targetTurretAngle) {
     turretController.setSetpoint(targetTurretAngle.in(Radians), ControlType.kPosition);
   }
 
   public void setTurretVoltage(Voltage volts) {
-    turnMotor.setVoltage(volts);
+    turretMotor.setVoltage(volts);
   }
 
   public void stopTurret() {
-    turnMotor.stopMotor();
+    turretMotor.stopMotor();
   }
 
   public void resetTurretEncoder() {
@@ -182,6 +227,48 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     return (degrees / 360.0) * ShooterConstants.kHoodGearRatio;
   }
 
+  // Flywheel
+  /**
+   * Set the flywheel target velocity.
+   * @param targetVelocity Target angular velocity
+   */
+  public void setFlywheelVelocity(AngularVelocity targetVelocity) {
+    flywheelController.setSetpoint(targetVelocity.in(RPM), ControlType.kVelocity);
+  }
+
+  /**
+   * Set the flywheel to the default shooting velocity.
+   */
+  public void setFlywheelToShootSpeed() {
+    setFlywheelVelocity(RPM.of(flywheelTargetRPM.get()));
+  }
+
+  /**
+   * Stop the flywheel motors.
+   */
+  public void stopFlywheel() {
+    flywheelMotor1.stopMotor();
+  }
+
+  /**
+   * Get the current flywheel velocity.
+   * @return Current flywheel angular velocity
+   */
+  public AngularVelocity getFlywheelVelocity() {
+    return RPM.of(flywheelEncoder.getVelocity());
+  }
+
+  /**
+   * Check if the flywheel is at the target velocity (within tolerance).
+   * @param targetVelocity Target velocity to check against
+   * @param tolerance Tolerance in angular velocity
+   * @return True if within tolerance
+   */
+  public boolean flywheelAtSpeed(AngularVelocity targetVelocity, AngularVelocity tolerance) {
+    return Math.abs(getFlywheelVelocity().in(RPM) - targetVelocity.in(RPM)) 
+           < tolerance.in(RPM);
+  }
+
   /**
    * Aim and apply a shot using ShooterCalculator. Mirrors ShooterSubsystem behavior.
    */
@@ -219,9 +306,12 @@ public class ShooterSubsystemNeo extends SubsystemBase {
     // Update PID constants if they've changed in NetworkTables
     updateTurretPID();
     updateHoodPID();
+    updateFlywheelPID();
 
-    SmartDashboard.putNumber("Shooter/Turret Degrees", getTurretRotation().getDegrees());
-    SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodRotation().getDegrees());
+    SmartDashboard.putNumber("Shooter/Turret Actual Degrees", getTurretRotation().getDegrees());
+    SmartDashboard.putNumber("Shooter/Hood Actual Degrees", getHoodRotation().getDegrees());
+    SmartDashboard.putNumber("Shooter/Flywheel Actual RPM", getFlywheelVelocity().in(RPM));
+    SmartDashboard.putNumber("Shooter/Flywheel Target RPM", flywheelTargetRPM.get());
 
     // Call aimAndShoot if suppliers are present
     aimAndShoot(targetPoseSupplier, chassisSpeedsSupplier);
@@ -243,7 +333,7 @@ public class ShooterSubsystemNeo extends SubsystemBase {
           .d(turretKD.get())
           .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
       
-      turnMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+      turretMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
       
       SmartDashboard.putString("Shooter/Turret/Status", 
           String.format("Updated: P=%.3f I=%.3f D=%.3f", turretKP.get(), turretKI.get(), turretKD.get()));
@@ -270,6 +360,33 @@ public class ShooterSubsystemNeo extends SubsystemBase {
       
       SmartDashboard.putString("Shooter/Hood/Status", 
           String.format("Updated: P=%.3f I=%.3f D=%.3f G=%.3f", hoodKP.get(), hoodKI.get(), hoodKD.get(), hoodKG.get()));
+    }
+  }
+
+  /**
+   * Updates the flywheel PID constants from NetworkTables if they've changed.
+   * This allows live tuning via AdvantageScope or SmartDashboard.
+   */
+  private void updateFlywheelPID() {
+    // Check if any values changed (using hashCode as ID)
+    int id = this.hashCode();
+    if (flywheelKP.hasChanged(id) || flywheelKI.hasChanged(id) || 
+        flywheelKD.hasChanged(id) || flywheelKV.hasChanged(id)) {
+      
+      flywheelConfig.closedLoop
+          .p(flywheelKP.get(), ClosedLoopSlot.kSlot0)
+          .i(flywheelKI.get(), ClosedLoopSlot.kSlot0)
+          .d(flywheelKD.get(), ClosedLoopSlot.kSlot0);
+      
+      flywheelConfig.closedLoop
+          .feedForward
+              .kV(flywheelKV.get(), ClosedLoopSlot.kSlot0);
+      
+      flywheelMotor1.configure(flywheelConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+      
+      SmartDashboard.putString("Shooter/Flywheel/Status", 
+          String.format("Updated: P=%.3f I=%.3f D=%.3f kV=%.4f", 
+              flywheelKP.get(), flywheelKI.get(), flywheelKD.get(), flywheelKV.get()));
     }
   }
 }

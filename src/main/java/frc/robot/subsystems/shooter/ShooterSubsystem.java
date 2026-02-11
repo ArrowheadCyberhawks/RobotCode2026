@@ -31,11 +31,11 @@ import static edu.wpi.first.units.Units.Rotations;
 
 public class ShooterSubsystem extends SubsystemBase {
 
-  private final TalonFX flywheel = new TalonFX(ShooterConstants.kFlywheelMotorId);
+  private final TalonFX flywheel = new TalonFX(ShooterConstants.kFlywheelMotor1Id);
   private final TalonFX hood = new TalonFX(ShooterConstants.kHoodMotorId);
   // Turret motors (merged)
   private final TalonFX turnMotor = new TalonFX(ShooterConstants.kTurnMotorId);
-  private final TalonFX shootMotor = new TalonFX(ShooterConstants.kShootMotorId);
+  private final TalonFX shootMotor = new TalonFX(ShooterConstants.kFlywheelMotor2Id);
 
   // Optional target supplier (pose of the target in field coordinates)
   private Supplier<Pose2d> targetPoseSupplier;
