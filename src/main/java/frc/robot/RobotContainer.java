@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -32,10 +33,16 @@ import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-//import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystemNeo; //TEMP TURRET
+import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
+import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
+import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
+import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
+import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
+import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem.IntakeState;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -75,10 +82,13 @@ public class RobotContainer {
 	);
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
 
-	// public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(() ->
-	// drivetrain.getPose(), () -> drivetrain.getKinematics().toChassisSpeeds());
-	public final ShooterSubsystemNeo shooterSubsystem = new ShooterSubsystemNeo(drivetrain::getPose,
-			() -> drivetrain.getState().Speeds);
+	// Shooter-related subsystems
+	public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
+	public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
+	//public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
+
+	// Intake subsystem
+	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -93,7 +103,7 @@ public class RobotContainer {
 			drivetrain.resetPose(pose);
 			questNav.resetPose(pose);
 		});
-		
+
 		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Tests"));
 
 
@@ -105,6 +115,8 @@ public class RobotContainer {
 
 		// Explicitly start the logger
 		SignalLogger.start();
+
+
 
 	}
 
@@ -147,6 +159,20 @@ public class RobotContainer {
 			)
 		);
 
+		hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
+		//turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
+		//flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
+
+		// Intake: toggle between RUN and IDLE on right stick press
+		driverController.rightStick().onTrue(Commands.runOnce(() -> {
+			if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
+				intakeSubsystem.setIntakeState(IntakeState.IDLE);
+			} else {
+				intakeSubsystem.setIntakeState(IntakeState.RUN);
+			}
+		}, intakeSubsystem));
+
+
 		// Idle while the robot is disabled. This ensures the configured
 		// neutral mode is applied to the drive motors while disabled.
 		final var idle = new SwerveRequest.Idle();
@@ -164,6 +190,8 @@ public class RobotContainer {
 				drivetrain,
 				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
 				driveFacingAngleRequest));
+
+		driverController.rightTrigger().onTrue(flywheelSubsystem.trackTarget());
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -183,8 +211,7 @@ public class RobotContainer {
 			.whileTrue(limelightSubsystem
 				.startRun(() -> LimelightSubsystem.SetIMUMode(1), () -> limelightSubsystem.updateVisionPoseMT1(true))
 				.finallyDo(() -> LimelightSubsystem.SetIMUMode(3))
-		);
-
+			);
 		driverController.back()
 			.whileTrue(questNav
 				.run(() -> questNav.resetPose(drivetrain.getPose()))

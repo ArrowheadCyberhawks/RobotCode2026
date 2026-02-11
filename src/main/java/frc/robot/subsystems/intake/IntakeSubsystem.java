@@ -46,6 +46,8 @@ public class IntakeSubsystem extends SubsystemBase {
     private final SimpleMotorFeedforward pivotFeedforward;
     
     private double rollerTargetRPM = 0.0;
+    /** Current high-level intake state (controls pivot + roller behavior) */
+    private IntakeState intakeState = IntakeState.IDLE;
 
     public IntakeSubsystem() {
         // Create motors
@@ -90,6 +92,23 @@ public class IntakeSubsystem extends SubsystemBase {
         syncEncoders();
 
         SmartDashboard.putBoolean("Intake/UseProfiledPID", true);
+    }
+
+    /** High-level intake states that control pivot and roller behavior */
+    public enum IntakeState {
+        STOW, // pivot up and rollers stopped
+        IDLE, // pivot down (ready) but rollers not running
+        RUN   // pivot down and rollers running to intake
+    }
+
+    /** Request the intake to move into a high-level state. */
+    public void setIntakeState(IntakeState state) {
+        this.intakeState = state;
+    }
+
+    /** Read the current intake state. */
+    public IntakeState getIntakeState() {
+        return this.intakeState;
     }
 
     private void configurePivot() {
@@ -224,6 +243,29 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        switch (intakeState) {
+            case STOW:
+                // Pivot up and rollers stopped
+                moveToPosition(IntakePosition.STOWED);
+                stopRoller();
+                break;
+            case IDLE:
+                // Pivot down (ready) but rollers not running
+                moveToPosition(IntakePosition.INTAKE);
+                stopRoller();
+                break;
+            case RUN:
+                // Pivot down and rollers running
+                moveToPosition(IntakePosition.INTAKE);
+                runIntake();
+                break;
+            default:
+                stopRoller();
+                break;
+        }
+
+        SmartDashboard.putString("Intake/State", intakeState.name());
+
         // Run the ProfiledPIDController and apply output to motor
         updatePivotControl();
         
