@@ -51,12 +51,15 @@ public class HoodSubsystemNeo extends SubsystemBase {
     cfg.encoder.positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
     cfg.idleMode(IdleMode.kBrake).inverted(true);
     cfg.closedLoop.positionWrappingEnabled(true).positionWrappingInputRange(-Math.PI, Math.PI)
-        .p(ShooterConstants.kPHood).i(ShooterConstants.kIHood).d(ShooterConstants.kDHood)
+        .p(ShooterConstants.kPHood)
+        .i(ShooterConstants.kIHood)
+        .d(ShooterConstants.kDHood)
   .allowedClosedLoopError(ShooterConstants.kHoodAllowedError, ClosedLoopSlot.kSlot0);
     cfg.softLimit.forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
         .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
 
-    hoodMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    // Use kNoPersistParameters to avoid slow flash writes that cause 6-second delays
+    hoodMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
   public void setTrackingEnabled(boolean enabled) {
@@ -70,9 +73,11 @@ public class HoodSubsystemNeo extends SubsystemBase {
   public void moveHoodToDegrees(double degrees) {
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
-    double motorRotations = degreesToMotorRotations(clipped);
-    // SparkMax position controller expects rotations (motor rotations)
-    pid.setReference(motorRotations, ControlType.kPosition);
+    // Convert degrees to radians since encoder is configured with radian conversion factor
+    double radians = Math.toRadians(clipped);
+    // SparkMax position controller expects the same units as the encoder conversion factor (radians)
+    pid.setReference(radians, ControlType.kPosition);
+    SmartDashboard.putNumber("Shooter/Hood Target", degrees);
   }
 
   public void stopHood() {
@@ -80,15 +85,15 @@ public class HoodSubsystemNeo extends SubsystemBase {
   }
 
   public double getHoodDegrees() {
-    double motorRot = encoder.getPosition();
-    return motorRotationsToDegrees(motorRot);
+    // Encoder returns radians due to conversion factor, convert to degrees
+    double radians = encoder.getPosition();
+    return Math.toDegrees(radians);
   }
 
   public void resetHoodEncoderToDegrees(double degrees) {
-    // SparkMax encoder doesn't allow direct setting of position via API in all
-    // cases; instead we can set the position in the RelativeEncoder object.
-    double motorRot = degreesToMotorRotations(degrees);
-    encoder.setPosition(motorRot);
+    // Convert degrees to radians for encoder position
+    double radians = Math.toRadians(degrees);
+    encoder.setPosition(radians);
   }
 
   private double degreesToMotorRotations(double degrees) {

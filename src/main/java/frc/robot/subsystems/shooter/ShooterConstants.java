@@ -14,6 +14,7 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
+import frc.robot.util.LoggedTunableNumber;
 
 /**
  * Shooter constants and enums.
@@ -22,18 +23,20 @@ public final class ShooterConstants {
     private ShooterConstants() {}
 
     // CAN IDs
-    public static final int kFlywheelMotorId = 20;
-    public static final int kHoodMotorId = 13;
+    public static final int kFlywheelMotorId = 12;
+    public static final int kHoodMotorId = 10;
     // Turret motors (merged into shooter)
     public static final int kTurnMotorId = 14;
     public static final int kShootMotorId = 22;
 
     // Flywheel (velocity control)
     public static final double kFlywheelGearRatio = 1.0;
-    public static final double kPFlywheel = 0.12;
-    public static final double kIFlywheel = 0.0;
-    public static final double kDFlywheel = 0.001;
-    public static final double kVFlywheel = 0.12;
+    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.0002);
+    public static final LoggedTunableNumber kIFlywheel = new LoggedTunableNumber("Flywheel/kI", 0.0);
+    public static final LoggedTunableNumber kDFlywheel = new LoggedTunableNumber("Flywheel/kD", 0.0);
+    public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 0.002);
+    public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.3);
+
     public static final double kFlywheelRpsShoot = 80.0;
     // Turret gear ratio (turn motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/12.8;
@@ -49,7 +52,7 @@ public final class ShooterConstants {
     public static final double kHoodGearRatio = 1/8.16;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
-    public static final double kPHood = 0.5;
+    public static final double kPHood = 1.0;
     public static final double kIHood = 0.0;
     public static final double kDHood = 0.0;
     public static final double kVHood = 0.0;

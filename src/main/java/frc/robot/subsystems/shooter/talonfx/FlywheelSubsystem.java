@@ -70,10 +70,10 @@ public class FlywheelSubsystem extends SubsystemBase {
   private void configureFlywheel() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    cfg.Slot0.kP = ShooterConstants.kPFlywheel;
-    cfg.Slot0.kI = ShooterConstants.kIFlywheel;
-    cfg.Slot0.kD = ShooterConstants.kDFlywheel;
-    cfg.Slot0.kV = ShooterConstants.kVFlywheel;
+    cfg.Slot0.kP = ShooterConstants.kPFlywheel.get();
+    cfg.Slot0.kI = ShooterConstants.kIFlywheel.get();
+    cfg.Slot0.kD = ShooterConstants.kDFlywheel.get();
+    cfg.Slot0.kV = ShooterConstants.kVFlywheel.get();
     // Apply to leader and follower
     try {
       flywheel.getConfigurator().apply(cfg);

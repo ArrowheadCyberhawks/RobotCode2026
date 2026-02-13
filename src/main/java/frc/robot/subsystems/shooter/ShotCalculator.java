@@ -91,33 +91,33 @@ public class ShotCalculator {
     private static double maxDistance;
     private static double phaseDelay;
     private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = new InterpolatingTreeMap<>(
-        InverseInterpolator.forDouble(), Rotation2d::interpolate);
+            InverseInterpolator.forDouble(), Rotation2d::interpolate);
     private static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap();
     private static final InterpolatingDoubleTreeMap tofMap = new InterpolatingDoubleTreeMap();
 
     static {
-    // Reasonable operating bounds for the shooter (meters) and a small
-    // phase delay used to offset calculations for shooter processing time.
-    minDistance = 1.34;
-    maxDistance = 5.60;
-    phaseDelay = 0.03;
+        // Reasonable operating bounds for the shooter (meters) and a small
+        // phase delay used to offset calculations for shooter processing time.
+        minDistance = 1.34;
+        maxDistance = 5.60;
+        phaseDelay = 0.03;
 
-    // Populate the hood angle calibration map (distance -> angle). These
-    // values should be tuned on the field; interpolation fills in values
-    // between the points defined here.
-    hoodAngleMap.put(1.34, Rotation2d.fromDegrees(19.0));
-        hoodAngleMap.put(1.78, Rotation2d.fromDegrees(19.0));
-        hoodAngleMap.put(2.17, Rotation2d.fromDegrees(24.0));
-        hoodAngleMap.put(2.81, Rotation2d.fromDegrees(27.0));
-        hoodAngleMap.put(3.82, Rotation2d.fromDegrees(29.0));
-        hoodAngleMap.put(4.09, Rotation2d.fromDegrees(30.0));
-        hoodAngleMap.put(4.40, Rotation2d.fromDegrees(31.0));
-        hoodAngleMap.put(4.77, Rotation2d.fromDegrees(32.0));
+        // Populate the hood angle calibration map (distance -> angle). These
+        // values should be tuned on the field; interpolation fills in values
+        // between the points defined here.
+        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(0.0));
+        hoodAngleMap.put(1.78, Rotation2d.fromDegrees(4.0));
+        hoodAngleMap.put(2.17, Rotation2d.fromDegrees(8.0));
+        hoodAngleMap.put(2.81, Rotation2d.fromDegrees(12.0));
+        hoodAngleMap.put(3.82, Rotation2d.fromDegrees(16.0));
+        hoodAngleMap.put(4.09, Rotation2d.fromDegrees(20.0));
+        hoodAngleMap.put(4.40, Rotation2d.fromDegrees(24.0));
+        hoodAngleMap.put(4.77, Rotation2d.fromDegrees(28.0));
         hoodAngleMap.put(5.57, Rotation2d.fromDegrees(32.0));
-        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(35.0));
+        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(36.0));
 
-    // Populate the flywheel speed calibration map (distance -> RPM).
-    flywheelSpeedMap.put(1.34, 210.0);
+        // Populate the flywheel speed calibration map (distance -> RPM).
+        flywheelSpeedMap.put(1.34, 210.0);
         flywheelSpeedMap.put(1.78, 220.0);
         flywheelSpeedMap.put(2.17, 220.0);
         flywheelSpeedMap.put(2.81, 230.0);
@@ -128,9 +128,9 @@ public class ShotCalculator {
         flywheelSpeedMap.put(5.57, 275.0);
         flywheelSpeedMap.put(5.60, 290.0);
 
-    // Populate a small time-of-flight lookup table (distance -> seconds)
-    // used in the lookahead loop to compensate for turret/robot motion.
-    tofMap.put(5.68, 1.16);
+        // Populate a small time-of-flight lookup table (distance -> seconds)
+        // used in the lookahead loop to compensate for turret/robot motion.
+        tofMap.put(5.68, 1.16);
         tofMap.put(4.55, 1.12);
         tofMap.put(3.15, 1.11);
         tofMap.put(1.88, 1.09);
@@ -138,10 +138,9 @@ public class ShotCalculator {
     }
 
     public ShotData getData() {
-        if (latestData != null) {
-            return latestData;
-        }
-
+        // Always recalculate for real-time tracking
+        // (This is cheap - just lookups and basic math)
+        
         // Calculate estimated pose while accounting for time between calculation and
         // the shot
         Pose2d estimatedPose = poseSupplier.get();
@@ -153,27 +152,27 @@ public class ShotCalculator {
                         robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
 
         // Calculate distance from turret to target
-            // Apply currently-configured target (default is the hub) with alliance flip
-            Translation2d target = AllianceFlipUtil.apply(this.target);
-    // Use the configured robot->turret transform from ShooterConstants (drop Z)
-    var robotToTurretTrans = ShooterConstants.kRobotToTurretTransform.getTranslation();
-    Pose2d turretPosition = estimatedPose.transformBy(
-        new Transform2d(
-            new Translation2d(robotToTurretTrans.getX(), robotToTurretTrans.getY()),
-            new Rotation2d()));
+        // Apply currently-configured target (default is the hub) with alliance flip
+        Translation2d target = AllianceFlipUtil.apply(this.target);
+        // Use the configured robot->turret transform from ShooterConstants (drop Z)
+        var robotToTurretTrans = ShooterConstants.kRobotToTurretTransform.getTranslation();
+        Pose2d turretPosition = estimatedPose.transformBy(
+                new Transform2d(
+                        new Translation2d(robotToTurretTrans.getX(), robotToTurretTrans.getY()),
+                        new Rotation2d()));
         double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
 
         // Calculate field relative turret velocity
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
-    double turretVelocityX = robotVelocity.vxMetersPerSecond
-        + robotVelocity.omegaRadiansPerSecond
-            * (robotToTurretTrans.getY() * Math.cos(robotAngle)
-                - robotToTurretTrans.getX() * Math.sin(robotAngle));
-    double turretVelocityY = robotVelocity.vyMetersPerSecond
-        + robotVelocity.omegaRadiansPerSecond
-            * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-                - robotToTurretTrans.getY() * Math.sin(robotAngle));
+        double turretVelocityX = robotVelocity.vxMetersPerSecond
+                + robotVelocity.omegaRadiansPerSecond
+                        * (robotToTurretTrans.getY() * Math.cos(robotAngle)
+                                - robotToTurretTrans.getX() * Math.sin(robotAngle));
+        double turretVelocityY = robotVelocity.vyMetersPerSecond
+                + robotVelocity.omegaRadiansPerSecond
+                        * (robotToTurretTrans.getX() * Math.cos(robotAngle)
+                                - robotToTurretTrans.getY() * Math.sin(robotAngle));
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
@@ -197,8 +196,8 @@ public class ShotCalculator {
         turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
 
         hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance).getRadians();
-    // Smooth hood angle as well
-    hoodAngle = hoodAngleFilter.calculate(hoodAngle);
+        // Smooth hood angle as well
+        hoodAngle = hoodAngleFilter.calculate(hoodAngle);
 
         if (lastTurretAngle == null)
             lastTurretAngle = turretAngle;
@@ -235,8 +234,10 @@ public class ShotCalculator {
     }
 
     /**
-     * Change the base (un-flipped) target used for shot calculations. Pass a Translation2d
-     * in field coordinates; alliance flipping is applied automatically in getData().
+     * Change the base (un-flipped) target used for shot calculations. Pass a
+     * Translation2d
+     * in field coordinates; alliance flipping is applied automatically in
+     * getData().
      */
     public void setTarget(Translation2d newBaseTarget) {
         this.target = newBaseTarget == null ? FieldConstants.Hub.topCenterPoint.toTranslation2d() : newBaseTarget;

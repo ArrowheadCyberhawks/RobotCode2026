@@ -33,6 +33,7 @@ import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
@@ -88,7 +89,7 @@ public class RobotContainer {
 	//public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
 
 	// Intake subsystem
-	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+	//public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -97,6 +98,12 @@ public class RobotContainer {
 	public RobotContainer() {
 		constructField();
 		configureBindings();
+
+		// Configure ShotCalculator with robot pose supplier
+		// This is critical - without this, the calculator thinks the robot is always at (0,0)
+		// and the hood/turret won't adjust based on distance!
+		ShotCalculator.getInstance().setPoseSupplier(() -> drivetrain.getPose());
+		// TODO: Add velocity suppliers for moving shot compensation if needed
 
 		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
 		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
@@ -161,16 +168,16 @@ public class RobotContainer {
 
 		hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
 		//turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
-		//flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
+		flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
 
 		// Intake: toggle between RUN and IDLE on right stick press
-		driverController.rightStick().onTrue(Commands.runOnce(() -> {
-			if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
-				intakeSubsystem.setIntakeState(IntakeState.IDLE);
-			} else {
-				intakeSubsystem.setIntakeState(IntakeState.RUN);
-			}
-		}, intakeSubsystem));
+		// driverController.rightStick().onTrue(Commands.runOnce(() -> {
+		// 	if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
+		// 		intakeSubsystem.setIntakeState(IntakeState.IDLE);
+		// 	} else {
+		// 		intakeSubsystem.setIntakeState(IntakeState.RUN);
+		// 	}
+		// }, intakeSubsystem));
 
 
 		// Idle while the robot is disabled. This ensures the configured

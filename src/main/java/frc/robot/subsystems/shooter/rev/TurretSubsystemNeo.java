@@ -109,6 +109,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
         .d(ShooterConstants.kDTurret)
         .allowedClosedLoopError(ShooterConstants.kTurretAllowedError, ClosedLoopSlot.kSlot0);
 
-    turnMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    // Use kNoPersistParameters to avoid slow flash writes that cause 6-second delays
+    turnMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 }
