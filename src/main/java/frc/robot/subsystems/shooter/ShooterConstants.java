@@ -39,13 +39,15 @@ public final class ShooterConstants {
 
     public static final double kFlywheelRpsShoot = 80.0;
     // Turret gear ratio (turret motor rotations per turret rotation)
-    public static final double kTurretGearRatio = 1/12.8;
+    public static final double kTurretGearRatio = 0.02;
     
     // Turret PID (units: volts per radian)
-    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 0.0);
+    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 0.3);
     public static final LoggedTunableNumber kITurret = new LoggedTunableNumber("Turret/kI", 0.0);
     public static final LoggedTunableNumber kDTurret = new LoggedTunableNumber("Turret/kD", 0.0);
     public static final LoggedTunableNumber kSTurret = new LoggedTunableNumber("Turret/kS", 0.0);
+    public static final LoggedTunableNumber kVTurret = new LoggedTunableNumber("Turret/kV", 0.0);
+    public static final LoggedTunableNumber kATurret = new LoggedTunableNumber("Turret/kA", 0.0);
     public static final double kTurretAllowedError = 0.02;
     // Maximum voltage to apply to turret motor
     public static final double kMaxTurretVolts = 6.0; 

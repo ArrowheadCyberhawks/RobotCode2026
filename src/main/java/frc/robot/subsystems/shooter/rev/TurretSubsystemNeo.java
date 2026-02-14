@@ -9,6 +9,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -52,7 +53,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
         new TrapezoidProfile.Constraints(maxVelocityRadPerSec, maxAccelRadPerSec2)
     );
     turretController.setTolerance(ShooterConstants.kTurretAllowedError);
-    turretController.enableContinuousInput(-Math.PI, Math.PI); // Wrap around for continuous rotation
+    turretController.enableContinuousInput(0, 2.0 * Math.PI); // Wrap around for continuous rotation [0, 2π]
 
     configureTurret();
     resetTurretEncoder();
@@ -79,8 +80,11 @@ public class TurretSubsystemNeo extends SubsystemBase {
   public void resetTurretEncoder() {
     // Get current position in radians
     double currentRadians = encoder.getPosition();
-    // Wrap to [-π, π] range
-    double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+    // Wrap to [0, 2π] range
+    double wrappedRadians = currentRadians % (2.0 * Math.PI);
+    if (wrappedRadians < 0) {
+      wrappedRadians += 2.0 * Math.PI;
+    }
     encoder.setPosition(wrappedRadians);
     turretController.reset(wrappedRadians);
   }
@@ -103,8 +107,11 @@ public class TurretSubsystemNeo extends SubsystemBase {
     
     // Periodically wrap encoder to prevent unbounded growth
     // Only wrap if we're far outside the normal range
-    if (Math.abs(currentRadians) > 10 * Math.PI) {
-      double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+    if (currentRadians < 0 || currentRadians > 2.0 * Math.PI) {
+      double wrappedRadians = currentRadians % (2.0 * Math.PI);
+      if (wrappedRadians < 0) {
+        wrappedRadians += 2.0 * Math.PI;
+      }
       encoder.setPosition(wrappedRadians);
       currentRadians = wrappedRadians;
     }
