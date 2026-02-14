@@ -58,7 +58,7 @@ public class Robot extends LoggedRobot {
 		LimelightSubsystem.setThrottle(0);
 		LimelightSubsystem.SetIMUMode(3);
 		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
-		m_robotContainer.turretSubsystem.manualResetTurretEncoder(); // TODO: write this the proper way
+		m_robotContainer.turretSubsystem.manualResetTurretEncoder(Math.PI); // TODO: write this the proper way
 	}
 
 	@Override

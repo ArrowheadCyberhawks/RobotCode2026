@@ -107,24 +107,24 @@ public class RobotContainer {
 		// and the hood/turret won't adjust based on distance!
 		ShotCalculator.getInstance().setPoseSupplier(() -> drivetrain.getPose());
 		// Field-relative velocities (used for turret velocity calculation)
-		// ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
+		ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
 
-		// // Robot-relative velocities (used for pose prediction during shot flight)
-		// ShotCalculator.getInstance().setFieldVelocitySupplier(() -> {
-		// 	var fieldSpeeds = drivetrain.getState().Speeds;
-		// 	var rotation = drivetrain.getPose().getRotation();
+		// Robot-relative velocities (used for pose prediction during shot flight)
+		ShotCalculator.getInstance().setFieldVelocitySupplier(() -> {
+			ChassisSpeeds robotSpeeds = drivetrain.getState().Speeds;
+			Rotation2d robotRotation = drivetrain.getPose().getRotation();
 			
-		// 	// Convert from field-relative to robot-relative
-		// 	// Rotate the velocity vector by the negative of the robot's rotation
-		// 	double cosAngle = rotation.getCos();
-		// 	double sinAngle = rotation.getSin();
+			// Convert robot-relative to field-relative by rotating velocity vector
+			double cosAngle = robotRotation.getCos();
+			double sinAngle = robotRotation.getSin();
 			
-		// 	return new ChassisSpeeds(
-		// 		fieldSpeeds.vxMetersPerSecond * cosAngle + fieldSpeeds.vyMetersPerSecond * sinAngle,
-		// 		-fieldSpeeds.vxMetersPerSecond * sinAngle + fieldSpeeds.vyMetersPerSecond * cosAngle,
-		// 		fieldSpeeds.omegaRadiansPerSecond
-		// 	);
-		// });
+			return new ChassisSpeeds(
+				robotSpeeds.vxMetersPerSecond * cosAngle - robotSpeeds.vyMetersPerSecond * sinAngle,
+				robotSpeeds.vxMetersPerSecond * sinAngle + robotSpeeds.vyMetersPerSecond * cosAngle,
+				robotSpeeds.omegaRadiansPerSecond
+			);
+		});
+
 
 		// TODO: Add velocity suppliers for moving shot compensation if needed
 
@@ -214,7 +214,6 @@ public class RobotContainer {
 			.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
 
 		driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
-		driverController.rightBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::alignToTag));
 		driverController.a().whileTrue(
 			new DriveToPose(
 				drivetrain,
@@ -235,8 +234,6 @@ public class RobotContainer {
 		)));
 
 		driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-
-		driverController.rightBumper().onTrue(turretSubsystem.runOnce(() -> turretSubsystem.manualResetTurretEncoder()));
 
 		driverController.start()
 			.whileTrue(limelightSubsystem

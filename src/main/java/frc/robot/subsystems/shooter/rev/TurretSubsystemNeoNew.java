@@ -90,8 +90,8 @@ public class TurretSubsystemNeoNew extends SubsystemBase {
     encoder.setPosition(wrappedRadians);
   }
 
-  public void manualResetTurretEncoder() {
-    encoder.setPosition(0);
+  public void manualResetTurretEncoder(double rotations) {
+    encoder.setPosition(rotations);
   }
 
   @Override

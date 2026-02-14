@@ -89,7 +89,7 @@ public class ShotCalculator {
         // phase delay used to offset calculations for shooter processing time.
         minDistance = 1.34;
         maxDistance = 5.60;
-        phaseDelay = 0.03;
+        phaseDelay = 0.09; //started at .03, increased to 0.09 for better accuracy, will change based on PID
 
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
@@ -121,6 +121,7 @@ public class ShotCalculator {
                         robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
                         robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
 
+
         // Calculate distance from turret to target
         // Apply currently-configured target (default is the hub) with alliance flip
         Translation2d target = AllianceFlipUtil.apply(this.target);
@@ -136,13 +137,14 @@ public class ShotCalculator {
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
         double turretVelocityX = robotVelocity.vxMetersPerSecond
-                + robotVelocity.omegaRadiansPerSecond
+                //+ robotVelocity.omegaRadiansPerSecond
                         * (robotToTurretTrans.getY() * Math.cos(robotAngle)
                                 - robotToTurretTrans.getX() * Math.sin(robotAngle));
         double turretVelocityY = robotVelocity.vyMetersPerSecond
-                + robotVelocity.omegaRadiansPerSecond
+                //+ robotVelocity.omegaRadiansPerSecond
                         * (robotToTurretTrans.getX() * Math.cos(robotAngle)
                                 - robotToTurretTrans.getY() * Math.sin(robotAngle));
+
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
@@ -197,7 +199,8 @@ public class ShotCalculator {
         lastTurretAngle = turretAngle;
         lastHoodAngle = hoodAngle;
         latestData = new ShotData(
-                lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
+                lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance
+					&& Math.abs(filteredTurretAngleRad) > 1/4 * Math.PI, //TODO: clamp to 270 degree max range (1/4 pi on each side)
                 turretAngle,
                 turretVelocity,
                 hoodAngle,
