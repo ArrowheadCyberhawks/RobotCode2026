@@ -47,8 +47,8 @@ public class LimelightSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 	updateRobotOrientation();
-	updateVisionPoseMT2(); // megatag2 is broken so just disable it
-	//updateVisionPoseMT1(false);
+	//updateVisionPoseMT2(); // megatag2 is broken so just disable it
+	updateVisionPoseMT1(false);
 	updateField(true);
 	if(DriverStation.isDisabled()) {
 		updateVisionPoseMT1(true);

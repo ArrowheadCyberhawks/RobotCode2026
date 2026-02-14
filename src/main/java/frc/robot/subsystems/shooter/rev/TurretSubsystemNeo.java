@@ -1,27 +1,33 @@
 package frc.robot.subsystems.shooter.rev;
 
+import static edu.wpi.first.units.Units.Radians;
+
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.measure.Angle;
 
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShotCalculator;
+import frc.robot.util.LoggedTunableNumber;
 
 /**
  * Turret implementation using REV CANSparkMax (NEO). 
- * Uses WPILib ProfiledPIDController (RobotRIO-side) for smooth motion profiling.
+ * Uses REV onboard PID controller for position control.
  */
 public class TurretSubsystemNeo extends SubsystemBase {
   private final SparkMax turnMotor;
@@ -53,7 +59,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
         new TrapezoidProfile.Constraints(maxVelocityRadPerSec, maxAccelRadPerSec2)
     );
     turretController.setTolerance(ShooterConstants.kTurretAllowedError);
-    turretController.enableContinuousInput(0, 2.0 * Math.PI); // Wrap around for continuous rotation [0, 2π]
+    turretController.enableContinuousInput(-Math.PI, Math.PI); // Wrap around for continuous rotation [-π, π]
 
     configureTurret();
     resetTurretEncoder();
@@ -80,11 +86,8 @@ public class TurretSubsystemNeo extends SubsystemBase {
   public void resetTurretEncoder() {
     // Get current position in radians
     double currentRadians = encoder.getPosition();
-    // Wrap to [0, 2π] range
-    double wrappedRadians = currentRadians % (2.0 * Math.PI);
-    if (wrappedRadians < 0) {
-      wrappedRadians += 2.0 * Math.PI;
-    }
+    // Wrap to [-π, π] range to match ShotCalculator
+    double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
     encoder.setPosition(wrappedRadians);
     turretController.reset(wrappedRadians);
   }
@@ -105,13 +108,10 @@ public class TurretSubsystemNeo extends SubsystemBase {
     // Get current turret position in radians
     double currentRadians = getTurretRotation().getRadians();
     
-    // Periodically wrap encoder to prevent unbounded growth
-    // Only wrap if we're far outside the normal range
-    if (currentRadians < 0 || currentRadians > 2.0 * Math.PI) {
-      double wrappedRadians = currentRadians % (2.0 * Math.PI);
-      if (wrappedRadians < 0) {
-        wrappedRadians += 2.0 * Math.PI;
-      }
+    // Periodically wrap encoder to [-π, π] to match ShotCalculator and continuous input
+    // Only wrap if far outside the normal range
+    if (Math.abs(currentRadians) > Math.PI) {
+      double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
       encoder.setPosition(wrappedRadians);
       currentRadians = wrappedRadians;
     }
@@ -149,6 +149,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
     SmartDashboard.putNumber("Turret/PID Output", pidOutput);
     SmartDashboard.putNumber("Turret/Voltage Output", voltage);
     SmartDashboard.putBoolean("Turret/At Goal", turretController.atGoal());
+    SmartDashboard.putNumber("Turret/kS Feedforward", feedforward);
   }
 
   public void setTrackingEnabled(boolean enabled) {
@@ -185,4 +186,5 @@ public class TurretSubsystemNeo extends SubsystemBase {
     // Use kNoPersistParameters to avoid slow flash writes that cause 6-second delays
     turnMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
+
 }

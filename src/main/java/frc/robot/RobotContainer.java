@@ -20,6 +20,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -38,6 +39,7 @@ import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
+import frc.robot.subsystems.shooter.rev.TurretSubsystemNeoNew;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
@@ -87,7 +89,7 @@ public class RobotContainer {
 	// Shooter-related subsystems
 	//public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
 	//public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
-	public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
+	public final TurretSubsystemNeoNew turretSubsystem = new TurretSubsystemNeoNew();
 
 	// Intake subsystem
 	//public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
@@ -104,6 +106,26 @@ public class RobotContainer {
 		// This is critical - without this, the calculator thinks the robot is always at (0,0)
 		// and the hood/turret won't adjust based on distance!
 		ShotCalculator.getInstance().setPoseSupplier(() -> drivetrain.getPose());
+		// Field-relative velocities (used for turret velocity calculation)
+		// ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
+
+		// // Robot-relative velocities (used for pose prediction during shot flight)
+		// ShotCalculator.getInstance().setFieldVelocitySupplier(() -> {
+		// 	var fieldSpeeds = drivetrain.getState().Speeds;
+		// 	var rotation = drivetrain.getPose().getRotation();
+			
+		// 	// Convert from field-relative to robot-relative
+		// 	// Rotate the velocity vector by the negative of the robot's rotation
+		// 	double cosAngle = rotation.getCos();
+		// 	double sinAngle = rotation.getSin();
+			
+		// 	return new ChassisSpeeds(
+		// 		fieldSpeeds.vxMetersPerSecond * cosAngle + fieldSpeeds.vyMetersPerSecond * sinAngle,
+		// 		-fieldSpeeds.vxMetersPerSecond * sinAngle + fieldSpeeds.vyMetersPerSecond * cosAngle,
+		// 		fieldSpeeds.omegaRadiansPerSecond
+		// 	);
+		// });
+
 		// TODO: Add velocity suppliers for moving shot compensation if needed
 
 		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
@@ -213,6 +235,8 @@ public class RobotContainer {
 		)));
 
 		driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+		driverController.rightBumper().onTrue(turretSubsystem.runOnce(() -> turretSubsystem.manualResetTurretEncoder()));
 
 		driverController.start()
 			.whileTrue(limelightSubsystem
