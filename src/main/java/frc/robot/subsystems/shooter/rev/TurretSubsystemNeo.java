@@ -2,15 +2,15 @@ package frc.robot.subsystems.shooter.rev;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
-import com.revrobotics.spark.ClosedLoopSlot;
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,15 +19,18 @@ import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShotCalculator;
 
 /**
- * Turret implementation using REV CANSparkMax (NEO). Uses position control
- * on the SparkMax PID controller. Mirrors the TalonFX-based Turret API.
+ * Turret implementation using REV CANSparkMax (NEO). 
+ * Uses WPILib ProfiledPIDController (RobotRIO-side) for smooth motion profiling.
  */
 public class TurretSubsystemNeo extends SubsystemBase {
   private final SparkMax turnMotor;
   private final RelativeEncoder encoder;
-  private final SparkClosedLoopController pid;
+  
+  // WPILib ProfiledPIDController for RobotRIO-side control
+  private final ProfiledPIDController turretController;
 
   private boolean trackingEnabled = true;
+  private double desiredAngleDegrees = 0.0;
 
   public TurretSubsystemNeo() {
     this(ShooterConstants.kTurnMotorId);
@@ -36,20 +39,28 @@ public class TurretSubsystemNeo extends SubsystemBase {
   public TurretSubsystemNeo(int motorId) {
     turnMotor = new SparkMax(motorId, MotorType.kBrushless);
     encoder = turnMotor.getEncoder();
-    pid = turnMotor.getClosedLoopController();
+    
+    // Create WPILib ProfiledPIDController with trapezoidal motion profile (RobotRIO-side)
+    // Convert cruise velocity and acceleration from motor rotations/sec to turret radians/sec
+    double maxVelocityRadPerSec = ShooterConstants.kTurretCruiseRps / ShooterConstants.kTurretGearRatio * 2.0 * Math.PI;
+    double maxAccelRadPerSec2 = ShooterConstants.kTurretAccelRps2 / ShooterConstants.kTurretGearRatio * 2.0 * Math.PI;
+    
+    turretController = new ProfiledPIDController(
+        ShooterConstants.kPTurret.get(),
+        ShooterConstants.kITurret.get(),
+        ShooterConstants.kDTurret.get(),
+        new TrapezoidProfile.Constraints(maxVelocityRadPerSec, maxAccelRadPerSec2)
+    );
+    turretController.setTolerance(ShooterConstants.kTurretAllowedError);
+    turretController.enableContinuousInput(-Math.PI, Math.PI); // Wrap around for continuous rotation
 
     configureTurret();
     resetTurretEncoder();
   }
 
   public void moveTurretToRadians(double radians) {
-    double currentRad = getTurretRotation().getRadians();
-    double rawDiff = radians - currentRad;
-    double delta = Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff));
-    double shortestRad = currentRad + delta;
-    double turretRotations = shortestRad / (2.0 * Math.PI);
-    double motorRotations = turretRotations * ShooterConstants.kTurretGearRatio;
-    pid.setReference(motorRotations, ControlType.kPosition);
+    desiredAngleDegrees = Math.toDegrees(radians);
+    turretController.setGoal(radians);
   }
 
   public void moveTurretToDegrees(double degrees) {
@@ -62,17 +73,75 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
   public void stopTurret() {
     turnMotor.stopMotor();
+    turretController.reset(getTurretRotation().getRadians());
   }
 
   public void resetTurretEncoder() {
-    double rot = encoder.getPosition();
-    encoder.setPosition(rot % 1.0);
+    // Get current position in radians
+    double currentRadians = encoder.getPosition();
+    // Wrap to [-π, π] range
+    double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+    encoder.setPosition(wrappedRadians);
+    turretController.reset(wrappedRadians);
   }
 
   @Override
   public void periodic() {
-    // optional tracking occurs in periodic in TalonFX version; here we leave
-    // tracking to explicit commands or the trackTarget() Command below.
+    // Update PID values from LoggedTunableNumbers
+    if (ShooterConstants.kPTurret.hasChanged(hashCode()) || 
+        ShooterConstants.kITurret.hasChanged(hashCode()) || 
+        ShooterConstants.kDTurret.hasChanged(hashCode())) {
+      turretController.setPID(
+          ShooterConstants.kPTurret.get(),
+          ShooterConstants.kITurret.get(),
+          ShooterConstants.kDTurret.get()
+      );
+    }
+    
+    // Get current turret position in radians
+    double currentRadians = getTurretRotation().getRadians();
+    
+    // Periodically wrap encoder to prevent unbounded growth
+    // Only wrap if we're far outside the normal range
+    if (Math.abs(currentRadians) > 10 * Math.PI) {
+      double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+      encoder.setPosition(wrappedRadians);
+      currentRadians = wrappedRadians;
+    }
+    
+    // Get goal from profiled controller
+    double goalRadians = turretController.getGoal().position;
+    
+    // Calculate PID output using ProfiledPIDController
+    double pidOutput = turretController.calculate(currentRadians);
+    
+    // Add static friction feedforward (kS)
+    double kS = ShooterConstants.kSTurret.get();
+    double feedforward = 0.0;
+    if (Math.abs(pidOutput) > 0.01) { // Only apply if there's meaningful output
+      feedforward = Math.copySign(kS, pidOutput);
+    }
+    
+    // Combine PID and feedforward
+    double totalOutput = pidOutput + feedforward;
+    
+    // Clamp output to max voltage
+    double voltage = Math.max(-ShooterConstants.kMaxTurretVolts, 
+                             Math.min(ShooterConstants.kMaxTurretVolts, totalOutput));
+    
+    // Apply voltage to motor
+    turnMotor.setVoltage(voltage);
+    
+    // Log telemetry
+    double currentDegrees = Math.toDegrees(currentRadians);
+    double goalDegrees = Math.toDegrees(goalRadians);
+    SmartDashboard.putNumber("Turret/Current Position (deg)", currentDegrees);
+    SmartDashboard.putNumber("Turret/Goal Position (deg)", goalDegrees);
+    SmartDashboard.putNumber("Turret/Desired Position (deg)", desiredAngleDegrees);
+    SmartDashboard.putNumber("Turret/Error (deg)", goalDegrees - currentDegrees);
+    SmartDashboard.putNumber("Turret/PID Output", pidOutput);
+    SmartDashboard.putNumber("Turret/Voltage Output", voltage);
+    SmartDashboard.putBoolean("Turret/At Goal", turretController.atGoal());
   }
 
   public void setTrackingEnabled(boolean enabled) {
@@ -82,33 +151,30 @@ public class TurretSubsystemNeo extends SubsystemBase {
   public Command trackTarget() {
     return run(() -> {
       var data = ShotCalculator.getInstance().getData();
-      if (data != null && data.isValid()) {
+      SmartDashboard.putBoolean("Turret/ShotData Exists", data != null);
+      if (data != null) {
+        SmartDashboard.putBoolean("Turret/ShotData Valid", data.isValid());
         Rotation2d desired = data.turretAngle();
-        moveTurretToRadians(desired.getRadians());
+        SmartDashboard.putNumber("Turret/ShotCalc Angle (deg)", desired.getDegrees());
+        if (data.isValid()) {
+          moveTurretToRadians(desired.getRadians());
+        }
       }
     });
   }
 
   public Rotation2d getTurretRotation() {
-    try {
-      double rotations = encoder.getPosition();
-      double turretRotations = rotations / ShooterConstants.kTurretGearRatio;
-      return Rotation2d.fromRadians(turretRotations * 2.0 * Math.PI);
-    } catch (Exception e) {
-      return new Rotation2d();
-    }
+      return Rotation2d.fromRadians(encoder.getPosition());
   }
 
   private void configureTurret() {
     SparkMaxConfig cfg = new SparkMaxConfig();
+    // Encoder conversion: motor rotations → radians
     cfg.encoder.positionConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI);
-    cfg.idleMode(IdleMode.kBrake).inverted(true).closedLoop
-        .outputRange(-ShooterConstants.kMaxTurretVolts, ShooterConstants.kMaxTurretVolts)
-        .p(ShooterConstants.kPTurret)
-        .i(ShooterConstants.kITurret)
-        .d(ShooterConstants.kDTurret)
-        .allowedClosedLoopError(ShooterConstants.kTurretAllowedError, ClosedLoopSlot.kSlot0);
+    cfg.encoder.velocityConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI / 60.0);
+    cfg.idleMode(IdleMode.kBrake).inverted(true);
 
+    // No PID on motor controller - using WPILib ProfiledPIDController
     // Use kNoPersistParameters to avoid slow flash writes that cause 6-second delays
     turnMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }

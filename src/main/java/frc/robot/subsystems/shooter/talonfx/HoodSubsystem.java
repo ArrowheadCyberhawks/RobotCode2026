@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter.talonfx;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.NeutralOut;
@@ -46,12 +47,12 @@ public class HoodSubsystem extends SubsystemBase {
   private void configureHood() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    cfg.Slot0.kP = ShooterConstants.kPHood;
-    cfg.Slot0.kI = ShooterConstants.kIHood;
-    cfg.Slot0.kD = ShooterConstants.kDHood;
-    cfg.Slot0.kV = ShooterConstants.kVHood;
-    cfg.Slot0.kA = ShooterConstants.kAHood;
-    cfg.Slot0.kG = ShooterConstants.kGHood;
+    cfg.Slot0.kP = ShooterConstants.kPHood.get();
+    cfg.Slot0.kI = ShooterConstants.kIHood.get();
+    cfg.Slot0.kD = ShooterConstants.kDHood.get();
+    cfg.Slot0.kV = ShooterConstants.kVHood.get();
+    cfg.Slot0.kA = ShooterConstants.kAHood.get();
+    cfg.Slot0.kG = ShooterConstants.kGHood.get();
     cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kHoodCruiseRps;
     cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kHoodAccelRps2;
     hood.getConfigurator().apply(cfg);
@@ -90,6 +91,24 @@ public class HoodSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Update PID values from LoggedTunableNumbers
+    if (ShooterConstants.kPHood.hasChanged(hashCode()) || 
+        ShooterConstants.kIHood.hasChanged(hashCode()) || 
+        ShooterConstants.kDHood.hasChanged(hashCode()) ||
+        ShooterConstants.kVHood.hasChanged(hashCode()) ||
+        ShooterConstants.kAHood.hasChanged(hashCode()) ||
+        ShooterConstants.kGHood.hasChanged(hashCode())) {
+      // Reconfigure PID on the motor controller
+      Slot0Configs slot0 = new Slot0Configs();
+      slot0.kP = ShooterConstants.kPHood.get();
+      slot0.kI = ShooterConstants.kIHood.get();
+      slot0.kD = ShooterConstants.kDHood.get();
+      slot0.kV = ShooterConstants.kVHood.get();
+      slot0.kA = ShooterConstants.kAHood.get();
+      slot0.kG = ShooterConstants.kGHood.get();
+      hood.getConfigurator().apply(slot0);
+    }
+    
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
   }
 

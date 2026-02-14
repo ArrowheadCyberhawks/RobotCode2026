@@ -19,17 +19,6 @@ import frc.robot.util.FieldConstants;
 import frc.robot.util.geometry.AllianceFlipUtil;
 import frc.robot.util.geometry.GeomUtil;
 import org.littletonrobotics.junction.Logger;
-
-/**
- * ShotCalculator
- *
- * Centralized place to compute the desired shooting setpoints (turret angle,
- * hood angle, and flywheel speed) based on the robot pose, robot velocity,
- * and a configured target on the field. This class is written as a
- * lightweight singleton so callers can pull the latest calculated
- * ShotData when needed. The calculations perform a small lookahead to
- * account for robot/turret motion during the projectile's time-of-flight.
- */
 public class ShotCalculator {
     private static ShotCalculator instance;
 
@@ -105,36 +94,17 @@ public class ShotCalculator {
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
-        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(0.0));
-        hoodAngleMap.put(1.78, Rotation2d.fromDegrees(4.0));
-        hoodAngleMap.put(2.17, Rotation2d.fromDegrees(8.0));
-        hoodAngleMap.put(2.81, Rotation2d.fromDegrees(12.0));
-        hoodAngleMap.put(3.82, Rotation2d.fromDegrees(16.0));
-        hoodAngleMap.put(4.09, Rotation2d.fromDegrees(20.0));
-        hoodAngleMap.put(4.40, Rotation2d.fromDegrees(24.0));
-        hoodAngleMap.put(4.77, Rotation2d.fromDegrees(28.0));
-        hoodAngleMap.put(5.57, Rotation2d.fromDegrees(32.0));
-        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(36.0));
+        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(23.1));
+        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(50.0));
 
         // Populate the flywheel speed calibration map (distance -> RPM).
-        flywheelSpeedMap.put(1.34, 210.0);
-        flywheelSpeedMap.put(1.78, 220.0);
-        flywheelSpeedMap.put(2.17, 220.0);
-        flywheelSpeedMap.put(2.81, 230.0);
-        flywheelSpeedMap.put(3.82, 250.0);
-        flywheelSpeedMap.put(4.09, 255.0);
-        flywheelSpeedMap.put(4.40, 260.0);
-        flywheelSpeedMap.put(4.77, 265.0);
-        flywheelSpeedMap.put(5.57, 275.0);
-        flywheelSpeedMap.put(5.60, 290.0);
+        flywheelSpeedMap.put(1.34, 150.0);
+        flywheelSpeedMap.put(5.60, 250.0);
 
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.
-        tofMap.put(5.68, 1.16);
-        tofMap.put(4.55, 1.12);
-        tofMap.put(3.15, 1.11);
-        tofMap.put(1.88, 1.09);
-        tofMap.put(1.38, 0.90);
+        tofMap.put(5.60, 3.00);
+        tofMap.put(1.34, 0.90);
     }
 
     public ShotData getData() {
@@ -190,10 +160,26 @@ public class ShotCalculator {
         }
 
         // Calculate parameters accounted for imparted velocity
-        double rawTurretAngleRad = target.minus(lookaheadPose.getTranslation()).getAngle().getRadians();
+        // Get field-relative angle from turret to target
+        double fieldRelativeAngleRad = target.minus(lookaheadPose.getTranslation()).getAngle().getRadians();
+        // Convert to robot-relative by subtracting robot heading
+        double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
+        // Normalize to [-π, π]
+        double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
+        
         // Filter the turret angle to smooth noisy measurements
         double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
+        
         turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
+
+        // Log calculated values for debugging
+        Logger.recordOutput("ShotCalculator/RobotPose", estimatedPose);
+        Logger.recordOutput("ShotCalculator/TargetPos", target);
+        Logger.recordOutput("ShotCalculator/TurretPos", turretPosition.getTranslation());
+        Logger.recordOutput("ShotCalculator/FieldRelativeAngle", fieldRelativeAngleRad);
+        Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
+        Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
+        Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
 
         hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance).getRadians();
         // Smooth hood angle as well
@@ -256,5 +242,13 @@ public class ShotCalculator {
 
     public void setRobotRelativeVelocitySupplier(Supplier<ChassisSpeeds> supplier) {
         this.robotRelativeVelocitySupplier = supplier == null ? () -> new ChassisSpeeds(0.0, 0.0, 0.0) : supplier;
+    }
+
+    /**
+     * Get the current target position (with alliance flipping applied).
+     * Returns the target as a Translation2d in field coordinates.
+     */
+    public Translation2d getTarget() {
+        return AllianceFlipUtil.apply(this.target);
     }
 }

@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter.talonfx;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -39,7 +40,7 @@ public class TurretSubsystem extends SubsystemBase {
     double delta = Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff));
     double shortestRad = currentRad + delta;
     double turretRotations = shortestRad / (2.0 * Math.PI);
-    double motorRotations = turretRotations * ShooterConstants.kTurretGearRatio;
+    double motorRotations = turretRotations / ShooterConstants.kTurretGearRatio;
     turnMotor.setControl(turretRequest.withPosition(motorRotations));
   }
 
@@ -62,7 +63,19 @@ public class TurretSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-
+    // Update PID values from LoggedTunableNumbers
+    if (ShooterConstants.kPTurret.hasChanged(hashCode()) || 
+        ShooterConstants.kITurret.hasChanged(hashCode()) || 
+        ShooterConstants.kDTurret.hasChanged(hashCode()) ||
+        ShooterConstants.kSTurret.hasChanged(hashCode())) {
+      // Reconfigure PID on the motor controller
+      Slot0Configs slot0 = new Slot0Configs();
+      slot0.kP = ShooterConstants.kPTurret.get();
+      slot0.kI = ShooterConstants.kITurret.get();
+      slot0.kD = ShooterConstants.kDTurret.get();
+      slot0.kS = ShooterConstants.kSTurret.get();
+      turnMotor.getConfigurator().apply(slot0);
+    }
   }
 
   /**
@@ -88,7 +101,7 @@ public class TurretSubsystem extends SubsystemBase {
   public Rotation2d getTurretRotation() {
     try {
       double rotations = turnMotor.getPosition().getValue().in(Rotations);
-      double turretRotations = rotations / ShooterConstants.kTurretGearRatio;
+      double turretRotations = rotations * ShooterConstants.kTurretGearRatio;
       return Rotation2d.fromRadians(turretRotations * 2.0 * Math.PI);
     } catch (Exception e) {
       return new Rotation2d();
@@ -99,9 +112,10 @@ public class TurretSubsystem extends SubsystemBase {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
     cfg.ClosedLoopGeneral.ContinuousWrap = true;
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    cfg.Slot0.kP = ShooterConstants.kPTurret;
-    cfg.Slot0.kI = ShooterConstants.kITurret;
-    cfg.Slot0.kD = ShooterConstants.kDTurret;
+    cfg.Slot0.kP = ShooterConstants.kPTurret.get();
+    cfg.Slot0.kI = ShooterConstants.kITurret.get();
+    cfg.Slot0.kD = ShooterConstants.kDTurret.get();
+    cfg.Slot0.kS = ShooterConstants.kSTurret.get();
     cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kTurretCruiseRps;
     cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kTurretAccelRps2;
     turnMotor.getConfigurator().apply(cfg);

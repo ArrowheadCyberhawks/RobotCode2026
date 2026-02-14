@@ -19,6 +19,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -84,9 +85,9 @@ public class RobotContainer {
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
 
 	// Shooter-related subsystems
-	public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
-	public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
-	//public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
+	//public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
+	//public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
+	public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
 
 	// Intake subsystem
 	//public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
@@ -166,12 +167,12 @@ public class RobotContainer {
 			)
 		);
 
-		hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
-		//turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
-		flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
+		//hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
+		turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
+		//flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
 
-		// Intake: toggle between RUN and IDLE on right stick press
-		// driverController.rightStick().onTrue(Commands.runOnce(() -> {
+		// Intake: toggle between RUN and IDLE on d pad up press
+		// driverController.povUp().onTrue(Commands.runOnce(() -> {
 		// 	if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
 		// 		intakeSubsystem.setIntakeState(IntakeState.IDLE);
 		// 	} else {
@@ -198,7 +199,6 @@ public class RobotContainer {
 				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
 				driveFacingAngleRequest));
 
-		driverController.rightTrigger().onTrue(flywheelSubsystem.trackTarget());
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -238,8 +238,12 @@ public class RobotContainer {
 
 	public void updateField2d() {
 		field2d.setRobotPose(drivetrain.getPose());
+		
+		// Add ShotCalculator target to field2d
+		Translation2d target = ShotCalculator.getInstance().getTarget();
+		Pose2d targetPose = new Pose2d(target, new Rotation2d());
+		field2d.getObject("ShotTarget").setPose(targetPose);
 	}
-
 	
 
 }

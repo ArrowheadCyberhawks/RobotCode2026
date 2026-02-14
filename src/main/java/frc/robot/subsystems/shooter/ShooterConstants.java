@@ -26,7 +26,7 @@ public final class ShooterConstants {
     public static final int kFlywheelMotorId = 12;
     public static final int kHoodMotorId = 10;
     // Turret motors (merged into shooter)
-    public static final int kTurnMotorId = 14;
+    public static final int kTurnMotorId = 13;
     public static final int kShootMotorId = 22;
 
     // Flywheel (velocity control)
@@ -38,12 +38,14 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.3);
 
     public static final double kFlywheelRpsShoot = 80.0;
-    // Turret gear ratio (turn motor rotations per turret rotation)
+    // Turret gear ratio (turret motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/12.8;
+    
     // Turret PID (units: volts per radian)
-    public static final double kPTurret = 1.0;
-    public static final double kITurret = 0.0;
-    public static final double kDTurret = 0.0;
+    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 0.0);
+    public static final LoggedTunableNumber kITurret = new LoggedTunableNumber("Turret/kI", 0.0);
+    public static final LoggedTunableNumber kDTurret = new LoggedTunableNumber("Turret/kD", 0.0);
+    public static final LoggedTunableNumber kSTurret = new LoggedTunableNumber("Turret/kS", 0.0);
     public static final double kTurretAllowedError = 0.02;
     // Maximum voltage to apply to turret motor
     public static final double kMaxTurretVolts = 6.0; 
@@ -52,12 +54,12 @@ public final class ShooterConstants {
     public static final double kHoodGearRatio = 1/8.16;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
-    public static final double kPHood = 1.0;
-    public static final double kIHood = 0.0;
-    public static final double kDHood = 0.0;
-    public static final double kVHood = 0.0;
-    public static final double kAHood = 0.0;
-    public static final double kGHood = 0.4;
+    public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 1.0);
+    public static final LoggedTunableNumber kIHood = new LoggedTunableNumber("Hood/kI", 0.0);
+    public static final LoggedTunableNumber kDHood = new LoggedTunableNumber("Hood/kD", 0.0);
+    public static final LoggedTunableNumber kVHood = new LoggedTunableNumber("Hood/kV", 0.0);
+    public static final LoggedTunableNumber kAHood = new LoggedTunableNumber("Hood/kA", 0.0);
+    public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.4);
     public static final double kHoodAllowedError = 0.02;
 
     public static final double kHoodMinDegrees = 0.0;
@@ -65,7 +67,7 @@ public final class ShooterConstants {
 
     /** Common hood presets */
     public enum HoodPosition {
-        STOW(0.0);
+        STOW(20.0);
 
         private final double degrees;
 

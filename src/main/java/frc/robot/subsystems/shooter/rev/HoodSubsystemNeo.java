@@ -51,9 +51,9 @@ public class HoodSubsystemNeo extends SubsystemBase {
     cfg.encoder.positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
     cfg.idleMode(IdleMode.kBrake).inverted(true);
     cfg.closedLoop.positionWrappingEnabled(true).positionWrappingInputRange(-Math.PI, Math.PI)
-        .p(ShooterConstants.kPHood)
-        .i(ShooterConstants.kIHood)
-        .d(ShooterConstants.kDHood)
+        .p(ShooterConstants.kPHood.get())
+        .i(ShooterConstants.kIHood.get())
+        .d(ShooterConstants.kDHood.get())
   .allowedClosedLoopError(ShooterConstants.kHoodAllowedError, ClosedLoopSlot.kSlot0);
     cfg.softLimit.forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
         .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
@@ -106,6 +106,22 @@ public class HoodSubsystemNeo extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Update PID values from LoggedTunableNumbers
+    if (ShooterConstants.kPHood.hasChanged(hashCode()) || 
+        ShooterConstants.kIHood.hasChanged(hashCode()) || 
+        ShooterConstants.kDHood.hasChanged(hashCode()) ||
+        ShooterConstants.kVHood.hasChanged(hashCode()) ||
+        ShooterConstants.kAHood.hasChanged(hashCode()) ||
+        ShooterConstants.kGHood.hasChanged(hashCode())) {
+      // Reconfigure PID on the motor controller
+      SparkMaxConfig cfg = new SparkMaxConfig();
+      cfg.closedLoop
+          .p(ShooterConstants.kPHood.get())
+          .i(ShooterConstants.kIHood.get())
+          .d(ShooterConstants.kDHood.get());
+      hoodMotor.configure(cfg, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    }
+    
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
     if (trackingEnabled) {
       var data = ShotCalculator.getInstance().getData();
