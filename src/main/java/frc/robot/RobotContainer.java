@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -35,6 +36,7 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.hopper.HopperSubsystem;
+import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
 //import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystemNeo; //TEMP TURRET
 import frc.robot.subsystems.vision.LimelightSubsystem;
@@ -173,7 +175,16 @@ public class RobotContainer {
 
 		//run hopper motors at half speed while right trigger is held
 		//driverController.rightTrigger().whileTrue(hopperSubsystem.runHopperMotors(0.5));
-	}
+
+		 driverController.rightTrigger().whileTrue(Commands.runOnce(() -> {
+		if (hopperSubsystem.getHopperState() == HopperState.ON) {
+			hopperSubsystem.setHopperState(HopperState.IDLE);
+		} else {
+			hopperSubsystem.setHopperState(HopperState.ON);
+	
+		}
+	},hopperSubsystem));
+}
 
 	public Command getAutonomousCommand() {
 		/* Run the path selected from the auto chooser */

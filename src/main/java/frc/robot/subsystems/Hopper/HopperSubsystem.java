@@ -13,8 +13,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.hopper.HopperConstants;
-import frc.robot.subsystems.hopper.HopperState;
 
 public class HopperSubsystem extends SubsystemBase {
 
@@ -67,7 +65,13 @@ public class HopperSubsystem extends SubsystemBase {
         configureHopper();
         configureKicker();
     }
+    //State machine for hopper and kicker control
+    public enum HopperState {
+        IDLE,   //Both motors off
+        ON      //Both motors running at given speed
+    }
 
+     /**Set the current hopper state*/
     public void setHopperState(HopperState state) {
         this.hopperState = state;
     }

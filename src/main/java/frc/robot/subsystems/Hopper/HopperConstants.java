@@ -38,5 +38,6 @@ public final class HopperConstants {
             new LoggedTunableNumber("Hopper/KickerReverse", -100.0); // Example value
         public static final LoggedTunableNumber kHopperReversedRpm = 
             new LoggedTunableNumber("Hopper/HopperReversedRpm", -100.0); // Example value
+        private HopperConstants() {}
     }
     
