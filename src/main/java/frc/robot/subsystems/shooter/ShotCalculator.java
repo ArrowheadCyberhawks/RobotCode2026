@@ -19,6 +19,7 @@ import frc.robot.util.FieldConstants;
 import frc.robot.util.geometry.AllianceFlipUtil;
 import frc.robot.util.geometry.GeomUtil;
 import org.littletonrobotics.junction.Logger;
+
 public class ShotCalculator {
     private static ShotCalculator instance;
 
@@ -79,8 +80,8 @@ public class ShotCalculator {
     private static double minDistance;
     private static double maxDistance;
     private static double phaseDelay;
-    private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = new InterpolatingTreeMap<>(
-            InverseInterpolator.forDouble(), Rotation2d::interpolate);
+    private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = 
+        new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
     private static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap();
     private static final InterpolatingDoubleTreeMap tofMap = new InterpolatingDoubleTreeMap();
 
@@ -89,7 +90,7 @@ public class ShotCalculator {
         // phase delay used to offset calculations for shooter processing time.
         minDistance = 1.34;
         maxDistance = 5.60;
-        phaseDelay = 0.09; //started at .03, increased to 0.09 for better accuracy, will change based on PID
+        phaseDelay = 0.09; // started at .03, increased to 0.09 for better accuracy, will change based on
 
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
@@ -108,9 +109,6 @@ public class ShotCalculator {
     }
 
     public ShotData getData() {
-        // Always recalculate for real-time tracking
-        // (This is cheap - just lookups and basic math)
-        
         // Calculate estimated pose while accounting for time between calculation and
         // the shot
         Pose2d estimatedPose = poseSupplier.get();
@@ -120,7 +118,6 @@ public class ShotCalculator {
                         robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
                         robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
                         robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
-
 
         // Calculate distance from turret to target
         // Apply currently-configured target (default is the hub) with alliance flip
@@ -137,14 +134,13 @@ public class ShotCalculator {
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
         double turretVelocityX = robotVelocity.vxMetersPerSecond
-                //+ robotVelocity.omegaRadiansPerSecond
-                        * (robotToTurretTrans.getY() * Math.cos(robotAngle)
-                                - robotToTurretTrans.getX() * Math.sin(robotAngle));
+                // + robotVelocity.omegaRadiansPerSecond
+                * (robotToTurretTrans.getY() * Math.cos(robotAngle)
+                        - robotToTurretTrans.getX() * Math.sin(robotAngle));
         double turretVelocityY = robotVelocity.vyMetersPerSecond
-                //+ robotVelocity.omegaRadiansPerSecond
-                        * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-                                - robotToTurretTrans.getY() * Math.sin(robotAngle));
-
+                // + robotVelocity.omegaRadiansPerSecond
+                * (robotToTurretTrans.getX() * Math.cos(robotAngle)
+                        - robotToTurretTrans.getY() * Math.sin(robotAngle));
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
@@ -168,10 +164,10 @@ public class ShotCalculator {
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
         // Normalize to [-π, π]
         double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
-        
+
         // Filter the turret angle to smooth noisy measurements
         double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
-        
+
         turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
 
         // Log calculated values for debugging
@@ -198,9 +194,10 @@ public class ShotCalculator {
 
         lastTurretAngle = turretAngle;
         lastHoodAngle = hoodAngle;
+        // Valid only when distance in range AND turret angle is within +/- 3/4*pi
         latestData = new ShotData(
                 lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance
-					&& Math.abs(filteredTurretAngleRad) > 1/4 * Math.PI, //TODO: clamp to 270 degree max range (1/4 pi on each side)
+                        && Math.abs(filteredTurretAngleRad) <= (3.0 / 4.0) * Math.PI,
                 turretAngle,
                 turretVelocity,
                 hoodAngle,

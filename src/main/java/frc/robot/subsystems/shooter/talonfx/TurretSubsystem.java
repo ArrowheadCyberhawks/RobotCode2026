@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -35,13 +36,10 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public void moveTurretToRadians(double radians) {
-    double currentRad = getTurretRotation().getRadians();
-    double rawDiff = radians - currentRad;
-    double delta = Math.atan2(Math.sin(rawDiff), Math.cos(rawDiff));
-    double shortestRad = currentRad + delta;
-    double turretRotations = shortestRad / (2.0 * Math.PI);
-    double motorRotations = turretRotations / ShooterConstants.kTurretGearRatio;
-    turnMotor.setControl(turretRequest.withPosition(motorRotations));
+    // With SensorToMechanismRatio configured, positions are in mechanism rotations
+    // Convert radians to rotations for the command
+    double turretRotations = radians / (2.0 * Math.PI);
+    turnMotor.setControl(turretRequest.withPosition(turretRotations));
   }
 
   public void moveTurretToDegrees(double degrees) {
@@ -57,8 +55,16 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public void resetTurretEncoder() {
-    double rot = turnMotor.getPosition().getValue().in(Rotations);
-    turnMotor.setPosition(rot % 1.0);
+    // With SensorToMechanismRatio configured, position is in mechanism rotations
+    // Wrap to one rotation
+    double mechanismRotations = turnMotor.getPosition().getValue().in(Rotations);
+    double wrappedRot = mechanismRotations % 1.0;
+    turnMotor.setPosition(wrappedRot);
+  }
+
+  public void manualResetTurretEncoder(double rotations) {
+    // Position is in mechanism rotations with SensorToMechanismRatio configured
+    turnMotor.setPosition(rotations);
   }
 
   @Override
@@ -76,6 +82,9 @@ public class TurretSubsystem extends SubsystemBase {
       slot0.kS = ShooterConstants.kSTurret.get();
       turnMotor.getConfigurator().apply(slot0);
     }
+    
+    // Log telemetry
+    SmartDashboard.putNumber("Turret/Current Position (deg)", getTurretRotation().getDegrees());
   }
 
   /**
@@ -86,23 +95,30 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   /**
-   * Query ShotCalculator for latest shot solution and command the turret tothat posotion.
+   * Query ShotCalculator for latest shot solution and command the turret to that position.
    */
   public Command trackTarget() {
     return run(() -> {
       var data = ShotCalculator.getInstance().getData();
-      if (data != null && data.isValid()) {
+      SmartDashboard.putBoolean("Turret/ShotData Exists", data != null);
+      if (data != null) {
+        SmartDashboard.putBoolean("Turret/ShotData Valid", data.isValid());
         Rotation2d desired = data.turretAngle();
-        moveTurretToRadians(desired.getRadians());
+        SmartDashboard.putNumber("Turret/ShotCalc Angle (deg)", desired.getDegrees());
+        SmartDashboard.putNumber("Turret/ShotCalc Angle (rad)", desired.getRadians());
+        if (data.isValid()) {
+          moveTurretToRadians(desired.getRadians());
+          SmartDashboard.putNumber("Turret/ShotCalc Angle Goal", desired.getDegrees());
+        }
       }
     });
   }
 
   public Rotation2d getTurretRotation() {
     try {
-      double rotations = turnMotor.getPosition().getValue().in(Rotations);
-      double turretRotations = rotations * ShooterConstants.kTurretGearRatio;
-      return Rotation2d.fromRadians(turretRotations * 2.0 * Math.PI);
+      // With SensorToMechanismRatio configured, getPosition returns mechanism rotations
+      double mechanismRotations = turnMotor.getPosition().getValue().in(Rotations);
+      return Rotation2d.fromRadians(mechanismRotations * 2.0 * Math.PI);
     } catch (Exception e) {
       return new Rotation2d();
     }
@@ -112,6 +128,10 @@ public class TurretSubsystem extends SubsystemBase {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
     cfg.ClosedLoopGeneral.ContinuousWrap = true;
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    
+    // Configure ratio so ContinuousWrap works for the turret
+    cfg.Feedback.SensorToMechanismRatio = 1.0 / ShooterConstants.kTurretGearRatio;
+    
     cfg.Slot0.kP = ShooterConstants.kPTurret.get();
     cfg.Slot0.kI = ShooterConstants.kITurret.get();
     cfg.Slot0.kD = ShooterConstants.kDTurret.get();

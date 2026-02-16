@@ -39,12 +39,12 @@ import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
-import frc.robot.subsystems.shooter.rev.TurretSubsystemNeoNew;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
+import frc.robot.util.FieldConstants;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem.IntakeState;
 
@@ -87,12 +87,12 @@ public class RobotContainer {
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
 
 	// Shooter-related subsystems
-	//public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
-	//public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
-	public final TurretSubsystemNeoNew turretSubsystem = new TurretSubsystemNeoNew();
+	public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
+	public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
+	public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
 
 	// Intake subsystem
-	//public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -189,9 +189,9 @@ public class RobotContainer {
 			)
 		);
 
-		//hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
+		hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
 		turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
-		//flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
+		flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
 
 		// Intake: toggle between RUN and IDLE on d pad up press
 		// driverController.povUp().onTrue(Commands.runOnce(() -> {
@@ -202,6 +202,29 @@ public class RobotContainer {
 		// 	}
 		// }, intakeSubsystem));
 
+		// Toggle ShotCalculator target between Hub top center and Hub near-left corner
+		driverController.povLeft().onTrue(Commands.runOnce(() -> {
+			ShotCalculator sc = ShotCalculator.getInstance();
+			Translation2d current = sc.getTarget();
+			Translation2d leftCorner = FieldConstants.Hub.nearLeftCorner;
+			Translation2d hub = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+			if (current.equals(hub)) {
+				sc.setTarget(leftCorner);
+			} else {
+				sc.setTarget(hub);
+			}
+		}));
+
+		// Smart target selection based on field zone: D-pad down will set the target
+		// to the hub if we're in our alliance zone; otherwise choose left/right
+		// corner based on which side of the field we're on.
+		driverController.povDown().onTrue(Commands.runOnce(() -> {
+			ShotCalculator sc = ShotCalculator.getInstance();
+			Pose2d pose = drivetrain.getPose();
+			double x = pose.getX();
+			double y = pose.getTranslation().getY();
+			//make this set the target location
+		}));
 
 		// Idle while the robot is disabled. This ensures the configured
 		// neutral mode is applied to the drive motors while disabled.
@@ -235,15 +258,14 @@ public class RobotContainer {
 
 		driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
+
+
 		driverController.start()
 			.whileTrue(limelightSubsystem
 				.startRun(() -> LimelightSubsystem.SetIMUMode(1), () -> limelightSubsystem.updateVisionPoseMT1(true))
 				.finallyDo(() -> LimelightSubsystem.SetIMUMode(3))
 			);
-		driverController.back()
-			.whileTrue(questNav
-				.run(() -> questNav.resetPose(drivetrain.getPose()))
-		);
+		driverController.back().whileTrue(questNav.run(() -> questNav.resetPose(drivetrain.getPose())));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 	}

@@ -55,6 +55,13 @@ public class HoodSubsystem extends SubsystemBase {
     cfg.Slot0.kG = ShooterConstants.kGHood.get();
     cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kHoodCruiseRps;
     cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kHoodAccelRps2;
+    
+    // Soft limits in motor rotations
+    cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = degreesToMotorRotations(ShooterConstants.kHoodMaxDegrees);
+    cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = degreesToMotorRotations(ShooterConstants.kHoodMinDegrees);
+    
     hood.getConfigurator().apply(cfg);
   }
 
@@ -66,6 +73,7 @@ public class HoodSubsystem extends SubsystemBase {
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
     hood.setControl(hoodRequest.withPosition(degreesToMotorRotations(clipped)));
+    SmartDashboard.putNumber("Shooter/Hood Target", degrees);
   }
 
   public void stopHood() {
@@ -110,6 +118,16 @@ public class HoodSubsystem extends SubsystemBase {
     }
     
     SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
+    
+  //   // Track target if enabled -> I turned this into a command
+  //   if (trackingEnabled) {
+  //     var data = ShotCalculator.getInstance().getData();
+  //     if (data != null && data.isValid()) {
+  //       double hoodRad = data.hoodAngle();
+  //       double hoodDeg = Math.toDegrees(hoodRad);
+  //       moveHoodToDegrees(hoodDeg);
+  //     }
+  //   }
   }
 
   public Command trackTarget() {
