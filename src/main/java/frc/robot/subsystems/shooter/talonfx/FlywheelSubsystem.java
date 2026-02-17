@@ -1,6 +1,6 @@
 package frc.robot.subsystems.shooter.talonfx;
 
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -19,18 +19,14 @@ import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-/**
- * TalonFX-based flywheel using closed-loop velocity control (VelocityDutyCycle).
- * Mirrors the Neo API (runFixedCommand/trackTarget/stopCommand) but uses the TalonFX
- * onboard closed-loop velocity slot configured at construction time.
- */
+
 public class FlywheelSubsystem extends SubsystemBase {
 
   private final TalonFX leader;
   private final TalonFX follower;
 
-  // Velocity closed-loop control request (reused to avoid object allocation)
-  private final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0.0);
+  // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
+  private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0.0);
 
   private double velocitySetpointRadsPerSec = 0.0;
   private boolean atGoal = false;
@@ -40,10 +36,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
   // Tuning published in NetworkTables via LoggedTunableNumber (used for runtime tolerances)
   private static final LoggedTunableNumber velocityTolerance =
-      new LoggedTunableNumber("Flywheel/VelocityTolerance", 20.0);
-
-  @AutoLogOutput private int launchCount = 0;
-  private boolean lastAtGoal = false;
+      new LoggedTunableNumber("Flywheel/VelocityTolerance", 5.0);
 
   public FlywheelSubsystem(int leaderId, int followerId) {
     leader = new TalonFX(leaderId);
@@ -61,15 +54,21 @@ public class FlywheelSubsystem extends SubsystemBase {
 
   private void configureFlywheel() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
+    
     // Set neutral mode to coast for flywheel
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
-    // Configure Slot0 closed-loop gains (used by VelocityDutyCycle)
+    // Configure Slot0 closed-loop gains (used by VelocityTorqueCurrentFOC)
+    // Note: VelocityTorqueCurrentFOC uses kP, kI, kD, kV, kS like VelocityDutyCycle
     cfg.Slot0.kP = ShooterConstants.kPFlywheel.get();
     cfg.Slot0.kI = ShooterConstants.kIFlywheel.get();
     cfg.Slot0.kD = ShooterConstants.kDFlywheel.get();
     cfg.Slot0.kV = ShooterConstants.kVFlywheel.get();
     cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
+
+    // Configure current limits for FOC
+    // cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
+    // cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     leader.getConfigurator().apply(cfg);
     follower.getConfigurator().apply(cfg);
@@ -94,7 +93,10 @@ public class FlywheelSubsystem extends SubsystemBase {
       follower.getConfigurator().apply(cfg);
     }
 
-    double velocityRadPerSec = leader.getVelocity().getValueAsDouble();
+    // Get current velocity in rotations per second, convert to rad/s for internal use
+    double velocityRps = leader.getVelocity().getValueAsDouble();
+    double velocityRadPerSec = velocityRps * 2.0 * Math.PI;
+    
     Logger.recordOutput("Flywheel/Velocity", velocityRadPerSec);
 
     if (velocitySetpointRadsPerSec == 0.0) {
@@ -106,15 +108,16 @@ public class FlywheelSubsystem extends SubsystemBase {
     boolean inTolerance = Math.abs(velocityRadPerSec - velocitySetpointRadsPerSec) <= velocityTolerance.get();
     atGoal = inTolerance;
 
-    // Use closed-loop velocity control
+    // Use VelocityTorqueCurrentFOC closed-loop control
     // Convert rad/s to rotations/s (Phoenix 6 uses rotations per second for velocity)
-    double velocityRps = velocitySetpointRadsPerSec / (2.0 * Math.PI);
-    velocityRequest.Velocity = velocityRps;
+    double velocityRpsSetpoint = velocitySetpointRadsPerSec / (2.0 * Math.PI);
+    velocityRequest.Velocity = velocityRpsSetpoint;
     leader.setControl(velocityRequest);
 
     Logger.recordOutput("Flywheel/Setpoint", velocitySetpointRadsPerSec);
     Logger.recordOutput("Flywheel/AtGoal", atGoal);
     Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
+    Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
   }
 
   // setpoint runner used by commands
@@ -130,15 +133,12 @@ public class FlywheelSubsystem extends SubsystemBase {
   }
 
   public double getVelocity() {
-    return leader.getVelocity().getValueAsDouble();
+    // Return velocity in rad/s (convert from TalonFX's rps)
+    return leader.getVelocity().getValueAsDouble() * 2.0 * Math.PI;
   }
 
   public boolean isAtGoal() {
     return atGoal;
-  }
-
-  public long getLaunchCount() {
-    return launchCount;
   }
 
   public Command trackTarget() {

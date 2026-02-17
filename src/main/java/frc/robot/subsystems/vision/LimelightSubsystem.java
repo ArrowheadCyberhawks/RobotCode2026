@@ -47,8 +47,8 @@ public class LimelightSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 	updateRobotOrientation();
-	//updateVisionPoseMT2(); // megatag2 is broken so just disable it
-	updateVisionPoseMT1(false);
+	updateVisionPoseMT2(); // megatag2 is broken so just disable it
+	//updateVisionPoseMT1(false);
 	updateField(true);
 	if(DriverStation.isDisabled()) {
 		updateVisionPoseMT1(true);
@@ -273,11 +273,11 @@ yError = MathUtil.clamp(yError, -1, 1);
 
 
   private void setUpShuffleboard() {
-	tab = Shuffleboard.getTab("VisionApriltag");
+	tab = Shuffleboard.getTab("Limelight");
 
 	LLFeed = new HttpCamera(
 		getLimelightName(),
-		"http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
+		"http://10.7.6.11:5800/stream.mjpg");
 	tab.add("Limelight Feed", LLFeed).withWidget("Camera Stream").withPosition(0, 0).withSize(4, 4);
 
 	tab.addDouble("Tx", () -> this.getTX());

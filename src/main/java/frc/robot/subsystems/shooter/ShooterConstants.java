@@ -83,7 +83,7 @@ public final class ShooterConstants {
 
         /** Return angle representation (units library) */
         // TODO import Units library properly
-        public edu.wpi.first.units.measure.Angle getAngle() {
+        public Angle getAngle() {
             return edu.wpi.first.units.Units.Degrees.of(degrees);
         }
     }

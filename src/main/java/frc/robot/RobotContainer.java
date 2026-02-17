@@ -80,7 +80,7 @@ public class RobotContainer {
 	// public final VisionSubsystem visionSubsystem = new
 	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-		() -> drivetrain.getPose().getRotation().getDegrees(),
+		() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), //switched to gyro-based not pose estimator based
 		drivetrain,
 		field2d
 	);
