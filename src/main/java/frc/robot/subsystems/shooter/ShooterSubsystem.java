@@ -1,0 +1,209 @@
+package frc.robot.subsystems.shooter;
+
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
+import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
+import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
+import edu.wpi.first.math.geometry.Rotation2d;
+
+import org.littletonrobotics.junction.Logger;
+
+/**
+ * State machine that coordinates the three TalonFX shooter subsystems:
+ * Flywheel, Hood, and Turret.
+ * 
+ * State Transitions:
+ * - IDLE -> AIM (start aiming and spinning up)
+ * - IDLE -> STRAIGHT (align turret straight, spin up for direct shot)
+ * - AIM -> SHOOT (when all subsystems at goal)
+ * - STRAIGHT -> SHOOT (when all subsystems at goal)
+ * - SHOOT -> IDLE (after shooting)
+ * - SHOOT -> STRAIGHT (quick realignment)
+ */
+public class ShooterSubsystem extends SubsystemBase {
+  
+  public enum ShooterState {
+    IDLE,
+    STRAIGHT,
+    AIM,
+    SHOOT
+  }
+
+  private final FlywheelSubsystem flywheel;
+  private final HoodSubsystem hood;
+  private final TurretSubsystem turret;
+
+  private ShooterState currentState = ShooterState.IDLE;
+  private ShooterState desiredState = ShooterState.IDLE;
+
+  public ShooterSubsystem(
+      FlywheelSubsystem flywheel,
+      HoodSubsystem hood,
+      TurretSubsystem turret) {
+    this.flywheel = flywheel;
+    this.hood = hood;
+    this.turret = turret;
+  }
+
+  @Override
+  public void periodic() {
+    // Update state transitions
+    updateState();
+
+    // Execute current state behavior
+    executeState();
+
+    // Log state information
+    Logger.recordOutput("Shooter/State", currentState.name());
+    Logger.recordOutput("Shooter/DesiredState", desiredState.name());
+    Logger.recordOutput("Shooter/AllAtGoal", areAllSubsystemsAtGoal());
+  }
+
+  /**
+   * Request a state transition. The state machine will validate and execute
+   * the transition according to the rules.
+   */
+  public void requestState(ShooterState state) {
+    // Validate state transition
+    if (isValidTransition(currentState, state)) {
+      desiredState = state;
+    } else {
+      Logger.recordOutput("Shooter/InvalidTransition", 
+          String.format("%s -> %s", currentState.name(), state.name()));
+    }
+  }
+
+  /**
+   * Get the current shooter state.
+   */
+  public ShooterState getState() {
+    return currentState;
+  }
+
+  /**
+   * Check if all subsystems are at their goals.
+   */
+  public boolean areAllSubsystemsAtGoal() {
+    return flywheel.isAtGoal() ;//&& hood.() && turret.isAtGoal();
+  }
+
+  /**
+   * Convenience method to start aiming sequence.
+   */
+  public void startAiming() {
+    requestState(ShooterState.AIM);
+  }
+
+  /**
+   * Convenience method to aim straight ahead.
+   */
+  public void aimStraight() {
+    requestState(ShooterState.STRAIGHT);
+  }
+
+  /**
+   * Convenience method to return to idle.
+   */
+  public void stop() {
+    requestState(ShooterState.IDLE);
+  }
+
+  /**
+   * Check if the shooter is ready to fire (in SHOOT state).
+   */
+  public boolean isReadyToShoot() {
+    return currentState == ShooterState.SHOOT;
+  }
+
+  private void updateState() {
+    switch (currentState) {
+      case IDLE:
+        // IDLE can transition to AIM or STRAIGHT
+        if (desiredState == ShooterState.AIM || desiredState == ShooterState.STRAIGHT) {
+          currentState = desiredState;
+        }
+        break;
+
+      case STRAIGHT:
+      case AIM:
+        // AIM/STRAIGHT automatically transition to SHOOT when all subsystems ready
+        if (areAllSubsystemsAtGoal()) {
+          currentState = ShooterState.SHOOT;
+          desiredState = ShooterState.SHOOT;
+        }
+        break;
+
+      case SHOOT:
+        // SHOOT can transition to IDLE or STRAIGHT
+        if (desiredState == ShooterState.IDLE) {
+          currentState = ShooterState.IDLE;
+        } else if (desiredState == ShooterState.STRAIGHT) {
+          currentState = ShooterState.STRAIGHT;
+        }
+        break;
+    }
+  }
+
+  private void executeState() {
+    switch (currentState) {
+      case IDLE:
+        // Stop all subsystems
+        flywheel.stopCommand().schedule();
+        hood.stopHood();
+        turret.stopTurret();
+        break;
+
+      case STRAIGHT:
+        // Turret aims straight (0 degrees)
+        turret.moveTurretToDegrees(0.0);
+        
+        // Get shot data for straight shot
+        var straightData = ShotCalculator.getInstance().getData();
+        if (straightData != null && straightData.isValid()) {
+          // Use calculated flywheel speed and hood angle
+          double flywheelSpeed = straightData.flywheelSpeed();
+          double hoodAngleDeg = Math.toDegrees(straightData.hoodAngle());
+          
+          // Command subsystems
+          flywheel.runFixedCommand(() -> flywheelSpeed).schedule();
+          hood.moveHoodToDegrees(hoodAngleDeg);
+        }
+        break;
+
+      case AIM:
+        // All subsystems track the target from ShotCalculator
+        flywheel.trackTarget();
+        hood.trackTarget();
+        turret.trackTarget();
+        break;
+
+      case SHOOT:
+        // Maintain current positions by continuing to track
+        flywheel.trackTarget();
+        hood.trackTarget();
+        turret.trackTarget();
+        break;
+    }
+  }
+
+  private boolean isValidTransition(ShooterState from, ShooterState to) {
+    switch (from) {
+      case IDLE:
+        // IDLE can only go to AIM or STRAIGHT
+        return to == ShooterState.AIM || to == ShooterState.STRAIGHT;
+      
+      case STRAIGHT:
+      case AIM:
+        // AIM/STRAIGHT automatically goes to SHOOT (handled in updateState)
+        // Can also be requested to return to IDLE
+        return to == ShooterState.SHOOT || to == ShooterState.IDLE;
+      
+      case SHOOT:
+        // SHOOT can go to IDLE or STRAIGHT
+        return to == ShooterState.IDLE || to == ShooterState.STRAIGHT;
+      
+      default:
+        return false;
+    }
+  }
+}

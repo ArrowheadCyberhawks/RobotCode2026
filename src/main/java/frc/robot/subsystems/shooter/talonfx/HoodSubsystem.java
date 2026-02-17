@@ -88,6 +88,18 @@ public class HoodSubsystem extends SubsystemBase {
     hood.setPosition(degreesToMotorRotations(degrees));
   }
 
+  /**
+   * Check if the hood is at its goal position.
+   * 
+   * @param toleranceDegrees The tolerance in degrees
+   * @return true if the hood is within tolerance of the target
+   */
+  public boolean atGoal(double toleranceDegrees) {
+    double currentDegrees = getHoodDegrees();
+    double targetDegrees = motorRotationsToDegrees(hoodRequest.Position);
+    return Math.abs(currentDegrees - targetDegrees) <= toleranceDegrees;
+  }
+
   // Conversions
   private double degreesToMotorRotations(double degrees) {
     return (degrees / 360.0) * ShooterConstants.kHoodGearRatio;

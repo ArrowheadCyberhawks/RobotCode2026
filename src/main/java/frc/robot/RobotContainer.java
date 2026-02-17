@@ -42,6 +42,7 @@ import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
 import frc.robot.util.FieldConstants;
@@ -51,13 +52,16 @@ import frc.robot.subsystems.intake.IntakeSubsystem.IntakeState;
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
 	private final SwerveRequest.FieldCentric teleDrive = new SwerveRequest.FieldCentric()
-		// .withDeadband(DriveConstants.kDriveDeadband * DriveConstants.kMaxSpeed.in(MetersPerSecond))
-		.withRotationalDeadband(DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate.in(RadiansPerSecond)) // Add a 10% deadband
-		.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+			// .withDeadband(DriveConstants.kDriveDeadband *
+			// DriveConstants.kMaxSpeed.in(MetersPerSecond))
+			.withRotationalDeadband(
+					DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate.in(RadiansPerSecond)) // Add a 10%
+																											// deadband
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
 	private final SwerveRequest.FieldCentric driveFacingAngleRequest = new SwerveRequest.FieldCentric()
-		// .withDeadband(DriveConstants.kMaxSpeed.in(MetersPerSecond) * 0.01)
-		.withSteerRequestType(SteerRequestType.MotionMagicExpo);
+			// .withDeadband(DriveConstants.kMaxSpeed.in(MetersPerSecond) * 0.01)
+			.withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -66,10 +70,16 @@ public class RobotContainer {
 
 	// check if bluetooth controller is connected, if so use it
 	private final CommandXboxController driverControllerBT = new CommandXboxController(
-		IOConstants.kDriverControllerPortBT);
+			IOConstants.kDriverControllerPortBT);
 	private final CommandXboxController driverController = driverControllerBT.isConnected()
-		? driverControllerBT
-		: new CommandXboxController(IOConstants.kDriverControllerPortUSB);
+			? driverControllerBT
+			: new CommandXboxController(IOConstants.kDriverControllerPortUSB);
+
+	private final CommandXboxController manipulatorControllerBT = new CommandXboxController(
+			IOConstants.kManipulatorControllerPortBT);
+	private final CommandXboxController manipulatorController = manipulatorControllerBT.isConnected()
+			? manipulatorControllerBT
+			: new CommandXboxController(IOConstants.kManipulatorControllerPortUSB);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -80,30 +90,40 @@ public class RobotContainer {
 	// public final VisionSubsystem visionSubsystem = new
 	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-		() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), //switched to gyro-based not pose estimator based
-		drivetrain,
-		field2d
-	);
+			() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to gyro-based not pose estimator
+			drivetrain,
+			field2d);
 	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
 
-	// Shooter-related subsystems
+	// Shooter-related subsystems (Neo versions - for testing/comparison)
 	public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
 	public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
 	public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
+
+	// TalonFX shooter subsystems and state machine
+	public final FlywheelSubsystem flywheelTalonFX = new FlywheelSubsystem();
+	public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
+	public final TurretSubsystem turretTalonFX = new TurretSubsystem();
+	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
+			flywheelTalonFX,
+			hoodTalonFX,
+			turretTalonFX);
 
 	// Intake subsystem
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
-	SlewRateLimiter rotationLimiter = new SlewRateLimiter(DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
+	SlewRateLimiter rotationLimiter = new SlewRateLimiter(
+			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	public RobotContainer() {
 		constructField();
 		configureBindings();
 
 		// Configure ShotCalculator with robot pose supplier
-		// This is critical - without this, the calculator thinks the robot is always at (0,0)
+		// This is critical - without this, the calculator thinks the robot is always at
+		// (0,0)
 		// and the hood/turret won't adjust based on distance!
 		ShotCalculator.getInstance().setPoseSupplier(() -> drivetrain.getPose());
 		// Field-relative velocities (used for turret velocity calculation)
@@ -113,18 +133,16 @@ public class RobotContainer {
 		ShotCalculator.getInstance().setFieldVelocitySupplier(() -> {
 			ChassisSpeeds robotSpeeds = drivetrain.getState().Speeds;
 			Rotation2d robotRotation = drivetrain.getPose().getRotation();
-			
+
 			// Convert robot-relative to field-relative by rotating velocity vector
 			double cosAngle = robotRotation.getCos();
 			double sinAngle = robotRotation.getSin();
-			
-			return new ChassisSpeeds(
-				robotSpeeds.vxMetersPerSecond * cosAngle - robotSpeeds.vyMetersPerSecond * sinAngle,
-				robotSpeeds.vxMetersPerSecond * sinAngle + robotSpeeds.vyMetersPerSecond * cosAngle,
-				robotSpeeds.omegaRadiansPerSecond
-			);
-		});
 
+			return new ChassisSpeeds(
+					robotSpeeds.vxMetersPerSecond * cosAngle - robotSpeeds.vyMetersPerSecond * sinAngle,
+					robotSpeeds.vxMetersPerSecond * sinAngle + robotSpeeds.vyMetersPerSecond * cosAngle,
+					robotSpeeds.omegaRadiansPerSecond);
+		});
 
 		// TODO: Add velocity suppliers for moving shot compensation if needed
 
@@ -136,7 +154,6 @@ public class RobotContainer {
 
 		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Tests"));
 
-
 		// Warmup PathPlanner to avoid Java pauses
 		CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
@@ -146,48 +163,45 @@ public class RobotContainer {
 		// Explicitly start the logger
 		SignalLogger.start();
 
-
-
 	}
 
 	private void configureBindings() {
 		// Note that X is defined as forward according to WPILib convention,
 		// and Y is defined as to the left according to WPILib convention.
 		drivetrain.setDefaultCommand(
-			// Drivetrain will execute this command periodically
-			drivetrain.applyRequest(() -> teleDrive
-				.withVelocityX(
-					xLimiter.calculate(
-						MathUtil.interpolate(1,
-							DriveConstants.kDriveSlowModifier,
-							driverController.getRightTriggerAxis()
-						)
-						* MathUtil.applyDeadband(-driverController.getLeftY(), DriveConstants.kDriveDeadband)
-						* DriveConstants.kMaxSpeed.in(MetersPerSecond)
-					)
-				) // Drive forward with negative Y (forward)
-				.withVelocityY(
-					yLimiter.calculate(
-						MathUtil.interpolate(1,
-							DriveConstants.kDriveSlowModifier,
-							driverController.getRightTriggerAxis()
-						)
-						* MathUtil.applyDeadband(-driverController.getLeftX(), DriveConstants.kDriveDeadband)
-						* DriveConstants.kMaxSpeed.in(MetersPerSecond)
-					)
-				) // Drive left with negative X (left)
-				.withRotationalRate(
-					rotationLimiter.calculate(
-						MathUtil.interpolate(1,
-							DriveConstants.kTurnSlowModifier,
-							driverController.getRightTriggerAxis()
-						)
-						* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
-						* DriveConstants.kMaxAngularRate.in(RadiansPerSecond)
-					)
-				) // Drive counterclockwise with negative X (left)
-			)
-		);
+				// Drivetrain will execute this command periodically
+				drivetrain.applyRequest(() -> teleDrive
+						.withVelocityX(
+								xLimiter.calculate(
+										MathUtil.interpolate(1,
+												DriveConstants.kDriveSlowModifier,
+												driverController.getRightTriggerAxis())
+												* MathUtil.applyDeadband(-driverController.getLeftY(),
+														DriveConstants.kDriveDeadband)
+												* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive forward with
+																									// negative Y
+																									// (forward)
+						.withVelocityY(
+								yLimiter.calculate(
+										MathUtil.interpolate(1,
+												DriveConstants.kDriveSlowModifier,
+												driverController.getRightTriggerAxis())
+												* MathUtil.applyDeadband(-driverController.getLeftX(),
+														DriveConstants.kDriveDeadband)
+												* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with
+																									// negative X (left)
+						.withRotationalRate(
+								rotationLimiter.calculate(
+										MathUtil.interpolate(1,
+												DriveConstants.kTurnSlowModifier,
+												driverController.getRightTriggerAxis())
+												* MathUtil.applyDeadband(-driverController.getRightX(),
+														DriveConstants.kRotationDeadband)
+												* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
+																										// counterclockwise
+																										// with negative
+																										// X (left)
+				));
 
 		hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
 		turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
@@ -195,54 +209,54 @@ public class RobotContainer {
 
 		// Intake: toggle between RUN and IDLE on d pad up press
 		// driverController.povUp().onTrue(Commands.runOnce(() -> {
-		// 	if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
-		// 		intakeSubsystem.setIntakeState(IntakeState.IDLE);
-		// 	} else {
-		// 		intakeSubsystem.setIntakeState(IntakeState.RUN);
-		// 	}
+		// if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
+		// intakeSubsystem.setIntakeState(IntakeState.IDLE);
+		// } else {
+		// intakeSubsystem.setIntakeState(IntakeState.RUN);
+		// }
 		// }, intakeSubsystem));
-
-		// Toggle ShotCalculator target between Hub top center and Hub near-left corner
-		driverController.povLeft().onTrue(Commands.runOnce(() -> {
-			ShotCalculator sc = ShotCalculator.getInstance();
-			Translation2d current = sc.getTarget();
-			Translation2d leftCorner = FieldConstants.Hub.nearLeftCorner;
-			Translation2d hub = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-			if (current.equals(hub)) {
-				sc.setTarget(leftCorner);
-			} else {
-				sc.setTarget(hub);
-			}
-		}));
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
 		// corner based on which side of the field we're on.
-		driverController.povDown().onTrue(Commands.runOnce(() -> {
+		manipulatorController.povLeft().onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			Pose2d pose = drivetrain.getPose();
 			double x = pose.getX();
-			double y = pose.getTranslation().getY();
-			//make this set the target location
+			double y = pose.getY();
+
+			// Check if we're in the neutral zone (past neutralZoneNear)
+			if (x < FieldConstants.LinesVertical.neutralZoneNear) {
+				// We're in our alliance zone - shoot at the hub
+				sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+			} else {
+				// We're in neutral/opponent zone - choose corner based on Y position
+				if (y > FieldConstants.LinesHorizontal.center) {
+					// Above center - shoot at left corner
+					sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
+				} else {
+					// Below center - shoot at right corner
+					sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
+				}
+			}
 		}));
 
 		// Idle while the robot is disabled. This ensures the configured
 		// neutral mode is applied to the drive motors while disabled.
 		final var idle = new SwerveRequest.Idle();
 		RobotModeTriggers.disabled().whileTrue(
-			drivetrain.applyRequest(() -> idle).ignoringDisable(true));
+				drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
 		driverController.x().whileTrue(drivetrain.applyRequest(() -> brake));
 		driverController.y().whileTrue(drivetrain.applyRequest(() -> point
-			.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
+				.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
 
 		driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
 		driverController.a().whileTrue(
-			new DriveToPose(
-				drivetrain,
-				() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
-				driveFacingAngleRequest));
-
+				new DriveToPose(
+						drivetrain,
+						() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
+						driveFacingAngleRequest));
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -253,19 +267,28 @@ public class RobotContainer {
 
 		// reset the field-centric heading on b button press
 		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
-			drivetrain.getState().Pose.getRotation() //drivetrain.getPose().getRotation()
+				drivetrain.getState().Pose.getRotation() // drivetrain.getPose().getRotation()
 		)));
 
 		driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-
-
 		driverController.start()
-			.whileTrue(limelightSubsystem
-				.startRun(() -> LimelightSubsystem.SetIMUMode(1), () -> limelightSubsystem.updateVisionPoseMT1(true))
-				.finallyDo(() -> LimelightSubsystem.SetIMUMode(3))
-			);
+				.whileTrue(limelightSubsystem
+						.startRun(() -> LimelightSubsystem.SetIMUMode(1),
+								() -> limelightSubsystem.updateVisionPoseMT1(true))
+						.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
 		driverController.back().whileTrue(questNav.run(() -> questNav.resetPose(drivetrain.getPose())));
+
+		// Manipulator controller - Shooter state machine controls
+		// A button: Set shooter to IDLE (stop all subsystems)
+		manipulatorController.a().onTrue(Commands.runOnce(() -> shooterSubsystem.stop()));
+
+		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
+		manipulatorController.b().onTrue(Commands.runOnce(() -> shooterSubsystem.aimStraight()));
+
+		// X button: Start AIM sequence (all subsystems track target, auto-transitions
+		// to SHOOT when ready)
+		manipulatorController.x().onTrue(Commands.runOnce(() -> shooterSubsystem.startAiming()));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 	}
@@ -281,12 +304,11 @@ public class RobotContainer {
 
 	public void updateField2d() {
 		field2d.setRobotPose(drivetrain.getPose());
-		
+
 		// Add ShotCalculator target to field2d
 		Translation2d target = ShotCalculator.getInstance().getTarget();
 		Pose2d targetPose = new Pose2d(target, new Rotation2d());
 		field2d.getObject("ShotTarget").setPose(targetPose);
 	}
-	
 
 }

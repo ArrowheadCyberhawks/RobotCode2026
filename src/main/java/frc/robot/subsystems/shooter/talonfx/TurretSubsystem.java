@@ -124,6 +124,25 @@ public class TurretSubsystem extends SubsystemBase {
     }
   }
 
+  /**
+   * Check if the turret is at its goal position.
+   * 
+   * @param toleranceRadians The tolerance in radians
+   * @return true if the turret is within tolerance of the target
+   */
+  public boolean atGoal(double toleranceRadians) {
+    double currentRadians = getTurretRotation().getRadians();
+    double targetRotations = turretRequest.Position;
+    double targetRadians = targetRotations * 2.0 * Math.PI;
+    
+    // Handle angle wrapping for shortest distance
+    double error = Math.abs(Rotation2d.fromRadians(currentRadians)
+        .minus(Rotation2d.fromRadians(targetRadians))
+        .getRadians());
+    
+    return error <= toleranceRadians;
+  }
+
   private void configureTurret() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
     cfg.ClosedLoopGeneral.ContinuousWrap = true;
