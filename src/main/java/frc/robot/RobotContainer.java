@@ -47,7 +47,6 @@ import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
 import frc.robot.util.FieldConstants;
 import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystem.IntakeState;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -125,7 +124,7 @@ public class RobotContainer {
 		// This is critical - without this, the calculator thinks the robot is always at
 		// (0,0)
 		// and the hood/turret won't adjust based on distance!
-		ShotCalculator.getInstance().setPoseSupplier(() -> drivetrain.getPose());
+		ShotCalculator.getInstance().setPoseSupplier(drivetrain::getPose);
 		// Field-relative velocities (used for turret velocity calculation)
 		ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
 
@@ -207,14 +206,9 @@ public class RobotContainer {
 		turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
 		flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
 
-		// Intake: toggle between RUN and IDLE on d pad up press
-		// driverController.povUp().onTrue(Commands.runOnce(() -> {
-		// if (intakeSubsystem.getIntakeState() == IntakeState.RUN) {
-		// intakeSubsystem.setIntakeState(IntakeState.IDLE);
-		// } else {
-		// intakeSubsystem.setIntakeState(IntakeState.RUN);
-		// }
-		// }, intakeSubsystem));
+		// Intake controls - D-pad up to toggle rollers on/off, D-pad down to extend/retract
+		driverController.povUp().onTrue(intakeSubsystem.runOnce(intakeSubsystem::toggleRunState));
+		driverController.povDown().onTrue(intakeSubsystem.runOnce(intakeSubsystem::toggleExtendState));
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right

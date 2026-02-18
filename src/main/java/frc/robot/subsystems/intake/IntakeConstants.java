@@ -1,8 +1,10 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.util.LoggedTunableNumber;
 
 public final class IntakeConstants {
@@ -13,7 +15,8 @@ public final class IntakeConstants {
 
     // Gear ratio: motor rotations per pivot rotation
     // Example: 100:1 reduction → 100 motor revs = 1 pivot rev
-    public static final double kPivotGearRatio = 1/9.0 * 24.0/42.0; //TODO: Update with actual gear ratio
+    public static final double kPivotGearRatio = 1/9.0 * 24.0/42.0;
+    public static final double kRollerGearRatio = 1/5.0;
 
     // Smart Motion constraints (rotations/sec)
     public static final LoggedTunableNumber kPivotMaxVelocityRps = 
@@ -56,24 +59,36 @@ public final class IntakeConstants {
     // Roller speeds (RPM)
     public static final LoggedTunableNumber kIntakeRpm = 
         new LoggedTunableNumber("Intake/Roller/IntakeRpm", 2400.0);
-    public static final LoggedTunableNumber kOuttakeRpm = 
-        new LoggedTunableNumber("Intake/Roller/OuttakeRpm", -2400.0);
 
     public static final int kPivotAbsoluteEncoderId = 56; // CAN ID for the absolute encoder (e.g., CANCoder)
 
-    public enum IntakePosition {
-        STOWED(Degrees.of(0.0)),
-        INTAKE(Degrees.of(55.0)),
-        EJECT(Degrees.of(45.0));
+    /** High-level intake states that control pivot and roller behavior */
+    public enum IntakeState {
+        STOW(Degrees.of(90.0), 0.0), // pivot up and rollers stopped
+        IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
+        RUN(Degrees.of(0.0), 0.80);   // pivot down and rollers running to intake
 
-        public final Angle angle;
+        public final Angle pivotTarget;
+        public final double rollerTarget;
 
-        IntakePosition(Angle angle) {
-            this.angle = angle;
+        IntakeState(Angle pivotAngle, double rollerVelocity) {
+            this.pivotTarget = pivotAngle;
+            this.rollerTarget = rollerVelocity;
         }
 
-        public Angle getAngle() {
-            return angle;
+        /**
+         * Get target pivot angle for this state.
+         * @return target pivot angle, where 0 is pointing straight forward and positive is rotating upward
+         */
+        public Angle getPivotTarget() {
+            return pivotTarget;
+        }
+
+        /**
+         * Get target roller duty cycle as a percentage (0.0 to 1.0).
+         */
+        public double getRollerTarget() {
+            return rollerTarget;
         }
     }
 
