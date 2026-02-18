@@ -102,11 +102,13 @@ public class RobotContainer {
 	// TalonFX shooter subsystems and state machine
 	public final FlywheelSubsystem flywheelTalonFX = new FlywheelSubsystem();
 	public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
-	public final TurretSubsystem turretTalonFX = new TurretSubsystem();
+	// public final TurretSubsystem turretTalonFX = new TurretSubsystem();
+	public final TurretSubsystemNeo turretNeo = new TurretSubsystemNeo(); // turret uses neos so switch it out
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
 			flywheelTalonFX,
 			hoodTalonFX,
-			turretTalonFX);
+			turretNeo
+		);
 
 	// Intake subsystem
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
