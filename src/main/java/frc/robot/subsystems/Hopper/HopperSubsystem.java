@@ -1,5 +1,4 @@
-package frc.robot.subsystems.hopper;
-import static edu.wpi.first.wpilibj2.command.Commands.*;
+package frc.robot.subsystems.Hopper;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -10,8 +9,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HopperSubsystem extends SubsystemBase {
@@ -68,7 +65,8 @@ public class HopperSubsystem extends SubsystemBase {
     //State machine for hopper and kicker control
     public enum HopperState {
         IDLE,   //Both motors off
-        ON      //Both motors running at given speed
+        ON,      //Both motors running at given speed
+        REVERSE  //Both motors running in reverse to fix jams
     }
 
      /**Set the current hopper state*/
@@ -142,6 +140,11 @@ public class HopperSubsystem extends SubsystemBase {
                 runHopper();
                 runKicker();
                 break;
+            case REVERSE:
+                //Runs both motors in reverse at given speed to fix jams
+                reverseHopper();
+                reverseKicker();
+                break;
         }
     
         SmartDashboard.putString("Hopper/State", hopperState.name());
@@ -183,6 +186,24 @@ public class HopperSubsystem extends SubsystemBase {
             kickerMotor.stopMotor();
         }
     }
+
+    // private void updateKickerControl() {
+   
+    //     if (kickerTargetRpm > 10) {
+    
+    //         double pidoutput = kickerController.calculate(kickerMotor., kickerTargetRpm);
+
+    //         double 
+
+    //         double totalOutput = pidoutput;
+
+    //         totalOutput = Math.max(-12.0, Math.min(12.0, totalOutput));
+
+    //         kickerMotor.setVoltage(totalOutput);
+    //     } else {
+    //         kickerMotor.stopMotor();
+    //     }
+    // }
     
     /**updates the hopper motor PID parameters if they have changed*/
     private void updateHopperPID() {

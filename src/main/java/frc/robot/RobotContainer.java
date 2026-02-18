@@ -35,8 +35,8 @@ import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.hopper.HopperSubsystem;
-import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
+import frc.robot.subsystems.Hopper.HopperSubsystem;
+import frc.robot.subsystems.Hopper.HopperSubsystem.HopperState;
 //import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystemNeo; //TEMP TURRET
 import frc.robot.subsystems.vision.LimelightSubsystem;
