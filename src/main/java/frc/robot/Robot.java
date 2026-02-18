@@ -57,7 +57,7 @@ public class Robot extends LoggedRobot {
 	public void disabledExit() {
 		LimelightSubsystem.setThrottle(0);
 		LimelightSubsystem.SetIMUMode(3);
-		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
+		m_robotContainer.questNavSubsystem.resetPose(m_robotContainer.drivetrain.getPose());
 		m_robotContainer.turretSubsystem.manualResetTurretEncoder(Math.PI); // TODO: write this the proper way
 	}
 

@@ -92,7 +92,7 @@ public class RobotContainer {
 			() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to gyro-based not pose estimator
 			drivetrain,
 			field2d);
-	public final QuestNavSubsystem questNav = new QuestNavSubsystem(drivetrain, field2d);
+	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
 	// Shooter-related subsystems (Neo versions - for testing/comparison)
 	public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
@@ -148,7 +148,7 @@ public class RobotContainer {
 		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
 		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
 			drivetrain.resetPose(pose);
-			questNav.resetPose(pose);
+			questNavSubsystem.resetPose(pose);
 		});
 
 		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Tests"));
@@ -271,18 +271,18 @@ public class RobotContainer {
 						.startRun(() -> LimelightSubsystem.SetIMUMode(1),
 								() -> limelightSubsystem.updateVisionPoseMT1(true))
 						.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
-		driverController.back().whileTrue(questNav.run(() -> questNav.resetPose(drivetrain.getPose())));
+		driverController.back().whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
 
 		// Manipulator controller - Shooter state machine controls
 		// A button: Set shooter to IDLE (stop all subsystems)
-		manipulatorController.a().onTrue(Commands.runOnce(() -> shooterSubsystem.stop()));
+		manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
 
 		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
-		manipulatorController.b().onTrue(Commands.runOnce(() -> shooterSubsystem.aimStraight()));
+		manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
 
 		// X button: Start AIM sequence (all subsystems track target, auto-transitions
 		// to SHOOT when ready)
-		manipulatorController.x().onTrue(Commands.runOnce(() -> shooterSubsystem.startAiming()));
+		manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 	}

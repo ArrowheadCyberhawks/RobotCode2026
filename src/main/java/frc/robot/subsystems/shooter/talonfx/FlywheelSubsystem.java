@@ -8,8 +8,12 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
@@ -28,7 +32,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
   private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0.0);
 
-  private double velocitySetpointRadsPerSec = 0.0;
+  private AngularVelocity velocitySetpoint = RadiansPerSecond.of(0.0);
   private boolean atGoal = false;
 
   // Slew rate limiter to smooth setpoint changes (rad/s per second)
@@ -94,27 +98,23 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     // Get current velocity in rotations per second, convert to rad/s for internal use
-    double velocityRps = leader.getVelocity().getValueAsDouble();
-    double velocityRadPerSec = velocityRps * 2.0 * Math.PI;
+    AngularVelocity currentVelocity = RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
     
-    Logger.recordOutput("Flywheel/Velocity", velocityRadPerSec);
-
-    if (velocitySetpointRadsPerSec == 0.0) {
+    Logger.recordOutput("Flywheel/Velocity (Rad/s)", currentVelocity.in(RadiansPerSecond));
+    if (velocitySetpoint.isEquivalent(RadiansPerSecond.zero())) {
       leader.stopMotor();
       atGoal = false;
       return;
     }
 
-    boolean inTolerance = Math.abs(velocityRadPerSec - velocitySetpointRadsPerSec) <= velocityTolerance.get();
+    boolean inTolerance = currentVelocity.isNear(velocitySetpoint, RadiansPerSecond.of(velocityTolerance.get()));
     atGoal = inTolerance;
 
     // Use VelocityTorqueCurrentFOC closed-loop control
-    // Convert rad/s to rotations/s (Phoenix 6 uses rotations per second for velocity)
-    double velocityRpsSetpoint = velocitySetpointRadsPerSec / (2.0 * Math.PI);
-    velocityRequest.Velocity = velocityRpsSetpoint;
+    velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
     leader.setControl(velocityRequest);
 
-    Logger.recordOutput("Flywheel/Setpoint", velocitySetpointRadsPerSec);
+    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
     Logger.recordOutput("Flywheel/AtGoal", atGoal);
     Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
     Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
@@ -123,11 +123,11 @@ public class FlywheelSubsystem extends SubsystemBase {
   // setpoint runner used by commands
   private void runVelocity(double velocityRadsPerSec) {
     // Apply slew rate limiting to smooth setpoint changes
-    velocitySetpointRadsPerSec = setpointLimiter.calculate(velocityRadsPerSec);
+    velocitySetpoint = RadiansPerSecond.of(setpointLimiter.calculate(velocityRadsPerSec));
   }
 
   private void stop() {
-    velocitySetpointRadsPerSec = 0.0;
+    velocitySetpoint = RadiansPerSecond.zero();
     setpointLimiter.reset(0.0);
     atGoal = false;
   }
