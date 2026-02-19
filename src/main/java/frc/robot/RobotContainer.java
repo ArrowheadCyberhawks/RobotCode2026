@@ -99,8 +99,6 @@ public class RobotContainer {
 	// public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
-
-	// TalonFX shooter subsystems and state machine
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
 	// public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
 	// public final TurretSubsystem turretTalonFX = new TurretSubsystem();
@@ -219,8 +217,14 @@ public class RobotContainer {
 			}
 		}));
 
-		// Right bumper - Start shooter aiming sequence, then feed when ready
-		driverController.rightBumper().onTrue(
+		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if already aiming/shooting
+		driverController.rightBumper().onTrue(Commands.either(
+			// If shooter is in AIM or SHOOT state, stop everything
+			Commands.sequence(
+				Commands.runOnce(() -> shooterSubsystem.stop()),
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+			),
+			// If shooter is IDLE or STRAIGHT, start aiming sequence
 			Commands.sequence(
 				// First, start aiming
 				Commands.runOnce(() -> shooterSubsystem.startAiming()),
@@ -228,8 +232,11 @@ public class RobotContainer {
 				Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
 				// Once ready, turn on the hopper to feed the ball
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-			)
-		);
+			),
+			// Condition: true if shooter is already aiming or shooting
+			() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
+			      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
+		));
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
