@@ -10,8 +10,9 @@ import frc.robot.util.LoggedTunableNumber;
 public final class IntakeConstants {
 
     // CAN IDs
-    public static final int kPivotMotorId = 10;
-    public static final int kRollerMotorId = 11;
+    public static final int kPivotMotorId = 14;
+    public static final int kRollerMotorId = 15;
+    public static final int kIntakePivotEncoderId = 55;
 
     // Gear ratio: motor rotations per pivot rotation
     // Example: 100:1 reduction → 100 motor revs = 1 pivot rev
@@ -59,8 +60,6 @@ public final class IntakeConstants {
     // Roller speeds (RPM)
     public static final LoggedTunableNumber kIntakeRpm = 
         new LoggedTunableNumber("Intake/Roller/IntakeRpm", 2400.0);
-
-    public static final int kPivotAbsoluteEncoderId = 56; // CAN ID for the absolute encoder (e.g., CANCoder)
 
     /** High-level intake states that control pivot and roller behavior */
     public enum IntakeState {

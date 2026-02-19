@@ -29,6 +29,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
   private final SparkClosedLoopController pid;
 
   private boolean trackingEnabled = false;
+  private double targetDegrees = ShooterConstants.HoodPosition.STOW.getDegrees();
 
   public HoodSubsystemNeo() {
     this(ShooterConstants.kHoodMotorId);
@@ -73,6 +74,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
   public void moveHoodToDegrees(double degrees) {
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
+    targetDegrees = clipped; // Store target for atGoal() check
     // Convert degrees to radians since encoder is configured with radian conversion factor
     double radians = Math.toRadians(clipped);
     // SparkMax position controller expects the same units as the encoder conversion factor (radians)
@@ -82,6 +84,26 @@ public class HoodSubsystemNeo extends SubsystemBase {
 
   public void stopHood() {
     hoodMotor.stopMotor();
+  }
+
+  /**
+   * Check if the hood is at its goal position.
+   * 
+   * @param toleranceDegrees The tolerance in degrees
+   * @return true if the hood is within tolerance of the target
+   */
+  public boolean atGoal(double toleranceDegrees) {
+    double currentDegrees = getHoodDegrees();
+    return Math.abs(currentDegrees - targetDegrees) <= toleranceDegrees;
+  }
+
+  /**
+   * Check if the hood is at its goal position using default tolerance.
+   * 
+   * @return true if the hood is within 2 degrees of the target
+   */
+  public boolean isAtGoal() {
+    return atGoal(2.0); // 2 degree default tolerance
   }
 
   public double getHoodDegrees() {

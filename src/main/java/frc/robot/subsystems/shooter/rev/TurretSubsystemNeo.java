@@ -42,6 +42,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
   private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 1.0);
 
   private boolean trackingEnabled = true;
+  private double targetRadians = 0.0;
 
   public TurretSubsystemNeo() {
     this(ShooterConstants.kTurnMotorId);
@@ -67,6 +68,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
   }
 
   public void moveTurretToRadians(double radians) {
+    targetRadians = radians; // Store target for atGoal() check
     turretController.setReference(radians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
   }
 
@@ -80,6 +82,32 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
   public void stopTurret() {
     turnMotor.stopMotor();
+  }
+
+  /**
+   * Check if the turret is at its goal position.
+   * 
+   * @param toleranceRadians The tolerance in radians
+   * @return true if the turret is within tolerance of the target
+   */
+  public boolean atGoal(double toleranceRadians) {
+    double currentRadians = getTurretRotation().getRadians();
+    
+    // Handle angle wrapping for shortest distance
+    double error = Math.abs(Rotation2d.fromRadians(currentRadians)
+        .minus(Rotation2d.fromRadians(targetRadians))
+        .getRadians());
+    
+    return error <= toleranceRadians;
+  }
+
+  /**
+   * Check if the turret is at its goal position using default tolerance.
+   * 
+   * @return true if the turret is within 3 degrees (~0.052 radians) of the target
+   */
+  public boolean isAtGoal() {
+    return atGoal(Math.toRadians(3.0)); // 3 degree default tolerance
   }
 
   public void resetTurretEncoder() {

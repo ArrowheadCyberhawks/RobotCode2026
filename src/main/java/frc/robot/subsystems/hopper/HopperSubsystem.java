@@ -6,9 +6,10 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -19,8 +20,11 @@ public class HopperSubsystem extends SubsystemBase {
     private final SparkMax hopperMotor;
     private final SparkMax kickerMotor;
 
-    private final ProfiledPIDController hopperController;
-    private final ProfiledPIDController kickerController;
+    private final SparkClosedLoopController hopperPIDController;
+    private final SparkClosedLoopController kickerPIDController;
+
+    private final RelativeEncoder hopperEncoder;
+    private final RelativeEncoder kickerEncoder;
 
     private SparkMaxConfig hopperConfig;
     private SparkMaxConfig kickerConfig;
@@ -35,36 +39,22 @@ public class HopperSubsystem extends SubsystemBase {
             hopperMotor = new SparkMax(HopperConstants.hopperMotor.hopperMotor, MotorType.kBrushless);
             kickerMotor = new SparkMax(HopperConstants.hopperMotor.kickerMotor, MotorType.kBrushless);
 
+            //Get encoders
+            hopperEncoder = hopperMotor.getEncoder();
+            kickerEncoder = kickerMotor.getEncoder();
+
+            //Get closed-loop controllers
+            hopperPIDController = hopperMotor.getClosedLoopController();
+            kickerPIDController = kickerMotor.getClosedLoopController();
+
             //create configs
             hopperConfig = new SparkMaxConfig();
             kickerConfig = new SparkMaxConfig();
-
-            //create PID controllers for hopper motor with trapezoidal motion profile
-            hopperController = new ProfiledPIDController(
-            HopperConstants.kPHopper.get(),
-            HopperConstants.kIHopper.get(),
-            HopperConstants.kDHopper.get(),
-            new TrapezoidProfile.Constraints(
-                HopperConstants.kHopperMaxVelocityRps.get(),
-                HopperConstants.kHopperMaxAccelRps2.get()
-            )
-        );
-
-            //create PID controllers for kicker motor with trapezoidal motion profile
-            kickerController = new ProfiledPIDController(
-                HopperConstants.kPKicker.get(),
-                HopperConstants.kIKicker.get(),
-                HopperConstants.kDKicker.get(),
-                new TrapezoidProfile.Constraints(
-                    HopperConstants.kKickerMaxVelocityRps.get(),
-                    HopperConstants.kKickerMaxAccelRps2.get()
-                )
-            );
         
-        //configure motors
-        configureHopper();
-        configureKicker();
-    }
+            //configure motors
+            configureHopper();
+            configureKicker();
+        }
     //State machine for hopper and kicker control
     public enum HopperState {
         IDLE,   //Both motors off
@@ -86,18 +76,30 @@ public class HopperSubsystem extends SubsystemBase {
     private void configureHopper() {
         hopperConfig
             .idleMode(IdleMode.kCoast)
-            .inverted ( false );
+            .inverted(false);
 
-    hopperMotor.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // Configure PID for velocity control
+        hopperConfig.closedLoop
+            .pid(HopperConstants.kPHopper.get(), 
+                 HopperConstants.kIHopper.get(), 
+                 HopperConstants.kDHopper.get());
+
+        hopperMotor.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     //Kicker motor configuration
     private void configureKicker() {
         kickerConfig
             .idleMode(IdleMode.kCoast)
-            .inverted ( false );
+            .inverted(false);
 
-    kickerMotor.configure(kickerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // Configure PID for velocity control
+        kickerConfig.closedLoop
+            .pid(HopperConstants.kPKicker.get(), 
+                 HopperConstants.kIKicker.get(), 
+                 HopperConstants.kDKicker.get());
+
+        kickerMotor.configure(kickerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     // function for hopper and givern speed
@@ -147,81 +149,74 @@ public class HopperSubsystem extends SubsystemBase {
         SmartDashboard.putString("Hopper/State", hopperState.name());
 
         // Update motor control and PID parameters
-    updateHopperControl();
-    updateKickerControl();
-    updateHopperPID();
-    updateKickerPID();
+        updateHopperControl();
+        updateKickerControl();
+        updateHopperPID();
+        updateKickerPID();
     }
 
 
 
 
-    /**updates the hopper motor control with simple voltage-based speed control*/
+    /**updates the hopper motor control using REV closed-loop velocity PID*/
     private void updateHopperControl() {
-   
-        if (hopperTargetRpm > 10) {
-    
-            double maxRPM = 5000.0;
-            double voltage = (hopperTargetRpm / maxRPM) * 12.0;
-            voltage = Math.max(-12.0, Math.min(12.0, voltage));
-            hopperMotor.setVoltage(voltage);
+        if (Math.abs(hopperTargetRpm) > 10) {
+            // Convert RPM to rotations per second for the PID controller
+            double targetRps = hopperTargetRpm / 60.0;
+            hopperPIDController.setReference(targetRps, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
         } else {
             hopperMotor.stopMotor();
         }
+
+        // Log telemetry
+        SmartDashboard.putNumber("Hopper/TargetRPM", hopperTargetRpm);
+        SmartDashboard.putNumber("Hopper/ActualRPM", hopperEncoder.getVelocity());
     }
 
-    /**updates the kicker motor control with simple voltage-based speed control*/
+    /**updates the kicker motor control using REV closed-loop velocity PID*/
     private void updateKickerControl() {
-   
-        if (kickerTargetRpm > 10) {
-    
-            double maxRPM = 5000.0;
-            double voltage = (kickerTargetRpm / maxRPM) * 12.0;
-            voltage = Math.max(-12.0, Math.min(12.0, voltage));
-            kickerMotor.setVoltage(voltage);
+        if (Math.abs(kickerTargetRpm) > 10) {
+            // Convert RPM to rotations per second for the PID controller
+            double targetRps = kickerTargetRpm / 60.0;
+            kickerPIDController.setReference(targetRps, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
         } else {
             kickerMotor.stopMotor();
         }
+
+        // Log telemetry
+        SmartDashboard.putNumber("Kicker/TargetRPM", kickerTargetRpm);
+        SmartDashboard.putNumber("Kicker/ActualRPM", kickerEncoder.getVelocity());
     }
     
     /**updates the hopper motor PID parameters if they have changed*/
     private void updateHopperPID() {
         int id = this.hashCode();
-        if (HopperConstants.kPHopper.hasChanged(id) || HopperConstants.kIHopper.hasChanged(id) ||
-            HopperConstants.kDHopper.hasChanged(id) || HopperConstants.kHopperMaxVelocityRps.hasChanged(id) ||
-            HopperConstants.kHopperMaxAccelRps2.hasChanged(id)) {
+        if (HopperConstants.kPHopper.hasChanged(id) || 
+            HopperConstants.kIHopper.hasChanged(id) ||
+            HopperConstants.kDHopper.hasChanged(id)) {
 
-
-            hopperController.setP(HopperConstants.kPHopper.get());
-            hopperController.setI(HopperConstants.kIHopper.get());
-            hopperController.setD(HopperConstants.kDHopper.get());
-            hopperController.setConstraints(
-                new TrapezoidProfile.Constraints(
-                    HopperConstants.kHopperMaxVelocityRps.get(),
-                    HopperConstants.kHopperMaxAccelRps2.get()
-                )
+            hopperConfig.closedLoop
+                .pid(HopperConstants.kPHopper.get(), 
+                     HopperConstants.kIHopper.get(), 
+                     HopperConstants.kDHopper.get());
             
-            );
+            hopperMotor.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         }
     }
+
     /**updates the kicker motor PID parameters if they have changed*/
     private void updateKickerPID() {
         int id = this.hashCode();
-        if (HopperConstants.kPKicker.hasChanged(id) || HopperConstants.kIKicker.hasChanged(id) ||
-            HopperConstants.kDKicker.hasChanged(id) || HopperConstants.kKickerMaxVelocityRps.hasChanged(id) ||
-            HopperConstants.kKickerMaxAccelRps2.hasChanged(id)) {
+        if (HopperConstants.kPKicker.hasChanged(id) || 
+            HopperConstants.kIKicker.hasChanged(id) ||
+            HopperConstants.kDKicker.hasChanged(id)) {
 
-
-                kickerController.setP(HopperConstants.kPKicker.get());
-                kickerController.setI(HopperConstants.kIKicker.get());
-                kickerController.setD(HopperConstants.kDKicker.get());
-                kickerController.setConstraints(
-                    new TrapezoidProfile.Constraints(
-                        HopperConstants.kKickerMaxVelocityRps.get(),
-                        HopperConstants.kKickerMaxAccelRps2.get()
-                    )
+            kickerConfig.closedLoop
+                .pid(HopperConstants.kPKicker.get(), 
+                     HopperConstants.kIKicker.get(), 
+                     HopperConstants.kDKicker.get());
             
-            );
+            kickerMotor.configure(kickerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         }
     }
 

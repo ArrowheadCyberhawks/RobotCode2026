@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
@@ -31,7 +32,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   private final FlywheelSubsystem flywheel;
-  private final HoodSubsystem hood;
+  private final HoodSubsystemNeo hood;
   private final TurretSubsystemNeo turret;
 
   private ShooterState currentState = ShooterState.IDLE;
@@ -39,7 +40,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public ShooterSubsystem(
       FlywheelSubsystem flywheel,
-      HoodSubsystem hood,
+      HoodSubsystemNeo hood,
       TurretSubsystemNeo turret) {
     this.flywheel = flywheel;
     this.hood = hood;
@@ -85,7 +86,7 @@ public class ShooterSubsystem extends SubsystemBase {
    * Check if all subsystems are at their goals.
    */
   public boolean areAllSubsystemsAtGoal() {
-    return flywheel.isAtGoal() ;//&& hood.() && turret.isAtGoal();
+    return flywheel.isAtGoal() && hood.isAtGoal() && turret.isAtGoal();
   }
 
   /**

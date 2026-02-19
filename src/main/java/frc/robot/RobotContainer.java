@@ -47,6 +47,8 @@ import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
 import frc.robot.util.FieldConstants;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.hopper.HopperSubsystem;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -94,24 +96,26 @@ public class RobotContainer {
 			field2d);
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
-	// Shooter-related subsystems (Neo versions - for testing/comparison)
-	public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
-	public final HoodSubsystemNeo hoodSubsystem = new HoodSubsystemNeo();
-	public final TurretSubsystemNeo turretSubsystem = new TurretSubsystemNeo();
+	// public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
+	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
+	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
 
 	// TalonFX shooter subsystems and state machine
-	public final FlywheelSubsystem flywheelTalonFX = new FlywheelSubsystem();
-	public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
+	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
+	// public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
 	// public final TurretSubsystem turretTalonFX = new TurretSubsystem();
-	public final TurretSubsystemNeo turretNeo = new TurretSubsystemNeo(); // turret uses neos so switch it out
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
-			flywheelTalonFX,
-			hoodTalonFX,
-			turretNeo
+			flywheel,
+			hood,
+			turret
 		);
 
 	// Intake subsystem
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+	
+	// Hopper subsystem
+	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
+	
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -204,18 +208,34 @@ public class RobotContainer {
 																										// X (left)
 				));
 
-		hoodSubsystem.setDefaultCommand(hoodSubsystem.trackTarget());
-		turretSubsystem.setDefaultCommand(turretSubsystem.trackTarget());
-		flywheelSubsystem.setDefaultCommand(flywheelSubsystem.trackTarget());
 
-		// Intake controls - D-pad up to toggle rollers on/off, D-pad down to extend/retract
-		driverController.povUp().onTrue(intakeSubsystem.runOnce(intakeSubsystem::toggleRunState));
-		driverController.povDown().onTrue(intakeSubsystem.runOnce(intakeSubsystem::toggleExtendState));
+		// Left bumper - Toggle intake between RUN and OFF
+		driverController.leftBumper().onTrue(Commands.runOnce(() -> {
+			IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
+			if (currentState == IntakeConstants.IntakeState.RUN) {
+				intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
+			} else {
+				intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
+			}
+		}));
+
+		// Right bumper - Start shooter aiming sequence, then feed when ready
+		driverController.rightBumper().onTrue(
+			Commands.sequence(
+				// First, start aiming
+				Commands.runOnce(() -> shooterSubsystem.startAiming()),
+				// Wait until shooter is ready to shoot
+				Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
+				// Once ready, turn on the hopper to feed the ball
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+			)
+		);
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
 		// corner based on which side of the field we're on.
-		manipulatorController.povLeft().onTrue(Commands.runOnce(() -> {
+		// TODO: Find a place to put this in so that it runs all the time (some periodic?)
+		driverController.povLeft().onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			Pose2d pose = drivetrain.getPose();
 			double x = pose.getX();
@@ -243,12 +263,12 @@ public class RobotContainer {
 		RobotModeTriggers.disabled().whileTrue(
 				drivetrain.applyRequest(() -> idle).ignoringDisable(true));
 
-		driverController.x().whileTrue(drivetrain.applyRequest(() -> brake));
-		driverController.y().whileTrue(drivetrain.applyRequest(() -> point
-				.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
+		// driverController.x().whileTrue(drivetrain.applyRequest(() -> brake));
+		// driverController.y().whileTrue(drivetrain.applyRequest(() -> point
+		// 		.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
 
-		driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
-		driverController.a().whileTrue(
+		// driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
+		driverController.povUp().whileTrue(
 				new DriveToPose(
 						drivetrain,
 						() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
@@ -262,29 +282,30 @@ public class RobotContainer {
 		driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
 		// reset the field-centric heading on b button press
-		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
+		driverController.povRight().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
 				drivetrain.getState().Pose.getRotation() // drivetrain.getPose().getRotation()
 		)));
 
-		driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+		// driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
 		driverController.start()
 				.whileTrue(limelightSubsystem
 						.startRun(() -> LimelightSubsystem.SetIMUMode(1),
 								() -> limelightSubsystem.updateVisionPoseMT1(true))
 						.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
+
 		driverController.back().whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
 
 		// Manipulator controller - Shooter state machine controls
 		// A button: Set shooter to IDLE (stop all subsystems)
-		manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
+		//manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
 
 		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
-		manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
+		//manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
 
 		// X button: Start AIM sequence (all subsystems track target, auto-transitions
 		// to SHOOT when ready)
-		manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
+		//manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 	}

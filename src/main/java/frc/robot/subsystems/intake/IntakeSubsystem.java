@@ -15,7 +15,6 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -34,10 +33,10 @@ public class IntakeSubsystem extends SubsystemBase {
     private final SparkFlex pivotMotor;
     private final SparkFlex rollerMotor;
 
-    private final RelativeEncoder pivotEncoder;
+    // Removed: private final RelativeEncoder pivotEncoder; - using absolute encoder only
     private final RelativeEncoder rollerEncoder;
 
-    private final CANcoder pivotAbsoluteEncoder; // Optional: for absolute position feedback
+    private final CANcoder pivotAbsoluteEncoder;
 
     private SparkFlexConfig pivotConfig;
     private SparkFlexConfig rollerConfig;
@@ -55,8 +54,7 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotor = new SparkFlex(IntakeConstants.kPivotMotorId, MotorType.kBrushless);
         rollerMotor = new SparkFlex(IntakeConstants.kRollerMotorId, MotorType.kBrushless);
 
-        // Get encoders
-        pivotEncoder = pivotMotor.getEncoder();
+        // Get roller encoder (pivot uses absolute encoder only)
         rollerEncoder = rollerMotor.getEncoder();
 
         // Create configs
@@ -64,7 +62,7 @@ public class IntakeSubsystem extends SubsystemBase {
         rollerConfig = new SparkFlexConfig();
 
         // Create absolute encoder
-        pivotAbsoluteEncoder = new CANcoder(IntakeConstants.kPivotAbsoluteEncoderId);
+        pivotAbsoluteEncoder = new CANcoder(IntakeConstants.kIntakePivotEncoderId);
 
         // Create WPILib ProfiledPIDController with trapezoidal motion profile (RobotRIO-side)
         pivotController = new ProfiledPIDController(
@@ -169,14 +167,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public void stopPivot() {
         pivotMotor.stopMotor();
-        pivotController.reset(getPivotAngleRelative().in(Radians));
-    }
-
-    /**
-     * Get the current pivot angle from the motor's relative encoder.
-     */
-    public Angle getPivotAngleRelative() {
-        return Radians.of(pivotEncoder.getPosition());
+        pivotController.reset(getPivotAngleAbsolute().in(Radians));
     }
 
     /**
@@ -186,9 +177,12 @@ public class IntakeSubsystem extends SubsystemBase {
         return Rotations.of(pivotAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
     }
 
+    /**
+     * Sync the controller to match the current absolute encoder position.
+     * This is useful on startup or after a reset.
+     */
     public void syncEncoders() {
         double absoluteRadians = getPivotAngleAbsolute().in(Radians);
-        pivotEncoder.setPosition(absoluteRadians);
         pivotController.reset(absoluteRadians);
     }
 
@@ -227,7 +221,6 @@ public class IntakeSubsystem extends SubsystemBase {
         updatePivotPID();
 
         // Telemetry
-        SmartDashboard.putNumber("Intake/Pivot Relative Degrees", getPivotAngleRelative().in(Degrees));
         SmartDashboard.putNumber("Intake/Pivot Absolute Degrees", getPivotAngleAbsolute().in(Degrees));
         SmartDashboard.putNumber("Intake/Pivot Target Degrees", Math.toDegrees(pivotController.getGoal().position));
         SmartDashboard.putNumber("Intake/Pivot Setpoint Degrees", Math.toDegrees(pivotController.getSetpoint().position));
