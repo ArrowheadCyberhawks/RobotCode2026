@@ -24,191 +24,204 @@ import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.util.LoggedTunableNumber;
 
 /**
- * Turret implementation using REV CANSparkMax (NEO). 
+ * Turret implementation using REV CANSparkMax (NEO).
  * Uses REV onboard PID controller for position control.
  */
 public class TurretSubsystemNeo extends SubsystemBase {
-  private final SparkMax turnMotor;
-  private final RelativeEncoder encoder;
-  private final SparkClosedLoopController turretController;
-  
-  private SparkMaxConfig turretConfig;
-  
-  // Tunable PID constants for Turret
-  private final LoggedTunableNumber turretKP = new LoggedTunableNumber("Turret/kP", ShooterConstants.kPTurret.get());
-  private final LoggedTunableNumber turretKI = new LoggedTunableNumber("Turret/kI", ShooterConstants.kITurret.get());
-  private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Turret/kD", ShooterConstants.kDTurret.get());
-  private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance", ShooterConstants.kTurretAllowedError);
-  private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 1.0);
+	private final SparkMax turretMotor;
+	private final RelativeEncoder encoder;
+	private final SparkClosedLoopController turretController;
 
-  private boolean trackingEnabled = true;
-  private double targetRadians = 0.0;
+	private SparkMaxConfig turretConfig;
 
-  public TurretSubsystemNeo() {
-    this(ShooterConstants.kTurretMotorId);
-  }
+	// Tunable PID constants for Turret
+	private final LoggedTunableNumber turretKP = new LoggedTunableNumber("Turret/kP", ShooterConstants.kPTurret.get());
+	private final LoggedTunableNumber turretKI = new LoggedTunableNumber("Turret/kI", ShooterConstants.kITurret.get());
+	private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Turret/kD", ShooterConstants.kDTurret.get());
+	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance",
+			ShooterConstants.kTurretAllowedError);
+	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.5);
+	// Soft limits in radians (±135 degrees)
+	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 3 * Math.PI / 4);
+	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -3 * Math.PI / 4);
 
-  public TurretSubsystemNeo(int motorId) {
-    turnMotor = new SparkMax(motorId, MotorType.kBrushless);
-    encoder = turnMotor.getEncoder();
-    turretController = turnMotor.getClosedLoopController();
-    
-    turretConfig = new SparkMaxConfig();
+	private boolean trackingEnabled = true;
+	private double targetRadians = 0.0;
 
-    configureTurret();
-    resetTurretEncoder();
-  }
+	public TurretSubsystemNeo() {
+		this(ShooterConstants.kTurretMotorId);
+	}
 
-  /**
-   * Set target azimuth for the turret. The controller will rotate the turret to the specified angle.
-   * @param targetTurretAngle Target angle in radians
-   */
-  public void setTurretTarget(Angle targetTurretAngle) {
-    turretController.setReference(targetTurretAngle.in(Radians), ControlType.kPosition, ClosedLoopSlot.kSlot0);
-  }
+	public TurretSubsystemNeo(int motorId) {
+		turretMotor = new SparkMax(motorId, MotorType.kBrushless);
+		encoder = turretMotor.getEncoder();
+		turretController = turretMotor.getClosedLoopController();
 
-  public void moveTurretToRadians(double radians) {
-    targetRadians = radians; // Store target for atGoal() check
-    turretController.setReference(radians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-  }
+		turretConfig = new SparkMaxConfig();
 
-  public void moveTurretToDegrees(double degrees) {
-    moveTurretToRadians(Math.toRadians(degrees));
-  }
+		configureTurret();
+		resetTurretEncoder();
+	}
 
-  public void setTurretVoltage(double volts) {
-    turnMotor.setVoltage(volts);
-  }
+	/**
+	 * Set target azimuth for the turret. The controller will rotate the turret to
+	 * the specified angle.
+	 * 
+	 * @param targetTurretAngle Target angle in radians
+	 */
+	public void setTurretTarget(Angle targetTurretAngle) {
+		moveTurretToRadians(targetTurretAngle.in(Radians));
+	}
 
-  public void stopTurret() {
-    turnMotor.stopMotor();
-  }
+	public void moveTurretToRadians(double radians) {
+		targetRadians = radians; // Store target for atGoal() check
+		turretController.setSetpoint(radians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+	}
 
-  /**
-   * Check if the turret is at its goal position.
-   * 
-   * @param toleranceRadians The tolerance in radians
-   * @return true if the turret is within tolerance of the target
-   */
-  public boolean atGoal(double toleranceRadians) {
-    double currentRadians = getTurretRotation().getRadians();
-    
-    // Handle angle wrapping for shortest distance
-    double error = Math.abs(Rotation2d.fromRadians(currentRadians)
-        .minus(Rotation2d.fromRadians(targetRadians))
-        .getRadians());
-    
-    return error <= toleranceRadians;
-  }
+	public void moveTurretToDegrees(double degrees) {
+		moveTurretToRadians(Math.toRadians(degrees));
+	}
 
-  /**
-   * Check if the turret is at its goal position using default tolerance.
-   * 
-   * @return true if the turret is within 3 degrees (~0.052 radians) of the target
-   */
-  public boolean isAtGoal() {
-    return atGoal(Math.toRadians(3.0)); // 3 degree default tolerance
-  }
+	public void setTurretVoltage(double volts) {
+		turretMotor.setVoltage(volts);
+	}
 
-  public void resetTurretEncoder() {
-    // Get current position in radians
-    double currentRadians = encoder.getPosition();
-    // Wrap to [-π, π] range to match ShotCalculator
-    double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
-    encoder.setPosition(wrappedRadians);
-  }
+	public void stopTurret() {
+		turretMotor.stopMotor();
+	}
 
-  public void manualResetTurretEncoder(double rotations) {
-    encoder.setPosition(rotations);
-  }
+	/**
+	 * Check if the turret is at its goal position.
+	 * 
+	 * @param toleranceRadians The tolerance in radians
+	 * @return true if the turret is within tolerance of the target
+	 */
+	public boolean atGoal(double toleranceRadians) {
+		double currentRadians = getTurretRotation().getRadians();
 
-  @Override
-  public void periodic() {
-    // Update PID constants if they've changed in NetworkTables
-    updateTurretPID();
-    
-    // Periodically wrap encoder to [-π, π] to match ShotCalculator
-    // TODO - check if you actually need this with rev
-    double currentRadians = getTurretRotation().getRadians();
-    if (Math.abs(currentRadians) > 10.0 * Math.PI) {
-      double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
-      encoder.setPosition(wrappedRadians);
-    }
-    
-    // Log telemetry
-    SmartDashboard.putNumber("Turret/Current Position (deg)", getTurretRotation().getDegrees());
-  }
+		// Handle angle wrapping for shortest distance
+		double error = Math.abs(Rotation2d.fromRadians(currentRadians)
+				.minus(Rotation2d.fromRadians(targetRadians))
+				.getRadians());
 
-  public void setTrackingEnabled(boolean enabled) {
-    this.trackingEnabled = enabled;
-  }
+		return error <= toleranceRadians;
+	}
 
-  public Command trackTarget() {
-    return run(() -> {
-      var data = ShotCalculator.getInstance().getData();
-      SmartDashboard.putBoolean("Turret/ShotData Exists", data != null);
-      if (data != null) {
-        SmartDashboard.putBoolean("Turret/ShotData Valid", data.isValid());
-        Rotation2d desired = data.turretAngle();
-        SmartDashboard.putNumber("Turret/ShotCalc Angle (deg)", desired.getDegrees());
-        SmartDashboard.putNumber("Turret/ShotCalc Angle (rad)", desired.getRadians());
-        if (data.isValid()) {
-          moveTurretToRadians(desired.getRadians());
-          SmartDashboard.putNumber("Turret/ShotCalc Angle Goal", desired.getDegrees());
-        }
-      }
-    });
-  }
+	/**
+	 * Check if the turret is at its goal position using default tolerance.
+	 * 
+	 * @return true if the turret is within 3 degrees (~0.052 radians) of the target
+	 */
+	public boolean isAtGoal() {
+		return atGoal(Math.toRadians(3.0)); // 3 degree default tolerance
+	}
 
-  public Rotation2d getTurretRotation() {
-    try {
-      return Rotation2d.fromRadians(encoder.getPosition());
-    } catch (Exception e) {
-      return new Rotation2d();
-    }
-  }
+	public void resetTurretEncoder() {
+		// Get current position in radians
+		double currentRadians = encoder.getPosition();
+		// Wrap to [-π, π] range to match ShotCalculator
+		double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+		encoder.setPosition(wrappedRadians);
+	}
 
-  private void configureTurret() {
-    // Encoder conversion: motor rotations → radians
-    turretConfig.encoder.positionConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI);
-    turretConfig.encoder.velocityConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI / 60.0);
-    
-    turretConfig.idleMode(IdleMode.kBrake)
-      .inverted(true)
-      .closedLoop
-        .outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
-        .p(turretKP.get())
-        .i(turretKI.get())
-        .d(turretKD.get())
-        .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
-  
-    // Use kNoPersistParameters to avoid slow flash writes
-    turnMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-  }
+	public void manualResetTurretEncoder(double rotations) {
+		encoder.setPosition(rotations);
+	}
 
-  /**
-   * Updates the turret PID constants from NetworkTables if they've changed.
-   * This allows live tuning via AdvantageScope or SmartDashboard.
-   */
-  private void updateTurretPID() {
-    // Check if any values changed (using hashCode as ID)
-    int id = this.hashCode();
-    if (turretKP.hasChanged(id) || turretKI.hasChanged(id) || 
-        turretKD.hasChanged(id) || turretTolerance.hasChanged(id) ||
-        turretMaxPercentOutput.hasChanged(id)) {
-      
-      turretConfig.closedLoop
-          .outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
-          .p(turretKP.get())
-          .i(turretKI.get())
-          .d(turretKD.get())
-          .allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
-      
-      turnMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-      
-      SmartDashboard.putString("Turret/PID Status", 
-          String.format("Updated: P=%.3f I=%.3f D=%.3f MaxOut=%.2f", 
-              turretKP.get(), turretKI.get(), turretKD.get(), turretMaxPercentOutput.get()));
-    }
-  }
+	@Override
+	public void periodic() {
+		// Update PID constants if they've changed in NetworkTables
+		updateTurretPID();
+
+		// Periodically wrap encoder to [-π, π] to match ShotCalculator
+		// TODO - check if you actually need this with rev
+		double currentRadians = getTurretRotation().getRadians();
+		if (Math.abs(currentRadians) > 10.0 * Math.PI) {
+			double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+			encoder.setPosition(wrappedRadians);
+		}
+
+		// Log telemetry
+		SmartDashboard.putNumber("Turret/Current Position (deg)", getTurretRotation().getDegrees());
+	}
+
+	public void setTrackingEnabled(boolean enabled) {
+		this.trackingEnabled = enabled;
+	}
+
+	public Command trackTarget() {
+		return run(() -> {
+			var data = ShotCalculator.getInstance().getData();
+			SmartDashboard.putBoolean("Turret/ShotData Exists", data != null);
+			if (data != null) {
+				SmartDashboard.putBoolean("Turret/ShotData Valid", data.isValid());
+				Rotation2d desired = data.turretAngle();
+				SmartDashboard.putNumber("Turret/ShotCalc Angle (deg)", desired.getDegrees());
+				SmartDashboard.putNumber("Turret/ShotCalc Angle (rad)", desired.getRadians());
+				if (data.isValid()) {
+					moveTurretToRadians(desired.getRadians());
+					SmartDashboard.putNumber("Turret/ShotCalc Angle Goal", desired.getDegrees());
+				}
+			}
+		});
+	}
+
+	public Rotation2d getTurretRotation() {
+		try {
+			return Rotation2d.fromRadians(encoder.getPosition());
+		} catch (Exception e) {
+			return new Rotation2d();
+		}
+	}
+
+	private void configureTurret() {
+		// Encoder conversion: motor rotations → radians
+		turretConfig.encoder
+				.positionConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI)
+				.velocityConversionFactor(ShooterConstants.kTurretGearRatio * 2.0 * Math.PI / 60.0);
+
+		turretConfig
+				.idleMode(IdleMode.kBrake)
+				.inverted(true).closedLoop
+				.outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
+				.p(turretKP.get())
+				.i(turretKI.get())
+				.d(turretKD.get())
+				.allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
+
+		turretConfig.softLimit
+				.forwardSoftLimit(turretMaxAngle.get())
+				.reverseSoftLimit(turretMinAngle.get())
+				.forwardSoftLimitEnabled(true)
+				.reverseSoftLimitEnabled(true);
+
+		// Use kNoPersistParameters to avoid slow flash writes
+		turretMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+	}
+
+	/**
+	 * Updates the turret PID constants from NetworkTables if they've changed.
+	 * This allows live tuning via AdvantageScope or SmartDashboard.
+	 */
+	private void updateTurretPID() {
+		// Check if any values changed (using hashCode as ID)
+		int id = this.hashCode();
+		if (turretKP.hasChanged(id) || turretKI.hasChanged(id) ||
+				turretKD.hasChanged(id) || turretTolerance.hasChanged(id) ||
+				turretMaxPercentOutput.hasChanged(id)) {
+
+			turretConfig.closedLoop
+					.outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
+					.p(turretKP.get())
+					.i(turretKI.get())
+					.d(turretKD.get())
+					.allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
+
+			turretMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+
+			SmartDashboard.putString("Turret/PID Status",
+					String.format("Updated: P=%.3f I=%.3f D=%.3f MaxOut=%.2f",
+							turretKP.get(), turretKI.get(), turretKD.get(), turretMaxPercentOutput.get()));
+		}
+	}
 }
