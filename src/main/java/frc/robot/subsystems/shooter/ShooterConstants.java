@@ -81,10 +81,8 @@ public final class ShooterConstants {
             return degrees;
         }
 
-        /** Return angle representation (units library) */
-        // TODO import Units library properly
         public Angle getAngle() {
-            return edu.wpi.first.units.Units.Degrees.of(degrees);
+            return Degrees.of(degrees);
         }
     }
 
@@ -101,8 +99,4 @@ public final class ShooterConstants {
         new Transform3d(new Translation3d(), new Rotation3d());
         
     public static final Translation3d robotToTurret = kRobotToTurretTransform.getTranslation();
-
-
-
-
 }
