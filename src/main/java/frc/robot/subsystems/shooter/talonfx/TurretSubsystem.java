@@ -22,7 +22,7 @@ import static edu.wpi.first.units.Units.Rotations;
  */
 public class TurretSubsystem extends SubsystemBase {
 
-  private final TalonFX turnMotor = new TalonFX(ShooterConstants.kTurnMotorId);
+  private final TalonFX turnMotor = new TalonFX(ShooterConstants.kTurretMotorId);
   private final MotionMagicVoltage turretRequest = new MotionMagicVoltage(0);
   private final VoltageOut neutralOut = new VoltageOut(0);
 

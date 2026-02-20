@@ -23,11 +23,10 @@ public final class ShooterConstants {
     private ShooterConstants() {}
 
     // CAN IDs
-    public static final int kFlywheelMotorId = 12;
+    public static final int kFlywheelMotorId = 14;
     public static final int kHoodMotorId = 10;
-    // Turret motors (merged into shooter)
-    public static final int kTurnMotorId = 13;
-    public static final int kShootMotorId = 22;
+    public static final int kTurretMotorId = 13;
+    //public static final int kShootMotorId = 22;
 
     // Flywheel (velocity control)
     public static final double kFlywheelGearRatio = 1.0;

@@ -45,7 +45,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
   private double targetRadians = 0.0;
 
   public TurretSubsystemNeo() {
-    this(ShooterConstants.kTurnMotorId);
+    this(ShooterConstants.kTurretMotorId);
   }
 
   public TurretSubsystemNeo(int motorId) {
