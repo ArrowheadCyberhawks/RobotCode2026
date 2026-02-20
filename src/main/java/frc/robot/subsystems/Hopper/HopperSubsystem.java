@@ -1,10 +1,13 @@
 package frc.robot.subsystems.Hopper;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -18,6 +21,12 @@ public class HopperSubsystem extends SubsystemBase {
 
     private final ProfiledPIDController hopperController;
     private final ProfiledPIDController kickerController;
+
+    private final RelativeEncoder hopperEncoder;
+    private final RelativeEncoder kickerEncoder;
+
+    private final SparkClosedLoopController hopperPIDController;
+    private final SparkClosedLoopController kickerPIDController;
 
     private SparkMaxConfig hopperConfig;
     private SparkMaxConfig kickerConfig;
@@ -35,6 +44,15 @@ public class HopperSubsystem extends SubsystemBase {
             //create configs
             hopperConfig = new SparkMaxConfig();
             kickerConfig = new SparkMaxConfig();
+
+            //create encoders
+            hopperEncoder = hopperMotor.getEncoder();
+            kickerEncoder = kickerMotor.getEncoder();
+
+            //create closed loop controllers
+            hopperPIDController = hopperMotor.getClosedLoopController();
+            kickerPIDController = kickerMotor.getClosedLoopController();
+
 
             //create PID controllers for hopper motor with trapezoidal motion profile
             hopperController = new ProfiledPIDController(
@@ -159,51 +177,37 @@ public class HopperSubsystem extends SubsystemBase {
 
 
 
-    /**updates the hopper motor control with simple voltage-based speed control*/
+        /**updates the hopper motor control using REV closed-loop velocity PID*/
     private void updateHopperControl() {
-   
-        if (hopperTargetRpm > 10) {
-    
-            double maxRPM = 5000.0;
-            double voltage = (hopperTargetRpm / maxRPM) * 12.0;
-            voltage = Math.max(-12.0, Math.min(12.0, voltage));
-            hopperMotor.setVoltage(voltage);
+             if (Math.abs(hopperTargetRpm) > 10) {
+            // Convert RPM to rotations per second for the PID controller
+            double targetRps = hopperTargetRpm / 60.0;
+            hopperPIDController.setReference(targetRps, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
         } else {
             hopperMotor.stopMotor();
         }
+
+        // Log telemetry
+        SmartDashboard.putNumber("Hopper/TargetRPM", hopperTargetRpm);
+        SmartDashboard.putNumber("Hopper/ActualRPM", hopperEncoder.getVelocity());
     }
 
-    /**updates the kicker motor control with simple voltage-based speed control*/
+        /**updates the kicker motor control using REV closed-loop velocity PID*/
     private void updateKickerControl() {
-   
-        if (kickerTargetRpm > 10) {
-    
-            double maxRPM = 5000.0;
-            double voltage = (kickerTargetRpm / maxRPM) * 12.0;
-            voltage = Math.max(-12.0, Math.min(12.0, voltage));
-            kickerMotor.setVoltage(voltage);
+
+                if (Math.abs(kickerTargetRpm) > 10) {
+            // Convert RPM to rotations per second for the PID controller
+            double targetRps = kickerTargetRpm / 60.0;
+            kickerPIDController.setReference(targetRps, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
         } else {
             kickerMotor.stopMotor();
         }
+
+        // Log telemetry
+        SmartDashboard.putNumber("Kicker/TargetRPM", kickerTargetRpm);
+        SmartDashboard.putNumber("Kicker/ActualRPM", kickerEncoder.getVelocity());
+
     }
-
-    // private void updateKickerControl() {
-   
-    //     if (kickerTargetRpm > 10) {
-    
-    //         double pidoutput = kickerController.calculate(kickerMotor., kickerTargetRpm);
-
-    //         double 
-
-    //         double totalOutput = pidoutput;
-
-    //         totalOutput = Math.max(-12.0, Math.min(12.0, totalOutput));
-
-    //         kickerMotor.setVoltage(totalOutput);
-    //     } else {
-    //         kickerMotor.stopMotor();
-    //     }
-    // }
     
     /**updates the hopper motor PID parameters if they have changed*/
     private void updateHopperPID() {
