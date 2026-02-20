@@ -27,7 +27,7 @@ import org.littletonrobotics.junction.Logger;
 public class FlywheelSubsystem extends SubsystemBase {
 
   private final TalonFX leader;
-  //private final TalonFX follower;
+  private final TalonFX follower;
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
   private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0.0);
@@ -42,18 +42,18 @@ public class FlywheelSubsystem extends SubsystemBase {
   private static final LoggedTunableNumber velocityTolerance =
       new LoggedTunableNumber("Flywheel/VelocityTolerance", 5.0);
 
-  public FlywheelSubsystem(int leaderId) {
+  public FlywheelSubsystem(int leaderId, int followerId) {
     leader = new TalonFX(leaderId);
-    //follower = new TalonFX(followerId);
+    follower = new TalonFX(followerId);
 
     // Configure follower to mirror leader (opposed direction for typical flywheels)
-    //follower.setControl(new Follower(leaderId, MotorAlignmentValue.Opposed));
+    follower.setControl(new Follower(leaderId, MotorAlignmentValue.Opposed));
 
     configureFlywheel();
   }
 
   public FlywheelSubsystem() {
-    this(ShooterConstants.kFlywheelMotorId);
+    this(ShooterConstants.kFlywheelMotorId, ShooterConstants.kFlywheelFollowerMotorId);
   }
 
   private void configureFlywheel() {
@@ -75,7 +75,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     // cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     leader.getConfigurator().apply(cfg);
-    //follower.getConfigurator().apply(cfg);
+    follower.getConfigurator().apply(cfg);
   }
 
   @Override
@@ -94,7 +94,7 @@ public class FlywheelSubsystem extends SubsystemBase {
       cfg.Slot0.kV = ShooterConstants.kVFlywheel.get();
       cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
       leader.getConfigurator().apply(cfg);
-      //follower.getConfigurator().apply(cfg);
+      follower.getConfigurator().apply(cfg);
     }
 
     // Get current velocity in rotations per second, convert to rad/s for internal use
