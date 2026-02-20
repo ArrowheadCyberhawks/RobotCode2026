@@ -6,7 +6,11 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Optional;
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.*;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -21,6 +25,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -46,6 +53,8 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.HubTracker;
+import frc.robot.util.HubTracker.Shift;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.hopper.HopperSubsystem;
@@ -97,16 +106,16 @@ public class RobotContainer {
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
 	// public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
-	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
-	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
-	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
-	// public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
-	// public final TurretSubsystem turretTalonFX = new TurretSubsystem();
-	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
-			flywheel,
-			hood,
-			turret
-		);
+	// public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
+	// public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
+	// public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
+	// // public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
+	// // public final TurretSubsystem turretTalonFX = new TurretSubsystem();
+	// public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
+	// 		flywheel,
+	// 		hood,
+	// 		turret
+	// 	);
 
 	// Intake subsystem
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
@@ -119,10 +128,13 @@ public class RobotContainer {
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter rotationLimiter = new SlewRateLimiter(
 			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
+	
+
 
 	public RobotContainer() {
 		constructField();
 		configureBindings();
+		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 
 		// Configure ShotCalculator with robot pose supplier
 		// This is critical - without this, the calculator thinks the robot is always at
@@ -216,20 +228,20 @@ public class RobotContainer {
 				intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
 			}
 		}));
-
+/*
 		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if already aiming/shooting
 		driverController.rightBumper().onTrue(Commands.either(
 			// If shooter is in AIM or SHOOT state, stop everything
 			Commands.sequence(
-				Commands.runOnce(() -> shooterSubsystem.stop()),
+				Commands.runOnce(shooterSubsystem::stop),
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
 			),
 			// If shooter is IDLE or STRAIGHT, start aiming sequence
 			Commands.sequence(
 				// First, start aiming
-				Commands.runOnce(() -> shooterSubsystem.startAiming()),
+				Commands.runOnce(shooterSubsystem::startAiming),
 				// Wait until shooter is ready to shoot
-				Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
+				Commands.waitUntil(shooterSubsystem::isReadyToShoot),
 				// Once ready, turn on the hopper to feed the ball
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
 			),
@@ -237,6 +249,7 @@ public class RobotContainer {
 			() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
 			      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
 		));
+		*/
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
@@ -306,6 +319,7 @@ public class RobotContainer {
 		// Manipulator controller - Shooter state machine controls
 		// A button: Set shooter to IDLE (stop all subsystems)
 		//manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
+
 
 		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
 		//manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
