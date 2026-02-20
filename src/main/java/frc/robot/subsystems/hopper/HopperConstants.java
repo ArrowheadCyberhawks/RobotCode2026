@@ -5,7 +5,7 @@ import frc.robot.util.LoggedTunableNumber;
 public final class HopperConstants {
     public final class hopperMotor {
         public static final int hopperMotor = 12; 
-        public static final int kickerMotor = 13;
+        public static final int kickerMotor = 11;
     } 
 
         public static final LoggedTunableNumber kPHopper = 

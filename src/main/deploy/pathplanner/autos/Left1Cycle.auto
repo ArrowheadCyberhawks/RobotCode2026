@@ -5,9 +5,16 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "LeftTrenchToNeutral"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "LeftTrenchToNeutral"
+                }
+              }
+            ]
           }
         },
         {

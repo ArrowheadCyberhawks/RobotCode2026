@@ -12,6 +12,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -35,7 +36,7 @@ public class QuestNavSubsystem extends SubsystemBase {
         Centimeters.of(0), // x offset
         Centimeters.of(27.5), // y offset
         Centimeters.of(0), // z offset
-        new edu.wpi.first.math.geometry.Rotation3d(0.0, 0.0, Math.PI/2) // rotation offset
+        new Rotation3d(0.0, 0.0, Math.PI/2) // rotation offset
     );
 
     /** Last known robot pose from QuestNav */

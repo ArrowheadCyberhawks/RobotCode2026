@@ -17,6 +17,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.math.MathUtil;
@@ -167,7 +168,10 @@ public class RobotContainer {
 			questNavSubsystem.resetPose(pose);
 		});
 
-		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Tests"));
+		// Register Named Commands for PathPlanner BEFORE creating any autos
+		registerNamedCommands();
+
+		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Left1Cycle"));
 
 		// Warmup PathPlanner to avoid Java pauses
 		CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
@@ -329,6 +333,42 @@ public class RobotContainer {
 		//manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
+	}
+
+	/**
+	 * Register named commands for use in PathPlanner autos.
+	 * These commands can be referenced by name in the PathPlanner GUI.
+	 */
+	private void registerNamedCommands() {
+		// Intake Commands
+		NamedCommands.registerCommand("IntakeOn", 
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN))
+		);
+		
+		NamedCommands.registerCommand("IntakeOff", 
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE))
+		);
+
+		// TODO: Uncomment when shooter subsystem is enabled
+		// Shooter Commands - Start shooting sequence
+		// NamedCommands.registerCommand("StartShoot", 
+		// 	Commands.sequence(
+		// 		// First, start aiming
+		// 		Commands.runOnce(() -> shooterSubsystem.startAiming()),
+		// 		// Wait until shooter is ready to shoot
+		// 		Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
+		// 		// Once ready, turn on the hopper to feed the ball
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+		// 	)
+		// );
+
+		// Shooter Commands - Stop all shooting motors
+		// NamedCommands.registerCommand("StopShoot", 
+		// 	Commands.sequence(
+		// 		Commands.runOnce(() -> shooterSubsystem.stop()),
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		// 	)
+		// );
 	}
 
 	public Command getAutonomousCommand() {
