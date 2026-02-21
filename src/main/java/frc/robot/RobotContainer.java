@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-import org.littletonrobotics.junction.*;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -107,7 +107,7 @@ public class RobotContainer {
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
-	// public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
+	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
 	// // public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
 	// // public final TurretSubsystem turretTalonFX = new TurretSubsystem();
@@ -258,7 +258,8 @@ public class RobotContainer {
 
 
 		//TEMP CODE
-		driverController.rightBumper().whileTrue(flywheel.trackTarget().alongWith(hood.trackTarget()));
+		driverController.rightBumper().whileTrue(hood.trackTarget());
+		//driverController.y().whileTrue(turret.trackTarget());
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right

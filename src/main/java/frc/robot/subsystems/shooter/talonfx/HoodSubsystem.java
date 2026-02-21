@@ -7,7 +7,7 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -32,7 +32,7 @@ public class HoodSubsystem extends SubsystemBase {
     // Zero to known STOW position on construction (caller can re-zero later).
     resetHoodEncoderToDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
 
-    SmartDashboard.putNumber("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
+    Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
   }
 
   private boolean trackingEnabled = false;
@@ -73,7 +73,7 @@ public class HoodSubsystem extends SubsystemBase {
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
     hood.setControl(hoodRequest.withPosition(degreesToMotorRotations(clipped)));
-    SmartDashboard.putNumber("Shooter/Hood Target", degrees);
+    Logger.recordOutput("Shooter/Hood Target", degrees);
   }
 
   public void stopHood() {
@@ -129,7 +129,7 @@ public class HoodSubsystem extends SubsystemBase {
       hood.getConfigurator().apply(slot0);
     }
     
-    SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
+    Logger.recordOutput("Shooter/Hood Degrees", getHoodDegrees());
     
   //   // Track target if enabled -> I turned this into a command
   //   if (trackingEnabled) {

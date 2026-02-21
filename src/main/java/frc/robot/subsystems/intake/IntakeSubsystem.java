@@ -20,7 +20,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -92,8 +92,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
         // Zero pivot at known position (stowed = 0 degrees)
         syncEncoders();
-
-        SmartDashboard.putBoolean("Intake/UseWPILibProfiledPID", true);
     }
 
     private void configurePivot() {
@@ -218,7 +216,7 @@ public class IntakeSubsystem extends SubsystemBase {
         setPivotTarget(intakeState.getPivotTarget());
         rollerTargetPercent = intakeState.getRollerTarget();
 
-        SmartDashboard.putString("Intake/State", intakeState.toString());
+        Logger.recordOutput("Intake/State", intakeState.toString());
 
         updatePivotControl();
         updateRollerControl();

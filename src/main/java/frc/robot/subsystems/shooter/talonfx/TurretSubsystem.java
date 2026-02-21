@@ -7,7 +7,6 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -15,6 +14,7 @@ import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.ShotCalculator.ShotData;
 import edu.wpi.first.math.geometry.Rotation2d;
 import static edu.wpi.first.units.Units.Rotations;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Dedicated turret subsystem moved out of ShooterSubsystem for separation of
@@ -84,7 +84,7 @@ public class TurretSubsystem extends SubsystemBase {
     }
     
     // Log telemetry
-    SmartDashboard.putNumber("Turret/Current Position (deg)", getTurretRotation().getDegrees());
+    Logger.recordOutput("Turret/Current Position", getTurretRotation());
   }
 
   /**
@@ -100,15 +100,14 @@ public class TurretSubsystem extends SubsystemBase {
   public Command trackTarget() {
     return run(() -> {
       var data = ShotCalculator.getInstance().getData();
-      SmartDashboard.putBoolean("Turret/ShotData Exists", data != null);
+      Logger.recordOutput("Turret/ShotData Exists", data != null);
       if (data != null) {
-        SmartDashboard.putBoolean("Turret/ShotData Valid", data.isValid());
+        Logger.recordOutput("Turret/ShotData Valid", data.isValid());
         Rotation2d desired = data.turretAngle();
-        SmartDashboard.putNumber("Turret/ShotCalc Angle (deg)", desired.getDegrees());
-        SmartDashboard.putNumber("Turret/ShotCalc Angle (rad)", desired.getRadians());
+        Logger.recordOutput("Turret/ShotCalc Angle", desired);
         if (data.isValid()) {
           moveTurretToRadians(desired.getRadians());
-          SmartDashboard.putNumber("Turret/ShotCalc Angle Goal", desired.getDegrees());
+          Logger.recordOutput("Turret/ShotCalc Angle Goal", desired);
         }
       }
     });

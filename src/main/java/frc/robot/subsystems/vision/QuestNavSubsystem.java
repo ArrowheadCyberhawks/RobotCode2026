@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldObjects;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 
-import static edu.wpi.first.units.Units.Centimeters;
+import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.Utils;
 
@@ -33,9 +33,9 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     /** Transform from robot center → Quest mount (tune to your actual mount) */
     private static final Transform3d ROBOT_TO_QUEST = new Transform3d(
-        Centimeters.of(0), // x offset
-        Centimeters.of(27.5), // y offset
-        Centimeters.of(0), // z offset
+        Inches.of(-12), // x offset
+        Inches.of(-8.5), // y offset
+        Inches.of(10.5), // z offset
         new Rotation3d(0.0, 0.0, Math.PI/2) // rotation offset
     );
 

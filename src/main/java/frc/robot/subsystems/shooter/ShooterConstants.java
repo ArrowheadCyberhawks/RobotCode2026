@@ -34,7 +34,7 @@ public final class ShooterConstants {
 
     public static final double kFlywheelRpsShoot = 80.0;
     // Turret gear ratio (turret motor rotations per turret rotation)
-    public static final double kTurretGearRatio = 0.02;
+    public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;
     
     // Turret PID (units: volts per radian)
     public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 1.9);
@@ -48,7 +48,7 @@ public final class ShooterConstants {
     public static final double kMaxTurretVolts = 6.0; 
 
     // Hood (Motion Magic)
-    public static final double kHoodGearRatio = 1/8.16;
+    public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 36.0/24.0 * 30.0/372.0;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
     public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 1.0);
@@ -56,8 +56,8 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kDHood = new LoggedTunableNumber("Hood/kD", 0.0);
     public static final LoggedTunableNumber kVHood = new LoggedTunableNumber("Hood/kV", 0.0);
     public static final LoggedTunableNumber kAHood = new LoggedTunableNumber("Hood/kA", 0.0);
-    public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.4);
-    public static final double kHoodAllowedError = 0.02;
+    public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.0);
+    public static final double kHoodAllowedError = 0.0;
 
     public static final double kHoodMinDegrees = 0.0;
     public static final double kHoodMaxDegrees = 70.0;
@@ -81,7 +81,7 @@ public final class ShooterConstants {
         }
     }
 
-    // Default targets (used for SmartDashboard defaults)
+    // Default targets
     public static final double kShootFlywheelTarget = kFlywheelRpsShoot;
     public static final double kShootHoodTarget = 35.0;
 

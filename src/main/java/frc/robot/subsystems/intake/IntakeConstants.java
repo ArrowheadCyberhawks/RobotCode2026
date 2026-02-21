@@ -22,13 +22,13 @@ public final class IntakeConstants {
 
     // Smart Motion constraints (rotations/sec)
     public static final LoggedTunableNumber kPivotMaxVelocityRps = 
-        new LoggedTunableNumber("Intake/Pivot/MaxVelocityRps", 2.0);
+        new LoggedTunableNumber("Intake/Pivot/MaxVelocityRps", 4.0);
     public static final LoggedTunableNumber kPivotMaxAccelRps2 = 
-        new LoggedTunableNumber("Intake/Pivot/MaxAccelRps2", 4.0);
+        new LoggedTunableNumber("Intake/Pivot/MaxAccelRps2", 8.0);
 
     // PID + FF for pivot (position control)
     public static final LoggedTunableNumber kPPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kP", 5);
+        new LoggedTunableNumber("Intake/Pivot/kP", 10);
     public static final LoggedTunableNumber kIPivot = 
         new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
     public static final LoggedTunableNumber kDPivot = 

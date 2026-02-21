@@ -11,7 +11,7 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -28,7 +28,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
   private final RelativeEncoder encoder;
   private final SparkClosedLoopController pid;
 
-  private boolean trackingEnabled = false;
+  private boolean trackingEnabled = true;
   private double targetDegrees = ShooterConstants.HoodPosition.STOW.getDegrees();
 
   public HoodSubsystemNeo() {
@@ -43,21 +43,23 @@ public class HoodSubsystemNeo extends SubsystemBase {
     configureHood();
     resetHoodEncoderToDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
 
-    SmartDashboard.putNumber("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
+    Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
   }
 
   private void configureHood() {
     SparkMaxConfig cfg = new SparkMaxConfig();
     // convert motor rotations to hood radians for easier control/monitoring
     cfg.encoder.positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
-    cfg.idleMode(IdleMode.kBrake).inverted(true);
-    cfg.closedLoop.positionWrappingEnabled(true).positionWrappingInputRange(-Math.PI, Math.PI)
+    cfg.idleMode(IdleMode.kBrake).inverted(false);
+    cfg.closedLoop.positionWrappingEnabled(false)//.positionWrappingInputRange(-Math.PI, Math.PI)
         .p(ShooterConstants.kPHood.get())
         .i(ShooterConstants.kIHood.get())
         .d(ShooterConstants.kDHood.get())
   .allowedClosedLoopError(ShooterConstants.kHoodAllowedError, ClosedLoopSlot.kSlot0);
     cfg.softLimit.forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
         .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
+
+    cfg.smartCurrentLimit(20);
 
     // Use kNoPersistParameters to avoid slow flash writes that cause 6-second delays
     hoodMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -78,8 +80,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
     // Convert degrees to radians since encoder is configured with radian conversion factor
     double radians = Math.toRadians(clipped);
     // SparkMax position controller expects the same units as the encoder conversion factor (radians)
-    pid.setReference(radians, ControlType.kPosition);
-    SmartDashboard.putNumber("Shooter/Hood Target", degrees);
+    pid.setSetpoint(radians, ControlType.kPosition);
+    Logger.recordOutput("Shooter/Hood Target", degrees);
   }
 
   public void stopHood() {
@@ -144,7 +146,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
       hoodMotor.configure(cfg, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
     
-    SmartDashboard.putNumber("Shooter/Hood Degrees", getHoodDegrees());
+    Logger.recordOutput("Shooter/Hood Degrees", getHoodDegrees());
+    Logger.recordOutput("Shooter/Hood Current", hoodMotor.getOutputCurrent());
     if (trackingEnabled) {
       var data = ShotCalculator.getInstance().getData();
       if (data != null && data.isValid()) {

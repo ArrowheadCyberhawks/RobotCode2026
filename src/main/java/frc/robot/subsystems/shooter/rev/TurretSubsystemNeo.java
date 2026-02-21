@@ -13,7 +13,7 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,10 +40,10 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Turret/kD", ShooterConstants.kDTurret.get());
 	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance",
 			ShooterConstants.kTurretAllowedError);
-	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.5);
+	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.1);
 	// Soft limits in radians (±135 degrees)
-	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 3 * Math.PI / 4);
-	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -3 * Math.PI / 4);
+	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", Math.PI / 4);
+	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -3 * Math.PI / 2); //TODO: move these into shooterconstants
 
 	private boolean trackingEnabled = true;//balls
 	private double targetRadians = 0.0;
@@ -142,7 +142,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		}
 
 		// Log telemetry
-		SmartDashboard.putNumber("Turret/Current Position (deg)", getTurretRotation().getDegrees());
+		Logger.recordOutput("Turret/Current Position", getTurretRotation());
 	}
 
 	public void setTrackingEnabled(boolean enabled) {
@@ -152,15 +152,14 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	public Command trackTarget() {
 		return run(() -> {
 			var data = ShotCalculator.getInstance().getData();
-			SmartDashboard.putBoolean("Turret/ShotData Exists", data != null);
+			Logger.recordOutput("Turret/ShotData Exists", data != null);
 			if (data != null) {
-				SmartDashboard.putBoolean("Turret/ShotData Valid", data.isValid());
+				Logger.recordOutput("Turret/ShotData Valid", data.isValid());
 				Rotation2d desired = data.turretAngle();
-				SmartDashboard.putNumber("Turret/ShotCalc Angle (deg)", desired.getDegrees());
-				SmartDashboard.putNumber("Turret/ShotCalc Angle (rad)", desired.getRadians());
+				Logger.recordOutput("Turret/ShotCalc Angle", desired);
 				if (data.isValid()) {
 					moveTurretToRadians(desired.getRadians());
-					SmartDashboard.putNumber("Turret/ShotCalc Angle Goal", desired.getDegrees());
+					Logger.recordOutput("Turret/ShotCalc Angle Goal", desired);
 				}
 			}
 		});
@@ -201,7 +200,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 	/**
 	 * Updates the turret PID constants from NetworkTables if they've changed.
-	 * This allows live tuning via AdvantageScope or SmartDashboard.
+	 * This allows live tuning via AdvantageScope.
 	 */
 	private void updateTurretPID() {
 		// Check if any values changed (using hashCode as ID)
@@ -219,7 +218,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 			turretMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
-			SmartDashboard.putString("Turret/PID Status",
+			Logger.recordOutput("Turret/PID Status",
 					String.format("Updated: P=%.3f I=%.3f D=%.3f MaxOut=%.2f",
 							turretKP.get(), turretKI.get(), turretKD.get(), turretMaxPercentOutput.get()));
 		}

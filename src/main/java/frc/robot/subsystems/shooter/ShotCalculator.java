@@ -96,8 +96,8 @@ public class ShotCalculator {
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
-        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(32));
-        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(50.0));
+        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(30));
+        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(60.0));
 
         // Populate the flywheel speed calibration map (distance -> RPM).
         flywheelSpeedMap.put(1.34, 25.0); //150
@@ -165,6 +165,7 @@ public class ShotCalculator {
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
         // Normalize to [-π, π]
         double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
+        rawTurretAngleRad -= rawTurretAngleRad > Math.PI / 2.0 ? 2.0 * Math.PI : 0;
 
         // Filter the turret angle to smooth noisy measurements
         double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
@@ -197,8 +198,8 @@ public class ShotCalculator {
         lastHoodAngle = hoodAngle;
         // Valid only when distance in range AND turret angle is within +/- 3/4*pi
         latestData = new ShotData(
-                lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance
-                        && Math.abs(filteredTurretAngleRad) <= (3.0 / 4.0) * Math.PI,
+                true,//lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
+                //&& ((filteredTurretAngleRad) >= (1.0 / 2.0) * Math.PI && (filteredTurretAngleRad) <= (1.0/4.0) * Math.PI), // clamp to 180 degree max range (1/4 pi on each side)
                 turretAngle,
                 turretVelocity,
                 hoodAngle,
