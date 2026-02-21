@@ -16,7 +16,8 @@ public final class IntakeConstants {
 
     // Gear ratio: motor rotations per pivot rotation
     // Example: 100:1 reduction → 100 motor revs = 1 pivot rev
-    public static final double kPivotGearRatio = 1/9.0 * 24.0/42.0;
+    public static final double kPivotEncoderGearRatio = 24.0/42.0;
+    public static final double kPivotMotorGearRatio = 1/9.0 * kPivotEncoderGearRatio; // 9:1 reduction from motor to pivot, then encoder ratio
     public static final double kRollerGearRatio = 1/5.0;
 
     // Smart Motion constraints (rotations/sec)

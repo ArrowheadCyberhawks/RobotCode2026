@@ -63,6 +63,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         // Create absolute encoder
         pivotAbsoluteEncoder = new CANcoder(IntakeConstants.kIntakePivotEncoderId);
+        //TODO: FIX DISCONTINUITY POINT OF ABSOLUTE ENCODER
 
         // Create WPILib ProfiledPIDController with trapezoidal motion profile (RobotRIO-side)
         pivotController = new ProfiledPIDController(
@@ -96,8 +97,8 @@ public class IntakeSubsystem extends SubsystemBase {
     private void configurePivot() {
         // Encoder conversion: motor rotations → radians of pivot
         pivotConfig.encoder
-            .positionConversionFactor(IntakeConstants.kPivotGearRatio * 2.0 * Math.PI) // motor rotations to pivot radians
-            .velocityConversionFactor(IntakeConstants.kPivotGearRatio * 2.0 * Math.PI / 60.0); // motor RPM to pivot radians per second
+            .positionConversionFactor(IntakeConstants.kPivotMotorGearRatio * 2.0 * Math.PI) // motor rotations to pivot radians
+            .velocityConversionFactor(IntakeConstants.kPivotMotorGearRatio * 2.0 * Math.PI / 60.0); // motor RPM to pivot radians per second
 
         // Motor output settings - NO PID configured here (using WPILib ProfiledPIDController)
         pivotConfig
@@ -174,7 +175,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * Get the current pivot angle from the absolute encoder.
      */
     public Angle getPivotAngleAbsolute() {
-        return Rotations.of(pivotAbsoluteEncoder.getAbsolutePosition().getValueAsDouble());
+        return Rotations.of(pivotAbsoluteEncoder.getAbsolutePosition().getValueAsDouble() * IntakeConstants.kPivotEncoderGearRatio);
     }
 
     /**
