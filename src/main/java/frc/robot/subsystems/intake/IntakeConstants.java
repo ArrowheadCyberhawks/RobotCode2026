@@ -17,7 +17,7 @@ public final class IntakeConstants {
     // Gear ratio: motor rotations per pivot rotation
     // Example: 100:1 reduction → 100 motor revs = 1 pivot rev
     public static final double kPivotEncoderGearRatio = 24.0/42.0;
-    public static final double kPivotMotorGearRatio = 1/9.0 * kPivotEncoderGearRatio; // 9:1 reduction from motor to pivot, then encoder ratio
+    public static final double kPivotMotorGearRatio = 1/9.0 * 1/9.0 * kPivotEncoderGearRatio; // 9:1 reduction from motor to pivot, then encoder ratio
     public static final double kRollerGearRatio = 1/5.0;
 
     // Smart Motion constraints (rotations/sec)
@@ -28,13 +28,13 @@ public final class IntakeConstants {
 
     // PID + FF for pivot (position control)
     public static final LoggedTunableNumber kPPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kP", 0.1);
+        new LoggedTunableNumber("Intake/Pivot/kP", 5);
     public static final LoggedTunableNumber kIPivot = 
         new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
     public static final LoggedTunableNumber kDPivot = 
         new LoggedTunableNumber("Intake/Pivot/kD", 0.0);
     public static final LoggedTunableNumber kGPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kG", 0.4);
+        new LoggedTunableNumber("Intake/Pivot/kG", 0.0);
     public static final LoggedTunableNumber kVPivot = 
         new LoggedTunableNumber("Intake/Pivot/kV", 0.0);
     public static final LoggedTunableNumber kAPivot = 
@@ -64,7 +64,7 @@ public final class IntakeConstants {
 
     /** High-level intake states that control pivot and roller behavior */
     public enum IntakeState {
-        STOW(Degrees.of(90.0), 0.0), // pivot up and rollers stopped
+        STOW(Degrees.of(110.0), 0.0), // pivot up and rollers stopped
         IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
         RUN(Degrees.of(0.0), 0.80);   // pivot down and rollers running to intake
 

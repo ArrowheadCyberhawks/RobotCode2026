@@ -35,7 +35,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private final SparkFlex pivotMotor;
     private final SparkFlex rollerMotor;
 
-    // Removed: private final RelativeEncoder pivotEncoder; - using absolute encoder only
+    private final RelativeEncoder pivotEncoder;
     private final RelativeEncoder rollerEncoder;
 
     private final CANcoder pivotAbsoluteEncoder;
@@ -56,7 +56,7 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotor = new SparkFlex(IntakeConstants.kPivotMotorId, MotorType.kBrushless);
         rollerMotor = new SparkFlex(IntakeConstants.kRollerMotorId, MotorType.kBrushless);
 
-        // Get roller encoder (pivot uses absolute encoder only)
+        pivotEncoder = pivotMotor.getEncoder();
         rollerEncoder = rollerMotor.getEncoder();
 
         // Create configs
@@ -105,7 +105,7 @@ public class IntakeSubsystem extends SubsystemBase {
         // Motor output settings - NO PID configured here (using WPILib ProfiledPIDController)
         pivotConfig
             .idleMode(IdleMode.kBrake)
-            .inverted(true);
+            .inverted(false);
 
         // Soft limits (converted to radians)
         pivotConfig.softLimit
@@ -186,6 +186,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public void syncEncoders() {
         double absoluteRadians = getPivotAngleAbsolute().in(Radians);
+        pivotEncoder.setPosition(absoluteRadians); // Sync relative encoder to absolute position
         pivotController.reset(absoluteRadians);
     }
 
@@ -225,6 +226,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         // Telemetry
         Logger.recordOutput("Intake/Pivot Absolute Degrees", getPivotAngleAbsolute().in(Degrees));
+        Logger.recordOutput("Intake/Pivot Relative Degrees", pivotEncoder.getPosition());
         Logger.recordOutput("Intake/Pivot Target Degrees", Math.toDegrees(pivotController.getGoal().position));
         Logger.recordOutput("Intake/Pivot Setpoint Degrees", Math.toDegrees(pivotController.getSetpoint().position));
         Logger.recordOutput("Intake/Pivot Error Degrees", Math.toDegrees(pivotController.getPositionError()));
@@ -256,12 +258,12 @@ public class IntakeSubsystem extends SubsystemBase {
         totalOutput = Math.max(-12.0, Math.min(12.0, totalOutput));
         
         // Apply to motor
-        pivotMotor.setVoltage(Volts.of(totalOutput));
+        pivotMotor.setVoltage(totalOutput);
         
-        SmartDashboard.putNumber("Intake/Pivot/PID Output", pidOutput);
-        SmartDashboard.putNumber("Intake/Pivot/FF Output", feedforward);
-        SmartDashboard.putNumber("Intake/Pivot/Gravity Output", gravityCompensation);
-        SmartDashboard.putNumber("Intake/Pivot/Total Output", totalOutput);
+        Logger.recordOutput("Intake/Pivot/PID Output", pidOutput);
+        Logger.recordOutput("Intake/Pivot/FF Output", feedforward);
+        Logger.recordOutput("Intake/Pivot/Gravity Output", gravityCompensation);
+        Logger.recordOutput("Intake/Pivot/Total Output", totalOutput);
     }
 
     /**

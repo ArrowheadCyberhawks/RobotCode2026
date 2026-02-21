@@ -106,8 +106,7 @@ public class RobotContainer {
 			field2d);
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
-	// public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
-	// public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
+	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	// public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
 	// // public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
@@ -137,7 +136,7 @@ public class RobotContainer {
 		configureBindings();
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 
-		flywheel.setDefaultCommand(flywheel.trackTarget());
+		//flywheel.setDefaultCommand(flywheel.trackTarget()); // TODO: REMOVE DEBUG
 
 		// Configure ShotCalculator with robot pose supplier
 		// This is critical - without this, the calculator thinks the robot is always at
@@ -234,28 +233,32 @@ public class RobotContainer {
 				intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
 			}
 		}));
-/*
+
 		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if already aiming/shooting
-		driverController.rightBumper().onTrue(Commands.either(
-			// If shooter is in AIM or SHOOT state, stop everything
-			Commands.sequence(
-				Commands.runOnce(shooterSubsystem::stop),
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-			),
-			// If shooter is IDLE or STRAIGHT, start aiming sequence
-			Commands.sequence(
-				// First, start aiming
-				Commands.runOnce(shooterSubsystem::startAiming),
-				// Wait until shooter is ready to shoot
-				Commands.waitUntil(shooterSubsystem::isReadyToShoot),
-				// Once ready, turn on the hopper to feed the ball
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-			),
-			// Condition: true if shooter is already aiming or shooting
-			() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
-			      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
-		));
-		*/
+		// driverController.rightBumper().onTrue(Commands.either(
+		// 	// If shooter is in AIM or SHOOT state, stop everything
+		// 	Commands.sequence(
+		// 		//Commands.runOnce(shooterSubsystem::stop),
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		// 	),
+		// 	// If shooter is IDLE or STRAIGHT, start aiming sequence
+		// 	Commands.sequence(
+		// 		// First, start aiming
+		// 		Commands.runOnce(shooterSubsystem::startAiming),
+		// 		// Wait until shooter is ready to shoot
+		// 		Commands.waitUntil(shooterSubsystem::isReadyToShoot),
+		// 		// Once ready, turn on the hopper to feed the ball
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+		// 	),
+		// 	// Condition: true if shooter is already aiming or shooting
+		// 	() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
+		// 	      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
+		// ));
+		
+
+
+		//TEMP CODE
+		driverController.rightBumper().whileTrue(flywheel.trackTarget().alongWith(hood.trackTarget()));
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
@@ -300,6 +303,8 @@ public class RobotContainer {
 						() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
 						driveFacingAngleRequest));
 
+		driverController.povDown().onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
+
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
 		driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -335,6 +340,13 @@ public class RobotContainer {
 		//manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
+
+		driverController.leftTrigger().whileTrue(
+			hopperSubsystem.runEnd(
+				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
+				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
+			)
+		);
 	}
 
 	/**

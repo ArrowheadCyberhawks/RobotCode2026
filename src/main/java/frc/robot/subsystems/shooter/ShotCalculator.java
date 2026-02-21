@@ -96,12 +96,12 @@ public class ShotCalculator {
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
-        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(23.1));
+        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(32));
         hoodAngleMap.put(5.60, Rotation2d.fromDegrees(50.0));
 
         // Populate the flywheel speed calibration map (distance -> RPM).
         flywheelSpeedMap.put(1.34, 25.0); //150
-        flywheelSpeedMap.put(5.60, 100.0); //250
+        flywheelSpeedMap.put(5.60, 50.0); //250
 
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.

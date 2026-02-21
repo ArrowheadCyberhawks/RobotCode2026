@@ -1,5 +1,8 @@
 package frc.robot.subsystems.hopper;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -78,11 +81,14 @@ public class HopperSubsystem extends SubsystemBase {
             .idleMode(IdleMode.kCoast)
             .inverted(true);
 
-        // Configure PID for velocity control
+        // Configure PID and feedforward for velocity control
         hopperConfig.closedLoop
             .pid(HopperConstants.kPHopper.get(), 
                  HopperConstants.kIHopper.get(), 
-                 HopperConstants.kDHopper.get());
+                 HopperConstants.kDHopper.get())
+            .feedForward
+                .kV(HopperConstants.kVHopper.get())
+                .kS(HopperConstants.kSHopper.get());
 
         hopperMotor.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
@@ -93,11 +99,14 @@ public class HopperSubsystem extends SubsystemBase {
             .idleMode(IdleMode.kCoast)
             .inverted(false);
 
-        // Configure PID for velocity control
+        // Configure PID and feedforward for velocity control
         kickerConfig.closedLoop
             .pid(HopperConstants.kPKicker.get(), 
                  HopperConstants.kIKicker.get(), 
-                 HopperConstants.kDKicker.get());
+                 HopperConstants.kDKicker.get())
+            .feedForward
+                .kV(HopperConstants.kVKicker.get())
+                .kS(HopperConstants.kSKicker.get());
 
         kickerMotor.configure(kickerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
@@ -146,7 +155,7 @@ public class HopperSubsystem extends SubsystemBase {
                 break;
         }
     
-        SmartDashboard.putString("Hopper/State", hopperState.name());
+        Logger.recordOutput("Hopper/State", hopperState.name());
 
         // Update motor control and PID parameters
         updateHopperControl();
@@ -154,8 +163,6 @@ public class HopperSubsystem extends SubsystemBase {
         updateHopperPID();
         updateKickerPID();
     }
-
-
 
 
     /**updates the hopper motor control using REV closed-loop velocity PID*/
@@ -169,8 +176,8 @@ public class HopperSubsystem extends SubsystemBase {
         }
 
         // Log telemetry
-        SmartDashboard.putNumber("Hopper/TargetRPM", hopperTargetRpm);
-        SmartDashboard.putNumber("Hopper/ActualRPM", hopperEncoder.getVelocity());
+        Logger.recordOutput("Hopper/TargetRPM", hopperTargetRpm);
+        Logger.recordOutput("Hopper/ActualRPM", hopperEncoder.getVelocity());
     }
 
     /**updates the kicker motor control using REV closed-loop velocity PID*/
@@ -184,8 +191,8 @@ public class HopperSubsystem extends SubsystemBase {
         }
 
         // Log telemetry
-        SmartDashboard.putNumber("Kicker/TargetRPM", kickerTargetRpm);
-        SmartDashboard.putNumber("Kicker/ActualRPM", kickerEncoder.getVelocity());
+        Logger.recordOutput("Kicker/TargetRPM", kickerTargetRpm);
+        Logger.recordOutput("Kicker/ActualRPM", kickerEncoder.getVelocity());
     }
     
     /**updates the hopper motor PID parameters if they have changed*/
@@ -193,14 +200,19 @@ public class HopperSubsystem extends SubsystemBase {
         int id = this.hashCode();
         if (HopperConstants.kPHopper.hasChanged(id) || 
             HopperConstants.kIHopper.hasChanged(id) ||
-            HopperConstants.kDHopper.hasChanged(id)) {
+            HopperConstants.kDHopper.hasChanged(id) ||
+            HopperConstants.kVHopper.hasChanged(id) ||
+            HopperConstants.kSHopper.hasChanged(id)) {
 
             hopperConfig.closedLoop
                 .pid(HopperConstants.kPHopper.get(), 
                      HopperConstants.kIHopper.get(), 
-                     HopperConstants.kDHopper.get());
+                     HopperConstants.kDHopper.get())
+                .feedForward
+                    .kV(HopperConstants.kVHopper.get())
+                    .kS(HopperConstants.kSHopper.get());
             
-            hopperMotor.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+            hopperMotor.configure(hopperConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         }
     }
 
@@ -209,14 +221,19 @@ public class HopperSubsystem extends SubsystemBase {
         int id = this.hashCode();
         if (HopperConstants.kPKicker.hasChanged(id) || 
             HopperConstants.kIKicker.hasChanged(id) ||
-            HopperConstants.kDKicker.hasChanged(id)) {
+            HopperConstants.kDKicker.hasChanged(id) ||
+            HopperConstants.kVKicker.hasChanged(id) ||
+            HopperConstants.kSKicker.hasChanged(id)) {
 
             kickerConfig.closedLoop
                 .pid(HopperConstants.kPKicker.get(), 
                      HopperConstants.kIKicker.get(), 
-                     HopperConstants.kDKicker.get());
+                     HopperConstants.kDKicker.get())
+                .feedForward
+                    .kV(HopperConstants.kVKicker.get())
+                    .kS(HopperConstants.kSKicker.get());
             
-            kickerMotor.configure(kickerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+            kickerMotor.configure(kickerConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         }
     }
 

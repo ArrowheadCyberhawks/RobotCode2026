@@ -64,7 +64,7 @@ public final class ShooterConstants {
 
     /** Common hood presets */
     public enum HoodPosition {
-        STOW(20.0);
+        STOW(30.0);
 
         private final double degrees;
 
