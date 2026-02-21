@@ -76,7 +76,7 @@ public class HopperSubsystem extends SubsystemBase {
     private void configureHopper() {
         hopperConfig
             .idleMode(IdleMode.kCoast)
-            .inverted(false);
+            .inverted(true);
 
         // Configure PID for velocity control
         hopperConfig.closedLoop

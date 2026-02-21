@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter.talonfx;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -61,6 +62,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     
     // Set neutral mode to coast for flywheel
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     // Configure Slot0 closed-loop gains (used by VelocityTorqueCurrentFOC)
     // Note: VelocityTorqueCurrentFOC uses kP, kI, kD, kV, kS like VelocityDutyCycle

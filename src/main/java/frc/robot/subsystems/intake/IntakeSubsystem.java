@@ -103,7 +103,7 @@ public class IntakeSubsystem extends SubsystemBase {
         // Motor output settings - NO PID configured here (using WPILib ProfiledPIDController)
         pivotConfig
             .idleMode(IdleMode.kBrake)
-            .inverted(false);
+            .inverted(true);
 
         // Soft limits (converted to radians)
         pivotConfig.softLimit
