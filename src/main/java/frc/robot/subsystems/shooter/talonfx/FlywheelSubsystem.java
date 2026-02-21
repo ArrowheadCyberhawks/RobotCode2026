@@ -31,7 +31,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private final TalonFX follower;
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
-  private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0.0);
+  private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(100.0);
 
   private AngularVelocity velocitySetpoint = RadiansPerSecond.of(0.0);
   private boolean atGoal = false;
@@ -48,6 +48,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     follower = new TalonFX(followerId);
 
     // Configure follower to mirror leader (opposed direction for typical flywheels)
+    leader.setControl(velocityRequest);
     follower.setControl(new Follower(leaderId, MotorAlignmentValue.Opposed));
 
     configureFlywheel();
@@ -62,7 +63,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     
     // Set neutral mode to coast for flywheel
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     // Configure Slot0 closed-loop gains (used by VelocityTorqueCurrentFOC)
     // Note: VelocityTorqueCurrentFOC uses kP, kI, kD, kV, kS like VelocityDutyCycle
@@ -76,8 +76,10 @@ public class FlywheelSubsystem extends SubsystemBase {
     // cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
     // cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    leader.getConfigurator().apply(cfg);
     follower.getConfigurator().apply(cfg);
+    
+    cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    leader.getConfigurator().apply(cfg);
   }
 
   @Override
@@ -114,6 +116,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityTorqueCurrentFOC closed-loop control
     velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
+    System.out.println("Setting velocity setpoint: " + velocitySetpoint.in(RadiansPerSecond) + " rad/s (" + velocitySetpoint.in(RotationsPerSecond) + " rps)");
     leader.setControl(velocityRequest);
 
     Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);

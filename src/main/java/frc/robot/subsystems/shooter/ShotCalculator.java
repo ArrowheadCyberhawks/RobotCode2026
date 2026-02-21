@@ -15,6 +15,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import java.util.function.Supplier;
 import frc.robot.Constants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.geometry.AllianceFlipUtil;
 import frc.robot.util.geometry.GeomUtil;
@@ -26,8 +27,8 @@ public class ShotCalculator {
     // Moving-average filters to smooth out noisy angle computations. Using the
     // same window for turret and hood keeps outputs stable for control and
     // derivative calculations.
-    private final LinearFilter turretAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.loopPeriodSecs));
-    private final LinearFilter hoodAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.loopPeriodSecs));
+    private final LinearFilter turretAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.DriveConstants.kLoopPeriodSeconds));
+    private final LinearFilter hoodAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.DriveConstants.kLoopPeriodSeconds));
 
     // Last values used for simple derivative computations (angular velocities).
     private Rotation2d lastTurretAngle;
@@ -189,8 +190,8 @@ public class ShotCalculator {
             lastHoodAngle = hoodAngle;
 
         // Compute angular velocities (simple derivative on filtered angle)
-        turretVelocity = (turretAngle.getRadians() - lastTurretAngle.getRadians()) / Constants.loopPeriodSecs;
-        hoodVelocity = (hoodAngle - lastHoodAngle) / Constants.loopPeriodSecs;
+        turretVelocity = (turretAngle.getRadians() - lastTurretAngle.getRadians()) / Constants.DriveConstants.kLoopPeriodSeconds;
+        hoodVelocity = (hoodAngle - lastHoodAngle) / Constants.DriveConstants.kLoopPeriodSeconds;
 
         lastTurretAngle = turretAngle;
         lastHoodAngle = hoodAngle;

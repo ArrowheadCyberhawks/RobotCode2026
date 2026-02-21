@@ -6,6 +6,8 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -222,13 +224,12 @@ public class IntakeSubsystem extends SubsystemBase {
         updatePivotPID();
 
         // Telemetry
-        SmartDashboard.putNumber("Intake/Pivot Absolute Degrees", getPivotAngleAbsolute().in(Degrees));
-        SmartDashboard.putNumber("Intake/Pivot Target Degrees", Math.toDegrees(pivotController.getGoal().position));
-        SmartDashboard.putNumber("Intake/Pivot Setpoint Degrees", Math.toDegrees(pivotController.getSetpoint().position));
-        SmartDashboard.putNumber("Intake/Pivot Error Degrees", Math.toDegrees(pivotController.getPositionError()));
-        SmartDashboard.putBoolean("Intake/Pivot At Goal", pivotController.atGoal());
-        SmartDashboard.putNumber("Intake/Roller RPM", getRollerVelocity().in(RPM));
-        SmartDashboard.putNumber("Intake/Roller Target Percent", rollerTargetPercent);
+        Logger.recordOutput("Intake/Pivot Absolute Degrees", getPivotAngleAbsolute().in(Degrees));
+        Logger.recordOutput("Intake/Pivot Target Degrees", Math.toDegrees(pivotController.getGoal().position));
+        Logger.recordOutput("Intake/Pivot Setpoint Degrees", Math.toDegrees(pivotController.getSetpoint().position));
+        Logger.recordOutput("Intake/Pivot Error Degrees", Math.toDegrees(pivotController.getPositionError()));
+        Logger.recordOutput("Intake/Roller RPM", getRollerVelocity().in(RPM));
+        Logger.recordOutput("Intake/Roller Target Percent", rollerTargetPercent);
     }
 
     /**

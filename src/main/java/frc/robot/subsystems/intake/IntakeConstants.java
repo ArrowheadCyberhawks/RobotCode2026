@@ -28,7 +28,7 @@ public final class IntakeConstants {
 
     // PID + FF for pivot (position control)
     public static final LoggedTunableNumber kPPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kP", 0.5);
+        new LoggedTunableNumber("Intake/Pivot/kP", 0.1);
     public static final LoggedTunableNumber kIPivot = 
         new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
     public static final LoggedTunableNumber kDPivot = 

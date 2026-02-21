@@ -109,7 +109,7 @@ public class RobotContainer {
 	// public final FlywheelSubsystemNeo flywheelSubsystem = new FlywheelSubsystemNeo();
 	// public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	// public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
-	// public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
+	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
 	// // public final HoodSubsystem hoodTalonFX = new HoodSubsystem();
 	// // public final TurretSubsystem turretTalonFX = new TurretSubsystem();
 	// public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
@@ -136,6 +136,8 @@ public class RobotContainer {
 		constructField();
 		configureBindings();
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
+
+		flywheel.setDefaultCommand(flywheel.runFixedCommand(() -> 100));
 
 		// Configure ShotCalculator with robot pose supplier
 		// This is critical - without this, the calculator thinks the robot is always at
@@ -306,7 +308,7 @@ public class RobotContainer {
 		driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
 		// reset the field-centric heading on b button press
-		driverController.povRight().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
+		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
 				drivetrain.getState().Pose.getRotation() // drivetrain.getPose().getRotation()
 		)));
 
