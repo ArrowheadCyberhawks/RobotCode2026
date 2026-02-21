@@ -137,7 +137,7 @@ public class RobotContainer {
 		configureBindings();
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 
-		flywheel.setDefaultCommand(flywheel.runFixedCommand(() -> 100));
+		flywheel.setDefaultCommand(flywheel.trackTarget());
 
 		// Configure ShotCalculator with robot pose supplier
 		// This is critical - without this, the calculator thinks the robot is always at

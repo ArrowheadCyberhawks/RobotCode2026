@@ -31,7 +31,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private final TalonFX follower;
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
-  private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(100.0);
+  private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0.0);
 
   private AngularVelocity velocitySetpoint = RadiansPerSecond.of(0.0);
   private boolean atGoal = false;
@@ -77,7 +77,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     // cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     follower.getConfigurator().apply(cfg);
-    
     cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     leader.getConfigurator().apply(cfg);
   }
@@ -97,14 +96,20 @@ public class FlywheelSubsystem extends SubsystemBase {
       cfg.Slot0.kD = ShooterConstants.kDFlywheel.get();
       cfg.Slot0.kV = ShooterConstants.kVFlywheel.get();
       cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
-      leader.getConfigurator().apply(cfg);
       follower.getConfigurator().apply(cfg);
+      cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+      leader.getConfigurator().apply(cfg);
     }
 
     // Get current velocity in rotations per second, convert to rad/s for internal use
     AngularVelocity currentVelocity = RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
-    
-    Logger.recordOutput("Flywheel/Velocity (Rad/s)", currentVelocity.in(RadiansPerSecond));
+
+    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
+    Logger.recordOutput("Flywheel/Velocity", currentVelocity);
+    Logger.recordOutput("Flywheel/AtGoal", atGoal);
+    Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
+    Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
+
     if (velocitySetpoint.isEquivalent(RadiansPerSecond.zero())) {
       leader.stopMotor();
       atGoal = false;
@@ -116,13 +121,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityTorqueCurrentFOC closed-loop control
     velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
-    System.out.println("Setting velocity setpoint: " + velocitySetpoint.in(RadiansPerSecond) + " rad/s (" + velocitySetpoint.in(RotationsPerSecond) + " rps)");
     leader.setControl(velocityRequest);
-
-    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
-    Logger.recordOutput("Flywheel/AtGoal", atGoal);
-    Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
-    Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
   }
 
   // setpoint runner used by commands
