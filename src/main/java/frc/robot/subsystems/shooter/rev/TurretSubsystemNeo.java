@@ -45,7 +45,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 3 * Math.PI / 4);
 	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -3 * Math.PI / 4);
 
-	private boolean trackingEnabled = true;
+	private boolean trackingEnabled = true;//balls
 	private double targetRadians = 0.0;
 
 	public TurretSubsystemNeo() {
