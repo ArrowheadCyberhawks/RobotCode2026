@@ -38,7 +38,6 @@ public class LimelightSubsystem extends SubsystemBase {
 
 
   public LimelightSubsystem(DoubleSupplier rotationSupplier, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
-	setUpShuffleboard();
 	this.rotationSupplier = rotationSupplier;
 	this.drivetrain = drivetrain;
 	this.field2d = field2d;
@@ -269,24 +268,5 @@ yError = MathUtil.clamp(yError, -1, 1);
 		if (limelightMeasurement != null && !limelightMeasurement.pose.equals(Pose2d.kZero)) {
 			field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurement.pose);
 		}
-  }
-
-
-  private void setUpShuffleboard() {
-	tab = Shuffleboard.getTab("VisionApriltag");
-
-	LLFeed = new HttpCamera(
-		getLimelightName(),
-		"http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
-	tab.add("Limelight Feed", LLFeed).withWidget("Camera Stream").withPosition(0, 0).withSize(4, 4);
-
-	tab.addDouble("Tx", () -> this.getTX());
-	tab.addDouble("Ty", () -> this.getTY());
-	tab.addDouble("Distance", () -> this.getDistanceToTarget());
-	tab.addDouble("Latency Capture", () -> this.getLatencyCapture());
-	tab.addDouble("Latency Pipeline", () -> this.getLatencyPipeline());
-	tab.addBoolean("Has Target", () -> this.hasTarget());
-
-	tab.addDouble("April Tag", () -> this.getAprilTagId());
   }
 }

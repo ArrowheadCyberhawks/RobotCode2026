@@ -27,7 +27,7 @@ import frc.robot.Constants;
  * perspective of the blue alliance station
  */
 public class FieldConstants {
-  public static final FieldType fieldType = FieldType.WELDED;
+  public static final FieldType fieldType = FieldType.ANDYMARK;
 
   // AprilTag related constants
   public static final int aprilTagCount = AprilTagLayoutType.OFFICIAL.getLayout().getTags().size();
@@ -307,6 +307,19 @@ public class FieldConstants {
     public static final Translation2d centerPoint =
         new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
   }
+
+    /**
+     * Common corner reference points for the blue alliance side.
+     *
+     * blueRight is the field origin (0,0,0) in our coordinate system.
+     */
+    public static class Corners {
+        // Blue alliance - right corner (field origin)
+        public static final Translation3d right = new Translation3d(0.0, 0.0, 0.0);
+
+        // Blue alliance - left corner (same X as origin, Y at far side of field)
+        public static final Translation3d left = new Translation3d(0.0, fieldWidth, 0.0);
+    }
 
     public enum FieldType {
         ANDYMARK("andymark"),

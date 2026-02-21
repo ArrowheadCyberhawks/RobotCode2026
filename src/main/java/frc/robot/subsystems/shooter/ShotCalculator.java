@@ -1,190 +1,254 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.InchesPerSecond;
-import static edu.wpi.first.units.Units.InchesPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Seconds;
-import frc.robot.subsystems.shooter.ShooterConstants.Calculator.ShotData;
-import static frc.robot.subsystems.shooter.ShooterConstants.Calculator.kDistanceToVelocity;
-import static frc.robot.subsystems.shooter.ShooterConstants.Calculator.kDistanceToAngle;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
+// Copyright (c) 2025-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
+import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
-import frc.robot.Constants.FieldConstants;
-
-// Possibly abandon this model completely and just use it for calculating whether to take the high or low shot
-
-//TODO: Account for air drag (non-constant x velocity)
-//TODO: Account gravity for magnus effect (the used value of g is not equal to 9.81 m/s^2 when the ball is spinning)
+import java.util.function.Supplier;
+import frc.robot.Constants;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.geometry.AllianceFlipUtil;
+import frc.robot.util.geometry.GeomUtil;
+import org.littletonrobotics.junction.Logger;
 
 public class ShotCalculator {
-	public static Distance getDistanceToTarget(Pose2d robot, Translation3d target) {
-		return Meters.of(robot.getTranslation().getDistance(target.toTranslation2d()));
-	}
+    private static ShotCalculator instance;
 
-	public static Angle calculateAngleFromVelocity(Pose2d robot, LinearVelocity velocity, Translation3d target) {
-		double g = MetersPerSecondPerSecond.of(9.81).in(InchesPerSecondPerSecond); // gravity!
-		double vel = velocity.in(InchesPerSecond);
-		double xDist = getDistanceToTarget(robot, target).in(Inches);
-		double yDist = Meters.of(target.getZ()).in(Inches)
-				- Meters.of(ShooterConstants.Calculator.kRobotToTurretTransform.getTranslation().getZ()).in(Inches);
-		// derived from projectile motion equations, substitute solve for t using x(t),
-		// then plug into y and solve for theta
-		double angle = Math
-				.atan(((vel * vel) + Math.sqrt(Math.pow(vel, 4) - g * (g * xDist * xDist + 2 * yDist * vel * vel)))
-						/ (g * xDist));
-		return Radians.of(angle);
-	}
+    // Moving-average filters to smooth out noisy angle computations. Using the
+    // same window for turret and hood keeps outputs stable for control and
+    // derivative calculations.
+    private final LinearFilter turretAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.loopPeriodSecs));
+    private final LinearFilter hoodAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.loopPeriodSecs));
 
-	// calculates how long it will take for a projectile to travel a set distance
-	// given its initial velocity and angle
-	// TODO: add air drag into TOF equation
-	public static Time calculateTimeOfFlight(LinearVelocity exitVelocity, Angle hoodAngle, Distance distance) {
-		double vel = exitVelocity.in(MetersPerSecond);
-		double angle = hoodAngle.in(Radians);
-		double dist = distance.in(Meters);
-		return Seconds.of(dist / (vel * Math.cos(angle)));
-	}
+    // Last values used for simple derivative computations (angular velocities).
+    private Rotation2d lastTurretAngle;
+    private double lastHoodAngle;
 
-	public static AngularVelocity linearToAngularVelocity(LinearVelocity vel, Distance radius) {
-		return RadiansPerSecond.of(vel.in(MetersPerSecond) / radius.in(Meters));
-	}
+    // Current computed setpoints (populated by getData()).
+    private Rotation2d turretAngle;
+    private double hoodAngle = Double.NaN;
+    private double turretVelocity;
+    private double hoodVelocity;
 
-	public static LinearVelocity angularToLinearVelocity(AngularVelocity vel, Distance radius) {
-		return MetersPerSecond.of(vel.in(RadiansPerSecond) * radius.in(Meters));
-	}
+    // Configurable base target for shots (defaults to the hub). The baseTarget
+    // is stored in field coordinates; getData() applies alliance flipping so
+    // callers always pass a single un-flipped target.
+    private Translation2d target = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+    // Suppliers for injected state (defaults are zero/no-op). RobotContainer should
+    // inject real suppliers.
+    private Supplier<ChassisSpeeds> fieldVelocitySupplier = () -> new ChassisSpeeds(0.0, 0.0, 0.0);
+    private Supplier<Pose2d> poseSupplier = () -> new Pose2d();
+    private Supplier<ChassisSpeeds> robotRelativeVelocitySupplier = () -> new ChassisSpeeds(0.0, 0.0, 0.0);
 
-	// calculates the angle of a turret relative to the robot to hit a target
-	public static Angle calculateHoodAngle(Pose2d robot, Translation3d target) {
-		Translation2d turretTranslation = new Pose3d(robot)
-				.transformBy(ShooterConstants.Calculator.kRobotToTurretTransform)
-				.toPose2d()
-				.getTranslation();
+    /**
+     * Singleton accessor. Lightweight and thread-unsafe (intended for robot
+     * code where single-threaded access is the norm). Callers should retrieve
+     * the instance and then call getData() to compute/read setpoints.
+     */
+    public static ShotCalculator getInstance() {
+        if (instance == null)
+            instance = new ShotCalculator();
+        return instance;
+    }
 
-		Translation2d direction = target.toTranslation2d().minus(turretTranslation);
+    public record ShotData(
+            boolean isValid,
+            Rotation2d turretAngle,
+            double turretVelocity,
+            double hoodAngle,
+            double hoodVelocity,
+            double flywheelSpeed) {
+    }
 
-		return direction.getAngle().minus(robot.getRotation()).getMeasure();
-	}
+    // Cached output from the last getData() call. Clearing this allows callers
+    // to force recomputation when inputs change.
+    private ShotData latestData = null;
 
-	// Move a target a set time in the future along a velocity defined by
-	// fieldSpeeds
-	public static Translation3d predictTargetPos(Translation3d target, ChassisSpeeds fieldSpeeds, Time timeOfFlight) {
-		double predictedX = target.getX() - fieldSpeeds.vxMetersPerSecond * timeOfFlight.in(Seconds);
-		double predictedY = target.getY() - fieldSpeeds.vyMetersPerSecond * timeOfFlight.in(Seconds);
+    // Configuration and lookup tables used by the calculator. These maps are
+    // populated with empirically-determined values that map distance ->
+    // desired hood angle and distance -> flywheel speed. The tofMap maps a
+    // distance to an estimated time-of-flight for lookahead calculations.
+    private static double minDistance;
+    private static double maxDistance;
+    private static double phaseDelay;
+    private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMap = 
+        new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
+    private static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap();
+    private static final InterpolatingDoubleTreeMap tofMap = new InterpolatingDoubleTreeMap();
 
-		return new Translation3d(predictedX, predictedY, target.getZ());
-	}
+    static {
+        // Reasonable operating bounds for the shooter (meters) and a small
+        // phase delay used to offset calculations for shooter processing time.
+        minDistance = 1.34;
+        maxDistance = 5.60;
+        phaseDelay = 0.09; // started at .03, increased to 0.09 for better accuracy, will change based on
 
-	// Custom velocity ramp meant to minimize how fast the flywheels have to change
-	// speed
-	public static LinearVelocity scaleLinearVelocity(Distance distanceToTarget) {
-		double velocity = ShooterConstants.Calculator.kBaseVel.in(InchesPerSecond)
-				+ ShooterConstants.Calculator.kVelMultiplier * Math.pow(distanceToTarget.in(Inches),
-						ShooterConstants.Calculator.kVelPower);
-		return InchesPerSecond.of(velocity);
-	}
+        // Populate the hood angle calibration map (distance -> angle). These
+        // values should be tuned on the field; interpolation fills in values
+        // between the points defined here.
+        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(23.1));
+        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(50.0));
 
-	public static ShotData calculateShotFromFunnelClearance(Pose2d robot, Translation3d actualTarget,
-			Translation3d predictedTarget) {
-		double xDist = getDistanceToTarget(robot, predictedTarget).in(Inches);
-		double yDist = Meters.of(predictedTarget.getZ()).in(Inches)
-				- Meters.of(ShooterConstants.Calculator.kRobotToTurretTransform.getTranslation().getZ()).in(Inches);
-		double g = 386;
-		double r = FieldConstants.FUNNEL_RADIUS.in(Inches) * xDist
-				/ getDistanceToTarget(robot, actualTarget).in(Inches);
-		double h = FieldConstants.FUNNEL_HEIGHT.plus(ShooterConstants.Calculator.kDistanceAboveFunnel).in(Inches);
-		double A1 = xDist * xDist;
-		double B1 = xDist;
-		double D1 = yDist;
-		double A2 = -xDist * xDist + (xDist - r) * (xDist - r);
-		double B2 = -r;
-		double D2 = h;
-		double Bm = -B2 / B1;
-		double A3 = Bm * A1 + A2;
-		double D3 = Bm * D1 + D2;
-		double a = D3 / A3;
-		double b = (D1 - A1 * a) / B1;
-		double theta = Math.atan(b);
-		double v0 = Math.sqrt(-g / (2 * a * (Math.cos(theta)) * (Math.cos(theta))));
-		return new ShotData(InchesPerSecond.of(v0), Radians.of(theta), predictedTarget);
-	}
+        // Populate the flywheel speed calibration map (distance -> RPM).
+        flywheelSpeedMap.put(1.34, 150.0);
+        flywheelSpeedMap.put(5.60, 250.0);
 
-	// use an iterative lookahead approach to determine shot parameters for a moving
-	// robot
-	public static ShotData iterativeMovingShotFromFunnelClearance(Pose2d robot, ChassisSpeeds fieldSpeeds,
-			Translation3d target, int iterations) {
-		// Perform initial estimation (assuming unmoving robot) to get time of flight
-		// estimate
-		ShotData shot = calculateShotFromFunnelClearance(robot, target, target);
-		Distance distance = getDistanceToTarget(robot, target);
-		Time timeOfFlight = calculateTimeOfFlight(shot.getExitVelocity(), shot.getHoodAngle(), distance);
-		Translation3d predictedTarget = target;
+        // Populate a small time-of-flight lookup table (distance -> seconds)
+        // used in the lookahead loop to compensate for turret/robot motion.
+        tofMap.put(5.60, 3.00);
+        tofMap.put(1.34, 0.90);
+    }
 
-		// Iterate the process, getting better time of flight estimations and updating
-		// the predicted target accordingly
-		for (int i = 0; i < iterations; i++) {
-			predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
-			shot = calculateShotFromFunnelClearance(robot, target, predictedTarget);
-			timeOfFlight = calculateTimeOfFlight(shot.getExitVelocity(), shot.getHoodAngle(),
-					getDistanceToTarget(robot, predictedTarget));
-		}
+    public ShotData getData() {
+        // Calculate estimated pose while accounting for time between calculation and
+        // the shot
+        Pose2d estimatedPose = poseSupplier.get();
+        ChassisSpeeds robotRelativeVelocity = robotRelativeVelocitySupplier.get();
+        estimatedPose = estimatedPose.exp(
+                new Twist2d(
+                        robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
+                        robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
+                        robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
 
-		return shot;
-	}
+        // Calculate distance from turret to target
+        // Apply currently-configured target (default is the hub) with alliance flip
+        Translation2d target = AllianceFlipUtil.apply(this.target);
+        // Use the configured robot->turret transform from ShooterConstants (drop Z)
+        var robotToTurretTrans = ShooterConstants.kRobotToTurretTransform.getTranslation();
+        Pose2d turretPosition = estimatedPose.transformBy(
+                new Transform2d(
+                        new Translation2d(robotToTurretTrans.getX(), robotToTurretTrans.getY()),
+                        new Rotation2d()));
+        double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
 
-	// We could shift to this to remove on-robot calculations and use raw heuristic
-	// data
-	// TODO: Prepare a second version of the shooter calculations using an
-	// InterpolatingDoubleTreeMap in case the physics descrepancies are too much
-	public static ShotData calculateHybridShot(Pose2d robotPose, ChassisSpeeds fieldSpeeds, Translation3d target,
-			int iterations) {
-		// distance to target
-		Distance baseDistance = getDistanceToTarget(robotPose, target);
-		double baseDistanceMeters = baseDistance.in(Meters);
+        // Calculate field relative turret velocity
+        ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
+        double robotAngle = estimatedPose.getRotation().getRadians();
+        double turretVelocityX = robotVelocity.vxMetersPerSecond
+                // + robotVelocity.omegaRadiansPerSecond
+                * (robotToTurretTrans.getY() * Math.cos(robotAngle)
+                        - robotToTurretTrans.getX() * Math.sin(robotAngle));
+        double turretVelocityY = robotVelocity.vyMetersPerSecond
+                // + robotVelocity.omegaRadiansPerSecond
+                * (robotToTurretTrans.getX() * Math.cos(robotAngle)
+                        - robotToTurretTrans.getY() * Math.sin(robotAngle));
 
-		// interpolated stationary shot
-		double baseVelMetersPerSecond = kDistanceToVelocity.get(baseDistanceMeters);
-		double baseAngleRadians = kDistanceToAngle.get(baseDistanceMeters);
+        // Account for imparted velocity by robot (turret) to offset
+        double timeOfFlight;
+        Pose2d lookaheadPose = turretPosition;
+        double lookaheadTurretToTargetDistance = turretToTargetDistance;
 
-		LinearVelocity exitVelocity = MetersPerSecond.of(baseVelMetersPerSecond);
-		Angle hoodAngle = Radians.of(baseAngleRadians);
+        for (int i = 0; i < 20; i++) {
+            timeOfFlight = tofMap.get(lookaheadTurretToTargetDistance);
+            double offsetX = turretVelocityX * timeOfFlight;
+            double offsetY = turretVelocityY * timeOfFlight;
+            lookaheadPose = new Pose2d(
+                    turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
+                    turretPosition.getRotation());
+            lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
+        }
 
-		// initial time of flight estimate
-		Time timeOfFlight = calculateTimeOfFlight(exitVelocity, hoodAngle, baseDistance);
+        // Calculate parameters accounted for imparted velocity
+        // Get field-relative angle from turret to target
+        double fieldRelativeAngleRad = target.minus(lookaheadPose.getTranslation()).getAngle().getRadians();
+        // Convert to robot-relative by subtracting robot heading
+        double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
+        // Normalize to [-π, π]
+        double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
 
-		Translation3d predictedTarget = target;
+        // Filter the turret angle to smooth noisy measurements
+        double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
 
-		// iternate with corrected distances
-		for (int i = 0; i < iterations; i++) {
-			// Predict where the target appears relative to robot motion
-			predictedTarget = predictTargetPos(target, fieldSpeeds, timeOfFlight);
-			Distance correctedDistance = getDistanceToTarget(robotPose, predictedTarget);
-			double correctedMeters = correctedDistance.in(Meters);
+        turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
 
-			// Now interpolation using predicted distance
-			double correctedVel = kDistanceToVelocity.get(correctedMeters);
-			double correctedAngle = kDistanceToAngle.get(correctedMeters);
+        // Log calculated values for debugging
+        Logger.recordOutput("ShotCalculator/RobotPose", estimatedPose);
+        Logger.recordOutput("ShotCalculator/TargetPos", target);
+        Logger.recordOutput("ShotCalculator/TurretPos", turretPosition.getTranslation());
+        Logger.recordOutput("ShotCalculator/FieldRelativeAngle", fieldRelativeAngleRad);
+        Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
+        Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
+        Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
 
-			exitVelocity = MetersPerSecond.of(correctedVel);
-			hoodAngle = Radians.of(correctedAngle);
+        hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance).getRadians();
+        // Smooth hood angle as well
+        hoodAngle = hoodAngleFilter.calculate(hoodAngle);
 
-			// Update time of flight with corrected values
-			timeOfFlight = calculateTimeOfFlight(exitVelocity, hoodAngle, correctedDistance);
-		}
+        if (lastTurretAngle == null)
+            lastTurretAngle = turretAngle;
+        if (Double.isNaN(lastHoodAngle))
+            lastHoodAngle = hoodAngle;
 
-		return new ShotData(exitVelocity, hoodAngle, predictedTarget);
-	}
+        // Compute angular velocities (simple derivative on filtered angle)
+        turretVelocity = (turretAngle.getRadians() - lastTurretAngle.getRadians()) / Constants.loopPeriodSecs;
+        hoodVelocity = (hoodAngle - lastHoodAngle) / Constants.loopPeriodSecs;
 
+        lastTurretAngle = turretAngle;
+        lastHoodAngle = hoodAngle;
+        // Valid only when distance in range AND turret angle is within +/- 3/4*pi
+        latestData = new ShotData(
+                lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance
+                        && Math.abs(filteredTurretAngleRad) <= (3.0 / 4.0) * Math.PI,
+                turretAngle,
+                turretVelocity,
+                hoodAngle,
+                hoodVelocity,
+                flywheelSpeedMap.get(lookaheadTurretToTargetDistance));
+
+        // Log calculated values
+        Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
+        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
+
+        return latestData;
+    }
+
+    public void clearShotData() {
+        latestData = null;
+    }
+
+    public void setFieldVelocitySupplier(Supplier<ChassisSpeeds> supplier) {
+        this.fieldVelocitySupplier = supplier == null ? () -> new ChassisSpeeds(0.0, 0.0, 0.0) : supplier;
+    }
+
+    /**
+     * Change the base (un-flipped) target used for shot calculations. Pass a
+     * Translation2d
+     * in field coordinates; alliance flipping is applied automatically in
+     * getData().
+     */
+    public void setTarget(Translation2d newBaseTarget) {
+        this.target = newBaseTarget == null ? FieldConstants.Hub.topCenterPoint.toTranslation2d() : newBaseTarget;
+        clearShotData();
+    }
+
+    /** Reset the target back to the default hub location. */
+    public void resetTargetToHub() {
+        this.target = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+        clearShotData();
+    }
+
+    public void setPoseSupplier(Supplier<Pose2d> supplier) {
+        this.poseSupplier = supplier == null ? () -> new Pose2d() : supplier;
+    }
+
+    public void setRobotRelativeVelocitySupplier(Supplier<ChassisSpeeds> supplier) {
+        this.robotRelativeVelocitySupplier = supplier == null ? () -> new ChassisSpeeds(0.0, 0.0, 0.0) : supplier;
+    }
+
+    /**
+     * Get the current target position (with alliance flipping applied).
+     * Returns the target as a Translation2d in field coordinates.
+     */
+    public Translation2d getTarget() {
+        return AllianceFlipUtil.apply(this.target);
+    }
 }
