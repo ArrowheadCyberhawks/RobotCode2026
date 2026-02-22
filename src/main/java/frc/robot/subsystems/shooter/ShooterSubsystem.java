@@ -105,9 +105,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /**
    * Convenience method to return to idle.
+   * This always works regardless of current state — safety override.
    */
   public void stop() {
-    requestState(ShooterState.IDLE);
+    desiredState = ShooterState.IDLE;
+    currentState = ShooterState.IDLE;
   }
 
   /**
@@ -149,8 +151,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private void executeState() {
     switch (currentState) {
       case IDLE:
-        // Stop all subsystems
-        flywheel.stopCommand().schedule();
+        // Stop all subsystems directly — no commands
+        flywheel.stop();
         hood.stopHood();
         turret.stopTurret();
         break;
@@ -163,27 +165,29 @@ public class ShooterSubsystem extends SubsystemBase {
         var straightData = ShotCalculator.getInstance().getData();
         if (straightData != null && straightData.isValid()) {
           // Use calculated flywheel speed and hood angle
-          double flywheelSpeed = straightData.flywheelSpeed();
-          double hoodAngleDeg = Math.toDegrees(straightData.hoodAngle());
-          
-          // Command subsystems
-          flywheel.runFixedCommand(() -> flywheelSpeed).schedule();
-          hood.moveHoodToDegrees(hoodAngleDeg);
+          flywheel.runVelocity(straightData.flywheelSpeed());
+          hood.moveHoodToDegrees(Math.toDegrees(straightData.hoodAngle()));
         }
         break;
 
       case AIM:
         // All subsystems track the target from ShotCalculator
-        flywheel.trackTarget();
-        hood.trackTarget();
-        turret.trackTarget();
+        var aimData = ShotCalculator.getInstance().getData();
+        if (aimData != null && aimData.isValid()) {
+          flywheel.runVelocity(aimData.flywheelSpeed());
+          hood.moveHoodToDegrees(Math.toDegrees(aimData.hoodAngle()));
+          //turret.moveTurretToRadians(aimData.turretAngle().getRadians());
+        }
         break;
 
       case SHOOT:
         // Maintain current positions by continuing to track
-        flywheel.trackTarget();
-        hood.trackTarget();
-        turret.trackTarget();
+        var shootData = ShotCalculator.getInstance().getData();
+        if (shootData != null && shootData.isValid()) {
+          flywheel.runVelocity(shootData.flywheelSpeed());
+          hood.moveHoodToDegrees(Math.toDegrees(shootData.hoodAngle()));
+          //turret.moveTurretToRadians(shootData.turretAngle().getRadians());
+        }
         break;
     }
   }

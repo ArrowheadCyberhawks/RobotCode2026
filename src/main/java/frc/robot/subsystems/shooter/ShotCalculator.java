@@ -97,7 +97,7 @@ public class ShotCalculator {
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
         hoodAngleMap.put(1.34, Rotation2d.fromDegrees(30));
-        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(60.0));
+        hoodAngleMap.put(5.60, Rotation2d.fromDegrees(45.0));
 
         // Populate the flywheel speed calibration map (distance -> RPM).
         flywheelSpeedMap.put(1.34, 25.0); //150

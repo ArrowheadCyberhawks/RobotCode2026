@@ -98,6 +98,7 @@ public class FlywheelSubsystem extends SubsystemBase {
       cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
       follower.getConfigurator().apply(cfg);
       cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+      
       leader.getConfigurator().apply(cfg);
     }
 
@@ -107,6 +108,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
     Logger.recordOutput("Flywheel/Velocity", currentVelocity);
     Logger.recordOutput("Flywheel/AtGoal", atGoal);
+    Logger.recordOutput("Flywheel/Error", leader.getClosedLoopError().getValueAsDouble());
     Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
     Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
 
@@ -124,13 +126,13 @@ public class FlywheelSubsystem extends SubsystemBase {
     leader.setControl(velocityRequest);
   }
 
-  // setpoint runner used by commands
-  private void runVelocity(double velocityRadsPerSec) {
+  // setpoint runner used by commands and direct callers
+  public void runVelocity(double velocityRadsPerSec) {
     // Apply slew rate limiting to smooth setpoint changes
     velocitySetpoint = RadiansPerSecond.of(setpointLimiter.calculate(velocityRadsPerSec));
   }
 
-  private void stop() {
+  public void stop() {
     velocitySetpoint = RadiansPerSecond.zero();
     setpointLimiter.reset(0.0);
     atGoal = false;

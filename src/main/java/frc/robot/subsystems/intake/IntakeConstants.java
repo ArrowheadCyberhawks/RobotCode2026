@@ -28,13 +28,13 @@ public final class IntakeConstants {
 
     // PID + FF for pivot (position control)
     public static final LoggedTunableNumber kPPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kP", 10);
+        new LoggedTunableNumber("Intake/Pivot/kP", 7.0);
     public static final LoggedTunableNumber kIPivot = 
         new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
     public static final LoggedTunableNumber kDPivot = 
         new LoggedTunableNumber("Intake/Pivot/kD", 0.0);
     public static final LoggedTunableNumber kGPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kG", 0.0);
+        new LoggedTunableNumber("Intake/Pivot/kG", 0.3);
     public static final LoggedTunableNumber kVPivot = 
         new LoggedTunableNumber("Intake/Pivot/kV", 0.0);
     public static final LoggedTunableNumber kAPivot = 
@@ -66,7 +66,7 @@ public final class IntakeConstants {
     public enum IntakeState {
         STOW(Degrees.of(110.0), 0.0), // pivot up and rollers stopped
         IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
-        RUN(Degrees.of(0.0), 0.80);   // pivot down and rollers running to intake
+        RUN(Degrees.of(0.0), 1.00);   // pivot down and rollers running to intake
 
         public final Angle pivotTarget;
         public final double rollerTarget;
