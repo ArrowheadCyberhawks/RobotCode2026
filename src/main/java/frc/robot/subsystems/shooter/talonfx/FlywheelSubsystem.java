@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter.talonfx;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -47,11 +48,12 @@ public class FlywheelSubsystem extends SubsystemBase {
     leader = new TalonFX(leaderId);
     follower = new TalonFX(followerId);
 
+    configureFlywheel();
+    
     // Configure follower to mirror leader (opposed direction for typical flywheels)
     leader.setControl(velocityRequest);
     follower.setControl(new Follower(leaderId, MotorAlignmentValue.Opposed));
 
-    configureFlywheel();
   }
 
   public FlywheelSubsystem() {
@@ -76,9 +78,13 @@ public class FlywheelSubsystem extends SubsystemBase {
     // cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
     // cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    follower.getConfigurator().apply(cfg);
+    //heavy monkey code, flips the sensor: WE SHOULD INVERTING DIRECTION!!!
+    // cfg.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+    // cfg.Feedback.RotorToSensorRatio = -1.0;
+
     cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     leader.getConfigurator().apply(cfg);
+    follower.getConfigurator().apply(cfg);
   }
 
   @Override
@@ -96,10 +102,10 @@ public class FlywheelSubsystem extends SubsystemBase {
       cfg.Slot0.kD = ShooterConstants.kDFlywheel.get();
       cfg.Slot0.kV = ShooterConstants.kVFlywheel.get();
       cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
-      follower.getConfigurator().apply(cfg);
-      cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-      
-      leader.getConfigurator().apply(cfg);
+      // cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+      // follower.getConfigurator().apply(cfg);
+      // cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+      // leader.getConfigurator().apply(cfg);
     }
 
     // Get current velocity in rotations per second, convert to rad/s for internal use
@@ -124,6 +130,11 @@ public class FlywheelSubsystem extends SubsystemBase {
     // Use VelocityTorqueCurrentFOC closed-loop control
     velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
     leader.setControl(velocityRequest);
+
+    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
+    Logger.recordOutput("Flywheel/AtGoal", atGoal);
+    Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
+    Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
   }
 
   // setpoint runner used by commands and direct callers
@@ -158,5 +169,21 @@ public class FlywheelSubsystem extends SubsystemBase {
   public Command stopCommand() {
     return runOnce(this::stop);
   }
+
+  public Command diagnosePhase() {
+    return run(() -> {
+        leader.set(0.1);
+        
+        double velocity = leader.getVelocity().getValueAsDouble();
+        Logger.recordOutput("Flywheel/DiagnoseVelocity", velocity);
+        
+        // Velocity should be POSITIVE if phase is correct
+        if (velocity < 0) {
+            Logger.recordOutput("Flywheel/Sensor", "INVERTED");
+        } else {
+            Logger.recordOutput("Flywheel/Sensor", "CORRECT");
+        }
+    });
+}
 }
 

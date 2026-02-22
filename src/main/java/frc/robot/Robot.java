@@ -45,8 +45,8 @@ public class Robot extends LoggedRobot {
 
 	@Override
 	public void disabledInit() {
-		LimelightSubsystem.SetIMUMode(1);
-		LimelightSubsystem.setThrottle(60);
+		// LimelightSubsystem.SetIMUMode(1);
+		// LimelightSubsystem.setThrottle(60);
 	}
 
 	@Override
@@ -55,8 +55,8 @@ public class Robot extends LoggedRobot {
 
 	@Override
 	public void disabledExit() {
-		LimelightSubsystem.setThrottle(0);
-		LimelightSubsystem.SetIMUMode(3);
+		// LimelightSubsystem.setThrottle(0);
+		// LimelightSubsystem.SetIMUMode(3);
 		m_robotContainer.questNavSubsystem.resetPose(m_robotContainer.drivetrain.getPose());
 	}
 

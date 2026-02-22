@@ -57,7 +57,7 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kVHood = new LoggedTunableNumber("Hood/kV", 0.0);
     public static final LoggedTunableNumber kAHood = new LoggedTunableNumber("Hood/kA", 0.0);
     public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.0);
-    public static final double kHoodAllowedError = 0.0;
+    public static final double kHoodAllowedError = 1.0;
 
     public static final double kHoodMinDegrees = 0.0;
     public static final double kHoodMaxDegrees = 70.0;

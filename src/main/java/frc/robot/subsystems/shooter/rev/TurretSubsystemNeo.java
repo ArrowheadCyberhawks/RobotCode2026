@@ -60,7 +60,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		turretConfig = new SparkMaxConfig();
 
 		configureTurret();
-		resetTurretEncoder();
+		//resetTurretEncoder();
 	}
 
 	/**
@@ -87,12 +87,9 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	}
 
 	public void stopTurret() {
-		// Set the PID target to the current position so the motor doesn't jump
-		// to an old setpoint when re-enabled
 		double currentRadians = encoder.getPosition();
 		targetRadians = currentRadians;
 		turretController.setSetpoint(currentRadians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-		turretMotor.stopMotor();
 	}
 
 	/**
