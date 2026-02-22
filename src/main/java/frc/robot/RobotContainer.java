@@ -57,8 +57,11 @@ import frc.robot.util.FieldConstants;
 import frc.robot.util.HubTracker;
 import frc.robot.util.HubTracker.Shift;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.hopper.HopperConstants;
 import frc.robot.subsystems.hopper.HopperSubsystem;
+import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -221,15 +224,20 @@ public class RobotContainer {
 				));
 
 
+		driverController.leftTrigger().onTrue(Commands.runEnd(
+			() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
+			() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
+		));
+		
 		// Left bumper - Toggle intake between RUN and OFF
-		driverController.leftBumper().onTrue(Commands.runOnce(() -> {
-			IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
-			if (currentState == IntakeConstants.IntakeState.RUN) {
-				intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
-			} else {
-				intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
-			}
-		}));
+		// driverController.leftTrigger().onTrue(Commands.runOnce(() -> {
+		// 	IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
+		// 	if (currentState == IntakeConstants.IntakeState.RUN) {
+		// 		intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
+		// 	} else {
+		// 		intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
+		// 	}
+		// }));
 
 		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if already aiming/shooting
 		// driverController.rightBumper().onTrue(Commands.either(
@@ -256,6 +264,7 @@ public class RobotContainer {
 
 		//TEMP CODE
 		driverController.rightBumper().whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()));
+		driverController.y().whileTrue(flywheel.diagnosePhase());
 		//driverController.y().whileTrue(turret.trackTarget());
 
 		// Smart target selection based on field zone: D-pad down will set the target
@@ -339,12 +348,21 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		driverController.leftTrigger().whileTrue(
-			hopperSubsystem.runEnd(
-				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
-				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
-			)
-		);
+		// driverController.leftBumper().whileTrue(
+		// 	hopperSubsystem.runEnd(
+		// 		() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
+		// 		() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
+		// 	)
+		// );
+
+		driverController.leftBumper().onTrue(Commands.runOnce(() -> {
+			HopperState currentState = hopperSubsystem.getHopperState();
+			if (currentState == HopperState.ON) {
+				hopperSubsystem.setHopperState(HopperState.IDLE);
+			} else {
+				hopperSubsystem.setHopperState(HopperState.ON);
+			}
+		}));
 	}
 
 	/**

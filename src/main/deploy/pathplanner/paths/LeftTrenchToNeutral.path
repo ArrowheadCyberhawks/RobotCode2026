@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.370031745210234,
-        "y": 7.394959425344272
+        "x": 3.418002853067047,
+        "y": 5.4517831669044226
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.69613595706619,
-        "y": 7.434221824686941
+        "x": 5.744438397073406,
+        "y": 5.4517831669044226
       },
       "isLocked": false,
       "linkedName": "LeftTrench"
     },
     {
       "anchor": {
-        "x": 7.653434704830055,
-        "y": 5.600751341681574
+        "x": 7.532496433666189,
+        "y": 5.4517831669044226
       },
       "prevControl": {
-        "x": 7.247799642218247,
-        "y": 6.655402504472272
+        "x": 6.419696532416845,
+        "y": 5.4517831669044226
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +31,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.09625668449197865,
-      "rotationDegrees": 180.0
+      "rotationDegrees": -45.0
     }
   ],
   "constraintZones": [],
@@ -47,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 105.70863782901587
+    "rotation": -58.49573328079566
   },
   "reversed": false,
   "folder": "Cycles",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 179.6499645798731
+    "rotation": -41.85504253530201
   },
   "useDefaultConstraints": true
 }

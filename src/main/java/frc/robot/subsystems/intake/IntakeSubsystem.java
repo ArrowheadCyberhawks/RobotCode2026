@@ -49,7 +49,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     private double rollerTargetPercent = 0.0;
     /** Current high-level intake state (controls pivot + roller behavior) */
-    private IntakeState intakeState = IntakeState.IDLE;
+    private IntakeState intakeState = IntakeState.STOW;
 
     public IntakeSubsystem() {
         // Create motors
