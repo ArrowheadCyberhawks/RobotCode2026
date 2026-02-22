@@ -109,11 +109,11 @@ public class RobotContainer {
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
-	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
-			flywheel,
-			hood,
-			turret
-		);
+	// public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
+	// 		flywheel,
+	// 		hood,
+	// 		turret
+	// 	);
 
 	// Intake subsystem
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
@@ -232,30 +232,30 @@ public class RobotContainer {
 		}));
 
 		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if already aiming/shooting
-		driverController.rightBumper().onTrue(Commands.either(
-			// If shooter is in AIM or SHOOT state, stop everything
-			Commands.sequence(
-				Commands.runOnce(shooterSubsystem::stop),
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-			),
-			// If shooter is IDLE or STRAIGHT, start aiming sequence
-			Commands.sequence(
-				// First, start aiming
-				Commands.runOnce(shooterSubsystem::startAiming),
-				// Wait until shooter is ready to shoot
-				Commands.waitUntil(shooterSubsystem::isReadyToShoot),
-				// Once ready, turn on the hopper to feed the ball
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-			),
-			// Condition: true if shooter is already aiming or shooting
-			() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
-			      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
-		));
+		// driverController.rightBumper().onTrue(Commands.either(
+		// 	// If shooter is in AIM or SHOOT state, stop everything
+		// 	Commands.sequence(
+		// 		Commands.runOnce(shooterSubsystem::stop),
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		// 	),
+		// 	// If shooter is IDLE or STRAIGHT, start aiming sequence
+		// 	Commands.sequence(
+		// 		// First, start aiming
+		// 		Commands.runOnce(shooterSubsystem::startAiming),
+		// 		// Wait until shooter is ready to shoot
+		// 		Commands.waitUntil(shooterSubsystem::isReadyToShoot),
+		// 		// Once ready, turn on the hopper to feed the ball
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+		// 	),
+		// 	// Condition: true if shooter is already aiming or shooting
+		// 	() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
+		// 	      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
+		// ));
 		
 
 
 		//TEMP CODE
-		//driverController.rightBumper().whileTrue(hood.trackTarget());
+		driverController.rightBumper().whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()));
 		//driverController.y().whileTrue(turret.trackTarget());
 
 		// Smart target selection based on field zone: D-pad down will set the target
