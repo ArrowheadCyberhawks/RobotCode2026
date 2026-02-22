@@ -348,21 +348,21 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		// driverController.leftBumper().whileTrue(
-		// 	hopperSubsystem.runEnd(
-		// 		() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
-		// 		() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
-		// 	)
-		// );
+		driverController.leftBumper().whileTrue(
+			hopperSubsystem.runEnd(
+				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
+				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
+			)
+		);
 
-		driverController.leftBumper().onTrue(Commands.runOnce(() -> {
-			HopperState currentState = hopperSubsystem.getHopperState();
-			if (currentState == HopperState.ON) {
-				hopperSubsystem.setHopperState(HopperState.IDLE);
-			} else {
-				hopperSubsystem.setHopperState(HopperState.ON);
-			}
-		}));
+		// driverController.leftBumper().onTrue(Commands.runOnce(() -> {
+		// 	HopperState currentState = hopperSubsystem.getHopperState();
+		// 	if (currentState == HopperState.ON) {
+		// 		hopperSubsystem.setHopperState(HopperState.IDLE);
+		// 	} else {
+		// 		hopperSubsystem.setHopperState(HopperState.ON);
+		// 	}
+		// }));
 	}
 
 	/**
