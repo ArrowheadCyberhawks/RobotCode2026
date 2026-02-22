@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -50,6 +51,7 @@ import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
+import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
@@ -182,6 +184,20 @@ public class RobotContainer {
 
 		// Explicitly start the logger
 		SignalLogger.start();
+		SmartDashboard.putNumber("ResetX", 0);
+		SmartDashboard.putNumber("ResetY", 0);
+		SmartDashboard.putNumber("ResetTheta", 0);
+		SmartDashboard.putData("Reset Pose", new InstantCommand(() -> drivetrain.resetPose(
+			new Pose2d(
+				new Translation2d(
+					SmartDashboard.getNumber("ResetX", 0.0),
+					SmartDashboard.getNumber("ResetY", 0.0)
+				),
+				new Rotation2d(
+					SmartDashboard.getNumber("ResetTheta", 0.0)
+				)
+			)
+		)));
 
 	}
 
@@ -224,10 +240,16 @@ public class RobotContainer {
 				));
 
 
-		driverController.leftTrigger().onTrue(Commands.runEnd(
+		driverController.leftTrigger().whileTrue(Commands.runEnd(
 			() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
 			() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
 		));
+		driverController.x().and(driverController.leftTrigger()).whileTrue(
+			intakeSubsystem.runEnd(
+				() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
+				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
+			)
+		);
 		
 		// Left bumper - Toggle intake between RUN and OFF
 		// driverController.leftTrigger().onTrue(Commands.runOnce(() -> {
@@ -311,6 +333,7 @@ public class RobotContainer {
 						driveFacingAngleRequest));
 
 		driverController.povDown().onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
+		driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodToDegrees(30.0)));
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -355,6 +378,13 @@ public class RobotContainer {
 			)
 		);
 
+		driverController.x().and(driverController.leftBumper()).whileTrue(
+			hopperSubsystem.runEnd(
+				() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
+				() -> hopperSubsystem.setHopperState(HopperState.IDLE)
+			)
+		);
+
 		// driverController.leftBumper().onTrue(Commands.runOnce(() -> {
 		// 	HopperState currentState = hopperSubsystem.getHopperState();
 		// 	if (currentState == HopperState.ON) {
@@ -377,6 +407,14 @@ public class RobotContainer {
 		
 		NamedCommands.registerCommand("IntakeOff", 
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE))
+		);
+
+		NamedCommands.registerCommand("IntakeStow",
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)
+		));
+
+		NamedCommands.registerCommand("ShooterAim",
+			Commands.run(() -> hood.trackTarget().alongWith(flywheel.trackTarget()))
 		);
 
 		// TODO: Uncomment when shooter subsystem is enabled

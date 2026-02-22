@@ -7,6 +7,8 @@ import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -32,7 +34,7 @@ public class HoodSubsystem extends SubsystemBase {
     // Zero to known STOW position on construction (caller can re-zero later).
     resetHoodEncoderToDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
 
-    Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
+    Logger.recordOutput("Shooter/Hood Target", Degrees.of(ShooterConstants.kShootHoodTarget));
   }
 
   private boolean trackingEnabled = false;

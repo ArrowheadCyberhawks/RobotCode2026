@@ -7,12 +7,6 @@
         {
           "type": "path",
           "data": {
-            "pathName": "PID Forward"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
             "pathName": null
           }
         }
@@ -20,6 +14,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "PID",
+  "folder": "Left",
   "choreoAuto": false
 }

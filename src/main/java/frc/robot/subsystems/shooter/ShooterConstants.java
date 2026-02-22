@@ -51,7 +51,7 @@ public final class ShooterConstants {
     public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 36.0/24.0 * 30.0/372.0;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
-    public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 0.7);
+    public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 20);
     public static final LoggedTunableNumber kIHood = new LoggedTunableNumber("Hood/kI", 0.0001);
     public static final LoggedTunableNumber kDHood = new LoggedTunableNumber("Hood/kD", 0.0);
     public static final LoggedTunableNumber kVHood = new LoggedTunableNumber("Hood/kV", 0.0);
