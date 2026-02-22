@@ -100,8 +100,8 @@ public class ShotCalculator {
         hoodAngleMap.put(17.37, Rotation2d.fromDegrees(60.0));
 
         // Populate the flywheel speed calibration map (distance -> RPM). NOT RMP FIX UNITS SUSSEX FIX IG
-        flywheelSpeedMap.put(1.34, 30.0); //150
-        flywheelSpeedMap.put(17.37, 90.0); //250
+        flywheelSpeedMap.put(1.34, 25.0); //150
+        flywheelSpeedMap.put(17.37, 70.0); //250
 
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.

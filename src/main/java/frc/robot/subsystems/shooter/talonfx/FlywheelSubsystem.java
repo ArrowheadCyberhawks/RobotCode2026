@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter.talonfx;
 
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -31,7 +32,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private final TalonFX follower;
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
-  private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0.0);
+  private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
 
   private AngularVelocity velocitySetpoint = RadiansPerSecond.of(0.0);
   private boolean atGoal = false;
@@ -126,6 +127,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityTorqueCurrentFOC closed-loop control
     velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
+    velocityRequest.FeedForward = 2.90;
+    velocityRequest.EnableFOC = false;
     leader.setControl(velocityRequest);
   }
 
