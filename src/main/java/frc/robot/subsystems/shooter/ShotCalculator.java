@@ -89,24 +89,24 @@ public class ShotCalculator {
     static {
         // Reasonable operating bounds for the shooter (meters) and a small
         // phase delay used to offset calculations for shooter processing time.
-        minDistance = 1.34;
+        minDistance = 2.16;
         maxDistance = 5.60;
         phaseDelay = 0.09; // started at .03, increased to 0.09 for better accuracy, will change based on
 
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
-        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(30));
-        hoodAngleMap.put(17.37, Rotation2d.fromDegrees(60.0));
+        hoodAngleMap.put(2.16, Rotation2d.fromDegrees(30));
+        hoodAngleMap.put(7.104, Rotation2d.fromDegrees(46.38));
 
-        // Populate the flywheel speed calibration map (distance -> RPM). NOT RPM FIX UNITS SUSSEX FIX IG
-        flywheelSpeedMap.put(1.34, 18.0); //150
-        flywheelSpeedMap.put(17.37, 50.0); //250
+        // Populate the flywheel speed calibration map (distance -> RPS).  (radians per second)
+        flywheelSpeedMap.put(2.16, 19.89); //150
+        flywheelSpeedMap.put(7.104, 31.6); //250
 
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.
         tofMap.put(5.60, 3.00);
-        tofMap.put(1.34, 0.90);
+        tofMap.put(2.16, 0.90);
     }
 
     public ShotData getData() {
