@@ -4,6 +4,7 @@ import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -48,11 +49,12 @@ public class FlywheelSubsystem extends SubsystemBase {
     leader = new TalonFX(leaderId);
     follower = new TalonFX(followerId);
 
+    configureFlywheel();
+    
     // Configure follower to mirror leader (opposed direction for typical flywheels)
     leader.setControl(velocityRequest);
     follower.setControl(new Follower(leaderId, MotorAlignmentValue.Opposed));
 
-    configureFlywheel();
   }
 
   public FlywheelSubsystem() {
@@ -130,6 +132,11 @@ public class FlywheelSubsystem extends SubsystemBase {
     velocityRequest.FeedForward = 2.90;
     velocityRequest.EnableFOC = false;
     leader.setControl(velocityRequest);
+
+    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
+    Logger.recordOutput("Flywheel/AtGoal", atGoal);
+    Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
+    Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
   }
 
   // setpoint runner used by commands and direct callers

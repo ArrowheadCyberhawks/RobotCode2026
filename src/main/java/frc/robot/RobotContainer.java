@@ -105,10 +105,10 @@ public class RobotContainer {
 
 	// public final VisionSubsystem visionSubsystem = new
 	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-			() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to gyro-based not pose estimator
-			drivetrain,
-			field2d);
+	// public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
+	// 		() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to gyro-based not pose estimator
+	// 		drivetrain,
+	// 		field2d);
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
@@ -349,18 +349,19 @@ public class RobotContainer {
 
 		// driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-		driverController.start()
-				.whileTrue(limelightSubsystem
-						.startRun(() -> LimelightSubsystem.SetIMUMode(1),
-								() -> limelightSubsystem.updateVisionPoseMT1(true))
-						.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
+		// driverController.start()
+		// 		.whileTrue(limelightSubsystem
+		// 				.startRun(() -> LimelightSubsystem.SetIMUMode(1),
+		// 						() -> limelightSubsystem.updateVisionPoseMT1(true))
+		// 				.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
+
+		driverController.start().whileTrue(flywheel.diagnosePhase());
 
 		driverController.back().whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
 
 		// Manipulator controller - Shooter state machine controls
 		// A button: Set shooter to IDLE (stop all subsystems)
 		//manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
-
 
 		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
 		//manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
