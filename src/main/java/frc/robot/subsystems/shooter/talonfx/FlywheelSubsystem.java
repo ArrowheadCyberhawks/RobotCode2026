@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -51,6 +52,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     follower = new TalonFX(followerId);
 
     configureFlywheel();
+
+    velocityRequest.EnableFOC = true;
     
     // Configure follower to mirror leader (opposed direction for typical flywheels)
     leader.setControl(velocityRequest);
@@ -130,8 +133,6 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityTorqueCurrentFOC closed-loop control
     velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
-    velocityRequest.FeedForward = 2.90;
-    velocityRequest.EnableFOC = false;
     leader.setControl(velocityRequest);
 
     Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
@@ -143,7 +144,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   // setpoint runner used by commands and direct callers
   public void runVelocity(AngularVelocity velocity) {
     // Apply slew rate limiting to smooth setpoint changes
-    velocitySetpoint = RadiansPerSecond.of(Math.max(setpointLimiter.calculate(velocity.in(RadiansPerSecond)), ShooterConstants.kFlywheelMinVel.in(RadiansPerSecond)));
+    velocitySetpoint = RadiansPerSecond.of(MathUtil.clamp(setpointLimiter.calculate(velocity.in(RadiansPerSecond)), ShooterConstants.kFlywheelMinVel.in(RadiansPerSecond), ShooterConstants.kFlywheelMaxVel.in(RadiansPerSecond)));
   }
 
   public void stop() {

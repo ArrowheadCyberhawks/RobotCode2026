@@ -28,13 +28,13 @@ public final class ShooterConstants {
 
     // Flywheel (velocity control)
     public static final double kFlywheelGearRatio = 1.0;
-    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.6);
+    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.59);
     public static final LoggedTunableNumber kIFlywheel = new LoggedTunableNumber("Flywheel/kI", 0.0);
     public static final LoggedTunableNumber kDFlywheel = new LoggedTunableNumber("Flywheel/kD", 0.0);
-    public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 3.0);
+    public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 4.0);
     public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.0);
 
-    public static final double kFlywheelRpsShoot = 80.0;
+    public static final AngularVelocity kFlywheelMaxVel = RadiansPerSecond.of(55.0);
     public static final AngularVelocity kFlywheelMinVel = RadiansPerSecond.of(10.0);
     // Turret gear ratio (turret motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;
@@ -85,7 +85,7 @@ public final class ShooterConstants {
     }
 
     // Default targets
-    public static final double kShootFlywheelTarget = kFlywheelRpsShoot;
+    public static final AngularVelocity kShootFlywheelTarget = kFlywheelMaxVel;
     public static final double kShootHoodTarget = 35.0;
 
     // Turret Motion Magic tuning (motor rotations/sec and rotations/sec^2)
