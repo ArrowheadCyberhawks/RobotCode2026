@@ -123,6 +123,10 @@ public class HoodSubsystemNeo extends SubsystemBase {
     return Radians.of(encoder.getPosition());
   }
 
+  public Angle getHoodTargetAngle() {
+    return Radians.of(pid.getSetpoint());
+  }
+
   public void resetHoodEncoderToDegrees(double degrees) {
     // Convert degrees to radians for encoder position
     double radians = Math.toRadians(degrees);

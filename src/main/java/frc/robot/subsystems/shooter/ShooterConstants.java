@@ -3,12 +3,14 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.util.LoggedTunableNumber;
 
@@ -33,6 +35,7 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.0);
 
     public static final double kFlywheelRpsShoot = 80.0;
+    public static final AngularVelocity kFlywheelMinVel = RadiansPerSecond.of(10.0);
     // Turret gear ratio (turret motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;
     
@@ -59,8 +62,8 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.0);
     public static final double kHoodAllowedError = 1.0;
 
-    public static final double kHoodMinDegrees = 0.0;
-    public static final double kHoodMaxDegrees = 70.0;
+    public static final double kHoodMinDegrees = 30.0;
+    public static final double kHoodMaxDegrees = 67.0; // i swear this is actually the maximum
 
     /** Common hood presets */
     public enum HoodPosition {

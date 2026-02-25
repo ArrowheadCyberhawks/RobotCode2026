@@ -238,18 +238,6 @@ public class RobotContainer {
 																										// with negative
 																										// X (left)
 				));
-
-
-		driverController.leftTrigger().whileTrue(Commands.runEnd(
-			() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
-			() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
-		));
-		driverController.x().and(driverController.leftTrigger()).whileTrue(
-			intakeSubsystem.runEnd(
-				() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
-				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
-			)
-		);
 		
 		// Left bumper - Toggle intake between RUN and OFF
 		// driverController.leftTrigger().onTrue(Commands.runOnce(() -> {
@@ -372,28 +360,50 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		driverController.leftBumper().whileTrue(
+		// intake controls
+		driverController.leftTrigger()
+			.or(manipulatorController.leftTrigger())
+			.whileTrue(Commands.runEnd(
+			() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
+			() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
+		));
+		
+		driverController.x().and(driverController.leftTrigger())
+			.or(manipulatorController.x().and(manipulatorController.leftTrigger()))
+			.whileTrue(
+			intakeSubsystem.runEnd(
+				() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
+				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
+			)
+		);
+
+		// hopper controls
+		driverController.leftBumper().or(manipulatorController.leftBumper()).whileTrue(
 			hopperSubsystem.runEnd(
 				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
 				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
 			)
 		);
 
-		driverController.x().and(driverController.leftBumper()).whileTrue(
+		driverController.x().and(driverController.leftBumper())
+			.or(manipulatorController.x().and(manipulatorController.leftBumper()))
+			.whileTrue(
 			hopperSubsystem.runEnd(
 				() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
 				() -> hopperSubsystem.setHopperState(HopperState.IDLE)
 			)
 		);
 
-		// driverController.leftBumper().onTrue(Commands.runOnce(() -> {
-		// 	HopperState currentState = hopperSubsystem.getHopperState();
-		// 	if (currentState == HopperState.ON) {
-		// 		hopperSubsystem.setHopperState(HopperState.IDLE);
-		// 	} else {
-		// 		hopperSubsystem.setHopperState(HopperState.ON);
-		// 	}
-		// }));
+		// Manipulator controller - Manual controls for testing
+		manipulatorController.rightStick().whileTrue(hood.run(() -> hood.moveHoodToDegrees(hood.getHoodTargetAngle().in(Degrees) - manipulatorController.getRightY() * 0.5)));
+		manipulatorController.leftStick().toggleOnTrue(
+			flywheel.runFixedCommand(
+				() -> flywheel.getVelocitySetpoint()
+						.plus(RadiansPerSecond.of(
+							MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05))
+						)
+			)
+		);
 	}
 
 	/**

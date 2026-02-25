@@ -19,6 +19,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShotCalculator;
@@ -140,9 +141,9 @@ public class FlywheelSubsystem extends SubsystemBase {
   }
 
   // setpoint runner used by commands and direct callers
-  public void runVelocity(double velocityRadsPerSec) {
+  public void runVelocity(AngularVelocity velocity) {
     // Apply slew rate limiting to smooth setpoint changes
-    velocitySetpoint = RadiansPerSecond.of(setpointLimiter.calculate(velocityRadsPerSec));
+    velocitySetpoint = RadiansPerSecond.of(Math.max(setpointLimiter.calculate(velocity.in(RadiansPerSecond)), ShooterConstants.kFlywheelMinVel.in(RadiansPerSecond)));
   }
 
   public void stop() {
@@ -151,9 +152,13 @@ public class FlywheelSubsystem extends SubsystemBase {
     atGoal = false;
   }
 
-  public double getVelocity() {
+  public AngularVelocity getVelocity() {
     // Return velocity in rad/s (convert from TalonFX's rps)
-    return leader.getVelocity().getValueAsDouble() * 2.0 * Math.PI;
+    return RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
+  }
+
+  public AngularVelocity getVelocitySetpoint() {
+    return velocitySetpoint;
   }
 
   public boolean isAtGoal() {
@@ -161,11 +166,11 @@ public class FlywheelSubsystem extends SubsystemBase {
   }
 
   public Command trackTarget() {
-    return runEnd(() -> runVelocity(ShotCalculator.getInstance().getData().flywheelSpeed()), this::stop);
+    return runEnd(() -> runVelocity(RadiansPerSecond.of(ShotCalculator.getInstance().getData().flywheelSpeed())), this::stop);
   }
 
-  public Command runFixedCommand(DoubleSupplier velocity) {
-    return runEnd(() -> runVelocity(velocity.getAsDouble()), this::stop);
+  public Command runFixedCommand(Supplier<AngularVelocity> velocity) {
+    return runEnd(() -> runVelocity(velocity.get()), this::stop);
   }
 
   public Command stopCommand() {

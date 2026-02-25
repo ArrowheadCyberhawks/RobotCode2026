@@ -8,6 +8,8 @@ import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -165,7 +167,7 @@ public class ShooterSubsystem extends SubsystemBase {
         var straightData = ShotCalculator.getInstance().getData();
         if (straightData != null && straightData.isValid()) {
           // Use calculated flywheel speed and hood angle
-          flywheel.runVelocity(straightData.flywheelSpeed());
+          flywheel.runVelocity(RadiansPerSecond.of(straightData.flywheelSpeed()));
           hood.moveHoodToDegrees(Math.toDegrees(straightData.hoodAngle()));
         }
         break;
@@ -174,7 +176,7 @@ public class ShooterSubsystem extends SubsystemBase {
         // All subsystems track the target from ShotCalculator
         var aimData = ShotCalculator.getInstance().getData();
         if (aimData != null && aimData.isValid()) {
-          flywheel.runVelocity(aimData.flywheelSpeed());
+          flywheel.runVelocity(RadiansPerSecond.of(aimData.flywheelSpeed()));
           hood.moveHoodToDegrees(Math.toDegrees(aimData.hoodAngle()));
           //turret.moveTurretToRadians(aimData.turretAngle().getRadians());
         }
@@ -184,7 +186,7 @@ public class ShooterSubsystem extends SubsystemBase {
         // Maintain current positions by continuing to track
         var shootData = ShotCalculator.getInstance().getData();
         if (shootData != null && shootData.isValid()) {
-          flywheel.runVelocity(shootData.flywheelSpeed());
+          flywheel.runVelocity(RadiansPerSecond.of(shootData.flywheelSpeed()));
           hood.moveHoodToDegrees(Math.toDegrees(shootData.hoodAngle()));
           //turret.moveTurretToRadians(shootData.turretAngle().getRadians());
         }
