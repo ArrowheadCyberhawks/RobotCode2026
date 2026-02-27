@@ -1,7 +1,5 @@
 package frc.robot.subsystems.shooter.rev;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -17,7 +15,6 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.Angle;
 
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShotCalculator;
@@ -40,13 +37,12 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Turret/kD", ShooterConstants.kDTurret.get());
 	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance",
 			ShooterConstants.kTurretAllowedError);
-	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.1);
+	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.15);
 	// Soft limits in radians (±135 degrees)
 	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", Math.PI / 4);
 	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -3 * Math.PI / 2); //TODO: move these into shooterconstants
 
-	private boolean trackingEnabled = true;//balls
-	private double targetRadians = 0.0;
+	private Rotation2d targetRotation = new Rotation2d();
 
 	public TurretSubsystemNeo() {
 		this(ShooterConstants.kTurretMotorId);
@@ -60,26 +56,29 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		turretConfig = new SparkMaxConfig();
 
 		configureTurret();
-		//resetTurretEncoder();
 	}
 
 	/**
 	 * Set target azimuth for the turret. The controller will rotate the turret to
 	 * the specified angle.
 	 * 
-	 * @param targetTurretAngle Target angle in radians
+	 * @param targetTurretAngle Target angle as a Rotation2d
 	 */
-	public void setTurretTarget(Angle targetTurretAngle) {
-		moveTurretToRadians(targetTurretAngle.in(Radians));
+	public void setTurretTarget(Rotation2d targetTurretAngle) {
+		// Clamp targetAngle to the configured soft limit range
+		targetRotation = Rotation2d.fromRadians(Math.max(turretMinAngle.get(), Math.min(turretMaxAngle.get(), targetTurretAngle.getRadians())));
 	}
 
-	public void moveTurretToRadians(double radians) {
-		targetRadians = radians; // Store target for atGoal() check
-		turretController.setSetpoint(radians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+	public Rotation2d getTurretTarget() {
+		return targetRotation;
 	}
 
-	public void moveTurretToDegrees(double degrees) {
-		moveTurretToRadians(Math.toRadians(degrees));
+	public Rotation2d getTurretRotation() {
+		try {
+			return Rotation2d.fromRadians(encoder.getPosition());
+		} catch (Exception e) {
+			return new Rotation2d();
+		}
 	}
 
 	public void setTurretVoltage(double volts) {
@@ -87,9 +86,8 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	}
 
 	public void stopTurret() {
-		double currentRadians = encoder.getPosition();
-		targetRadians = currentRadians;
-		turretController.setSetpoint(currentRadians, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+		targetRotation = getTurretRotation(); // Update target to current position to prevent jumps when resuming control
+		turretController.setSetpoint(targetRotation.getRadians(), ControlType.kPosition, ClosedLoopSlot.kSlot0);
 	}
 
 	/**
@@ -103,7 +101,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 		// Handle angle wrapping for shortest distance
 		double error = Math.abs(Rotation2d.fromRadians(currentRadians)
-				.minus(Rotation2d.fromRadians(targetRadians))
+				.minus(targetRotation)
 				.getRadians());
 
 		return error <= toleranceRadians;
@@ -137,18 +135,19 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 		// Periodically wrap encoder to [-π, π] to match ShotCalculator
 		// TODO - check if you actually need this with rev
-		double currentRadians = getTurretRotation().getRadians();
-		if (Math.abs(currentRadians) > 10.0 * Math.PI) {
-			double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
-			encoder.setPosition(wrappedRadians);
-		}
+		// double currentRadians = getTurretRotation().getRadians();
+		// if (Math.abs(currentRadians) > 10.0 * Math.PI) {
+		// 	double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+		// 	encoder.setPosition(wrappedRadians);
+		// }
+
+		// Clamp targetAngle to the configured soft limit range
+		
+		turretController.setSetpoint(targetRotation.getRadians(), ControlType.kPosition, ClosedLoopSlot.kSlot0);
 
 		// Log telemetry
 		Logger.recordOutput("Turret/Current Position", getTurretRotation());
-	}
-
-	public void setTrackingEnabled(boolean enabled) {
-		this.trackingEnabled = enabled;
+		Logger.recordOutput("Turret/Target Position", targetRotation);
 	}
 
 	public Command trackTarget() {
@@ -160,19 +159,11 @@ public class TurretSubsystemNeo extends SubsystemBase {
 				Rotation2d desired = data.turretAngle();
 				Logger.recordOutput("Turret/ShotCalc Angle", desired);
 				if (data.isValid()) {
-					moveTurretToRadians(desired.getRadians());
+					setTurretTarget(desired);
 					Logger.recordOutput("Turret/ShotCalc Angle Goal", desired);
 				}
 			}
 		});
-	}
-
-	public Rotation2d getTurretRotation() {
-		try {
-			return Rotation2d.fromRadians(encoder.getPosition());
-		} catch (Exception e) {
-			return new Rotation2d();
-		}
 	}
 
 	private void configureTurret() {
@@ -183,18 +174,21 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 		turretConfig
 				.idleMode(IdleMode.kBrake)
-				.inverted(true).closedLoop
-				.outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
-				.p(turretKP.get())
-				.i(turretKI.get())
-				.d(turretKD.get())
-				.allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
+				.inverted(true)
+				.closedLoop
+					.outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
+					.p(turretKP.get())
+					.i(turretKI.get())
+					.d(turretKD.get())
+					.allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
 
 		turretConfig.softLimit
 				.forwardSoftLimit(turretMaxAngle.get())
 				.reverseSoftLimit(turretMinAngle.get())
 				.forwardSoftLimitEnabled(true)
 				.reverseSoftLimitEnabled(true);
+
+		turretConfig.smartCurrentLimit(20);
 
 		// Use kNoPersistParameters to avoid slow flash writes
 		turretMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);

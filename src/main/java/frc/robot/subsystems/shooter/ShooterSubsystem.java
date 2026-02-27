@@ -8,6 +8,7 @@ import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import org.littletonrobotics.junction.Logger;
@@ -161,7 +162,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
       case STRAIGHT:
         // Turret aims straight (0 degrees)
-        turret.moveTurretToDegrees(0.0);
+        turret.setTurretTarget(new Rotation2d());
         
         // Get shot data for straight shot
         var straightData = ShotCalculator.getInstance().getData();

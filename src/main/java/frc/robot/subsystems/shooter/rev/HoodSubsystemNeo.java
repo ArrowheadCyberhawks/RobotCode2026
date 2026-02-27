@@ -49,7 +49,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
     pid.setTolerance(ShooterConstants.kHoodAllowedError);
 
     configureHood();
-    resetHoodEncoderToDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
+    // resetHoodEncoderToDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
     pid.setSetpoint(Math.toRadians(ShooterConstants.HoodPosition.STOW.getDegrees()));
   
 

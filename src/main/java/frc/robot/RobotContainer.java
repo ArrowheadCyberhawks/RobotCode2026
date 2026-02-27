@@ -137,7 +137,6 @@ public class RobotContainer {
 	public RobotContainer() {
 		constructField();
 		configureBindings();
-		turret.manualResetTurretEncoder(-Math.PI/2);
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 
 		// Configure ShotCalculator with robot pose supplier
@@ -395,7 +394,12 @@ public class RobotContainer {
 		);
 
 		// Manipulator controller - Manual controls for testing
-		manipulatorController.rightStick().whileTrue(hood.run(() -> hood.moveHoodToDegrees(hood.getHoodTargetAngle().in(Degrees) - manipulatorController.getRightY() * 0.5)));
+		manipulatorController.rightStick().whileTrue(
+			hood.run(() -> hood.moveHoodToDegrees(hood.getHoodTargetAngle().in(Degrees) - Math.pow(manipulatorController.getRightY(), 3) * 0.5))
+			.alongWith(
+				turret.run(() -> turret.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees() - Math.pow(manipulatorController.getRightX(), 3) * 2.0)))
+			)
+		);
 		manipulatorController.leftStick().toggleOnTrue(
 			flywheel.runFixedCommand(
 				() -> flywheel.getVelocitySetpoint()
