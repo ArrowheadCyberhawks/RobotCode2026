@@ -36,7 +36,7 @@ public class QuestNavSubsystem extends SubsystemBase {
         Inches.of(-12), // x offset
         Inches.of(-8.5), // y offset
         Inches.of(10.5), // z offset
-        new Rotation3d(0.0, 0.0, Math.PI/2) // rotation offset
+        new Rotation3d(0.0, 0.0, Math.PI) // rotation offset
     );
 
     /** Last known robot pose from QuestNav */

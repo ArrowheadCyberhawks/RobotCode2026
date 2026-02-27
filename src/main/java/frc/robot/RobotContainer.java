@@ -272,7 +272,7 @@ public class RobotContainer {
 
 
 		//TEMP CODE
-		driverController.rightBumper().whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()));
+		driverController.rightBumper().whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
 		driverController.y().whileTrue(flywheel.diagnosePhase());
 		//driverController.y().whileTrue(turret.trackTarget());
 
