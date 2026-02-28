@@ -1,8 +1,15 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
+import java.util.Optional;
+
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -13,11 +20,14 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.util.HubTracker;
+import frc.robot.util.HubTracker.Shift;
 
 public class Telemetry {
     private final double MaxSpeed;
@@ -120,6 +130,14 @@ public class Telemetry {
             m_moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
             m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
             m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
+        }
+
+        // non-swerve drive related telemetry
+        Logger.recordOutput("Time Remaining in Shift", HubTracker.timeRemainingInCurrentShift().orElse(Seconds.zero()));
+        if(MathUtil.isNear(Math.rint(HubTracker.getMatchTime()), HubTracker.getMatchTime(), 0.02)) {
+            Logger.recordOutput("Current Shift", HubTracker.getCurrentShift().orElse(Shift.AUTO));
+            Logger.recordOutput("Active Shift?", HubTracker.isActive());
+            Logger.recordOutput("Next Shift?", HubTracker.isActiveNext());
         }
     }
 }

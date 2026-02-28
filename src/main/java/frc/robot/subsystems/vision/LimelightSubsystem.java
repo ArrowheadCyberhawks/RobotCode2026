@@ -1,7 +1,5 @@
 package frc.robot.subsystems.vision;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.Utils;
@@ -17,12 +15,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.DriveConstants;
@@ -42,7 +38,6 @@ public class LimelightSubsystem extends SubsystemBase {
 
 
   public LimelightSubsystem(DoubleSupplier rotationSupplier, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
-	setUpShuffleboard();
 	this.rotationSupplier = rotationSupplier;
 	this.drivetrain = drivetrain;
 	this.field2d = field2d;
@@ -273,24 +268,5 @@ yError = MathUtil.clamp(yError, -1, 1);
 		if (limelightMeasurement != null && !limelightMeasurement.pose.equals(Pose2d.kZero)) {
 			field2d.getObject(FieldObjects.LIMELIGHT).setPose(limelightMeasurement.pose);
 		}
-  }
-
-
-  private void setUpShuffleboard() {
-	tab = Shuffleboard.getTab("VisionApriltag");
-
-	LLFeed = new HttpCamera(
-		getLimelightName(),
-		"http://10.7.6.11:5800/stream.mjpg"); // TODO check if this IP is correct
-	tab.add("Limelight Feed", LLFeed).withWidget("Camera Stream").withPosition(0, 0).withSize(4, 4);
-
-	tab.addDouble("Tx", () -> this.getTX());
-	tab.addDouble("Ty", () -> this.getTY());
-	tab.addDouble("Distance", () -> this.getDistanceToTarget());
-	tab.addDouble("Latency Capture", () -> this.getLatencyCapture());
-	tab.addDouble("Latency Pipeline", () -> this.getLatencyPipeline());
-	tab.addBoolean("Has Target", () -> this.hasTarget());
-
-	tab.addDouble("April Tag", () -> this.getAprilTagId());
   }
 }

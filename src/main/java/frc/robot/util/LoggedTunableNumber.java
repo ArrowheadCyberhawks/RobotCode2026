@@ -1,6 +1,5 @@
 package frc.robot.util;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;

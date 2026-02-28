@@ -13,7 +13,9 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
 import frc.robot.subsystems.vision.LimelightSubsystem;
+import frc.robot.subsystems.shooter.*;
 
 public class Robot extends LoggedRobot {
 	private Command m_autonomousCommand;
@@ -43,8 +45,8 @@ public class Robot extends LoggedRobot {
 
 	@Override
 	public void disabledInit() {
-		LimelightSubsystem.SetIMUMode(1);
-		LimelightSubsystem.setThrottle(60);
+		// LimelightSubsystem.SetIMUMode(1);
+		// LimelightSubsystem.setThrottle(60);
 	}
 
 	@Override
@@ -53,9 +55,9 @@ public class Robot extends LoggedRobot {
 
 	@Override
 	public void disabledExit() {
-		LimelightSubsystem.setThrottle(0);
-		LimelightSubsystem.SetIMUMode(3);
-		m_robotContainer.questNav.resetPose(m_robotContainer.drivetrain.getPose());
+		// LimelightSubsystem.setThrottle(0);
+		// LimelightSubsystem.SetIMUMode(3);
+		m_robotContainer.questNavSubsystem.resetPose(m_robotContainer.drivetrain.getPose());
 	}
 
 	@Override

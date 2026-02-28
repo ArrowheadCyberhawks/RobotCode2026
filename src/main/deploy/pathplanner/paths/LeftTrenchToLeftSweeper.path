@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 4.370031745210234,
+        "y": 7.394959425344272
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.9999999999999973,
-        "y": 0.0
+        "x": 5.370031745210234,
+        "y": 7.394959425344272
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LeftTrenchSweeper"
     },
     {
       "anchor": {
-        "x": 3.0,
-        "y": 0.0
+        "x": 8.740536672629696,
+        "y": 6.0
       },
       "prevControl": {
-        "x": 2.0,
-        "y": 1.2246467991473532e-16
+        "x": 8.740536672629696,
+        "y": 7.541413237924866
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "SweeperLeft"
     }
   ],
   "rotationTargets": [],
@@ -41,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 2.0,
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Sweepers",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

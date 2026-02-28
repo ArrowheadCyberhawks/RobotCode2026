@@ -41,7 +41,7 @@ public final class Constants {
     public static final LinearAcceleration kMaxAcceleration = kMaxSpeed.times(5.0).per(Second);
     public static final AngularAcceleration kMaxAngularAcceleration = kMaxAngularRate.times(8.0).per(Second);
 
-    public static final double kDriveDeadband = 0.1;
+    public static final double kDriveDeadband = 0.05;
     public static final double kRotationDeadband = 0.05;
 
     public static final double kLoopPeriodSeconds = 0.02;
@@ -56,17 +56,18 @@ public final class Constants {
     public static final String QUEST = "QuestPose";
   }
   
-  public static class FieldConstants {
-    public static final Distance FIELD_LENGTH = Inches.of(650.12);
-    public static final Distance FIELD_WIDTH = Inches.of(316.64);
-    public static final Distance ALLIANCE_ZONE = Inches.of(156.06);
-    public static final Translation3d HUB_BLUE = new Translation3d(Inches.of(181.56), FIELD_WIDTH.div(2), Inches.of(56.4));
-    public static final Translation3d HUB_RED =new Translation3d(FIELD_LENGTH.minus(Inches.of(181.56)), FIELD_WIDTH.div(2), Inches.of(56.4));
-    public static final Distance FUNNEL_RADIUS = Inches.of(24);
-    public static final Distance FUNNEL_HEIGHT = Inches.of(72 - 56.4);
-}
+//   public static class FieldConstants {
+//     public static final Distance FIELD_LENGTH = Inches.of(650.12);
+//     public static final Distance FIELD_WIDTH = Inches.of(316.64);
+//     public static final Distance ALLIANCE_ZONE = Inches.of(156.06);
+//     public static final Translation3d HUB_BLUE = new Translation3d(Inches.of(181.56), FIELD_WIDTH.div(2), Inches.of(56.4));
+//     public static final Translation3d HUB_RED =new Translation3d(FIELD_LENGTH.minus(Inches.of(181.56)), FIELD_WIDTH.div(2), Inches.of(56.4));
+//     public static final Distance FUNNEL_RADIUS = Inches.of(24);
+//     public static final Distance FUNNEL_HEIGHT = Inches.of(72 - 56.4);
+// }
   
-  public static boolean tuningMode = false;
+  // Set to true to enable tunable numbers in NetworkTables under /Tuning/
+  public static boolean tuningMode = true;
   // When true, avoid using hardware-dependent WPILib/robot APIs (useful for unit tests)
   public static boolean disableHAL = false;
 
