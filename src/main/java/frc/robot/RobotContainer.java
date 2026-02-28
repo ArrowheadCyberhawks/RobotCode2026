@@ -106,33 +106,32 @@ public class RobotContainer {
 	// public final VisionSubsystem visionSubsystem = new
 	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
 	// public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-	// 		() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to gyro-based not pose estimator
-	// 		drivetrain,
-	// 		field2d);
+	// () -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to
+	// gyro-based not pose estimator
+	// drivetrain,
+	// field2d);
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
 	// public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
-	// 		flywheel,
-	// 		hood,
-	// 		turret
-	// 	);
+	// flywheel,
+	// hood,
+	// turret
+	// );
 
 	// Intake subsystem
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-	
+
 	// Hopper subsystem
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
-	
+
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
 	SlewRateLimiter rotationLimiter = new SlewRateLimiter(
 			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
-	
-
 
 	public RobotContainer() {
 		constructField();
@@ -187,16 +186,12 @@ public class RobotContainer {
 		SmartDashboard.putNumber("ResetY", 0);
 		SmartDashboard.putNumber("ResetTheta", 0);
 		SmartDashboard.putData("Reset Pose", new InstantCommand(() -> drivetrain.resetPose(
-			new Pose2d(
-				new Translation2d(
-					SmartDashboard.getNumber("ResetX", 0.0),
-					SmartDashboard.getNumber("ResetY", 0.0)
-				),
-				new Rotation2d(
-					SmartDashboard.getNumber("ResetTheta", 0.0)
-				)
-			)
-		)));
+				new Pose2d(
+						new Translation2d(
+								SmartDashboard.getNumber("ResetX", 0.0),
+								SmartDashboard.getNumber("ResetY", 0.0)),
+						new Rotation2d(
+								SmartDashboard.getNumber("ResetTheta", 0.0))))));
 
 	}
 
@@ -204,82 +199,76 @@ public class RobotContainer {
 		// Note that X is defined as forward according to WPILib convention,
 		// and Y is defined as to the left according to WPILib convention.
 		drivetrain.setDefaultCommand(
-				// Drivetrain will execute this command periodically
-				drivetrain.applyRequest(() -> teleDrive
-						.withVelocityX(
-								xLimiter.calculate(
-										MathUtil.interpolate(1,
-												DriveConstants.kDriveSlowModifier,
-												driverController.getRightTriggerAxis())
-												* MathUtil.applyDeadband(-driverController.getLeftY(),
-														DriveConstants.kDriveDeadband)
-												* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive forward with
-																									// negative Y
-																									// (forward)
-						.withVelocityY(
-								yLimiter.calculate(
-										MathUtil.interpolate(1,
-												DriveConstants.kDriveSlowModifier,
-												driverController.getRightTriggerAxis())
-												* MathUtil.applyDeadband(-driverController.getLeftX(),
-														DriveConstants.kDriveDeadband)
-												* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with
-																									// negative X (left)
-						.withRotationalRate(
-								rotationLimiter.calculate(
-										MathUtil.interpolate(1,
-												DriveConstants.kTurnSlowModifier,
-												driverController.getRightTriggerAxis())
-												* MathUtil.applyDeadband(-driverController.getRightX(),
-														DriveConstants.kRotationDeadband)
-												* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
-																										// counterclockwise
-																										// with negative
-																										// X (left)
+			// Drivetrain will execute this command periodically
+			drivetrain.applyRequest(() -> teleDrive
+				.withVelocityX(
+					xLimiter.calculate(
+						MathUtil.interpolate(1,
+							DriveConstants.kDriveSlowModifier,
+							driverController.getRightTriggerAxis())
+							* MathUtil.applyDeadband(-driverController.getLeftY(), DriveConstants.kDriveDeadband)
+							* DriveConstants.kMaxSpeed.in(MetersPerSecond)))
+				.withVelocityY(
+					yLimiter.calculate(
+						MathUtil.interpolate(1,
+							DriveConstants.kDriveSlowModifier,
+								driverController.getRightTriggerAxis())
+									* MathUtil.applyDeadband(-driverController.getLeftX(), DriveConstants.kDriveDeadband)
+									* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with negative X (left)
+				.withRotationalRate(
+					rotationLimiter.calculate(
+						MathUtil.interpolate(1,
+							DriveConstants.kTurnSlowModifier,
+								driverController.getRightTriggerAxis())
+									* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
+									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
-		
+
 		// Left bumper - Toggle intake between RUN and OFF
 		// driverController.leftTrigger().onTrue(Commands.runOnce(() -> {
-		// 	IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
-		// 	if (currentState == IntakeConstants.IntakeState.RUN) {
-		// 		intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
-		// 	} else {
-		// 		intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
-		// 	}
+		// IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
+		// if (currentState == IntakeConstants.IntakeState.RUN) {
+		// intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
+		// } else {
+		// intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
+		// }
 		// }));
 
-		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if already aiming/shooting
+		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if
+		// already aiming/shooting
 		// driverController.rightBumper().onTrue(Commands.either(
-		// 	// If shooter is in AIM or SHOOT state, stop everything
-		// 	Commands.sequence(
-		// 		Commands.runOnce(shooterSubsystem::stop),
-		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-		// 	),
-		// 	// If shooter is IDLE or STRAIGHT, start aiming sequence
-		// 	Commands.sequence(
-		// 		// First, start aiming
-		// 		Commands.runOnce(shooterSubsystem::startAiming),
-		// 		// Wait until shooter is ready to shoot
-		// 		Commands.waitUntil(shooterSubsystem::isReadyToShoot),
-		// 		// Once ready, turn on the hopper to feed the ball
-		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-		// 	),
-		// 	// Condition: true if shooter is already aiming or shooting
-		// 	() -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM || 
-		// 	      shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
+		// // If shooter is in AIM or SHOOT state, stop everything
+		// Commands.sequence(
+		// Commands.runOnce(shooterSubsystem::stop),
+		// Commands.runOnce(() ->
+		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		// ),
+		// // If shooter is IDLE or STRAIGHT, start aiming sequence
+		// Commands.sequence(
+		// // First, start aiming
+		// Commands.runOnce(shooterSubsystem::startAiming),
+		// // Wait until shooter is ready to shoot
+		// Commands.waitUntil(shooterSubsystem::isReadyToShoot),
+		// // Once ready, turn on the hopper to feed the ball
+		// Commands.runOnce(() ->
+		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+		// ),
+		// // Condition: true if shooter is already aiming or shooting
+		// () -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM ||
+		// shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
 		// ));
-		
 
-
-		//TEMP CODE
-		driverController.rightBumper().whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
+		// TEMP CODE
+		driverController.rightBumper()
+				.whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
 		driverController.y().whileTrue(flywheel.diagnosePhase());
-		//driverController.y().whileTrue(turret.trackTarget());
+		// driverController.y().whileTrue(turret.trackTarget());
 
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
 		// corner based on which side of the field we're on.
-		// TODO: Find a place to put this in so that it runs all the time (some periodic?)
+		// TODO: Find a place to put this in so that it runs all the time (some
+		// periodic?)
 		driverController.povLeft().onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			Pose2d pose = drivetrain.getPose();
@@ -310,7 +299,8 @@ public class RobotContainer {
 
 		// driverController.x().whileTrue(drivetrain.applyRequest(() -> brake));
 		// driverController.y().whileTrue(drivetrain.applyRequest(() -> point
-		// 		.withModuleDirection(new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
+		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
+		// -driverController.getLeftX()))));
 
 		// driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
 		driverController.povUp().whileTrue(
@@ -319,8 +309,9 @@ public class RobotContainer {
 						() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
 						driveFacingAngleRequest));
 
-		driverController.povDown().onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
-		driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodToDegrees(30.0)));
+		driverController.povDown().onTrue(
+				intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
+		driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodTo(Rotation2d.fromDegrees(30.0))));
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -334,80 +325,73 @@ public class RobotContainer {
 				drivetrain.getState().Pose.getRotation() // drivetrain.getPose().getRotation()
 		)));
 
-		// driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+		// driverController.leftBumper().onTrue(drivetrain.runOnce(() ->
+		// drivetrain.seedFieldCentric()));
 
 		// driverController.start()
-		// 		.whileTrue(limelightSubsystem
-		// 				.startRun(() -> LimelightSubsystem.SetIMUMode(1),
-		// 						() -> limelightSubsystem.updateVisionPoseMT1(true))
-		// 				.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
+		// .whileTrue(limelightSubsystem
+		// .startRun(() -> LimelightSubsystem.SetIMUMode(1),
+		// () -> limelightSubsystem.updateVisionPoseMT1(true))
+		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
 
 		driverController.start().whileTrue(flywheel.diagnosePhase());
 
-		driverController.back().whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
+		driverController.back()
+				.whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
 
 		// Manipulator controller - Shooter state machine controls
 		// A button: Set shooter to IDLE (stop all subsystems)
-		//manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
+		// manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
 
 		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
-		//manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
+		// manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
 
 		// X button: Start AIM sequence (all subsystems track target, auto-transitions
 		// to SHOOT when ready)
-		//manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
+		// manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
 		// intake controls
 		driverController.leftTrigger()
-			.or(manipulatorController.leftTrigger())
-			.whileTrue(Commands.runEnd(
-			() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
-			() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
-		));
-		
+				.or(manipulatorController.leftTrigger())
+				.whileTrue(Commands.runEnd(
+						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
+						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
+
 		driverController.x().and(driverController.leftTrigger())
-			.or(manipulatorController.x().and(manipulatorController.leftTrigger()))
-			.whileTrue(
-			intakeSubsystem.runEnd(
-				() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
-				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)
-			)
-		);
+				.or(manipulatorController.x().and(manipulatorController.leftTrigger()))
+				.whileTrue(
+						intakeSubsystem.runEnd(
+								() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
+								() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
 
 		// hopper controls
 		driverController.leftBumper().or(manipulatorController.leftBumper()).whileTrue(
-			hopperSubsystem.runEnd(
-				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
-				() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)
-			)
-		);
+				hopperSubsystem.runEnd(
+						() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
+						() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
 
 		driverController.x().and(driverController.leftBumper())
-			.or(manipulatorController.x().and(manipulatorController.leftBumper()))
-			.whileTrue(
-			hopperSubsystem.runEnd(
-				() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
-				() -> hopperSubsystem.setHopperState(HopperState.IDLE)
-			)
-		);
+				.or(manipulatorController.x().and(manipulatorController.leftBumper()))
+				.whileTrue(
+						hopperSubsystem.runEnd(
+								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
+								() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 
 		// Manipulator controller - Manual controls for testing
 		manipulatorController.rightStick().whileTrue(
-			hood.run(() -> hood.moveHoodToDegrees(hood.getHoodTargetAngle().in(Degrees) - Math.pow(manipulatorController.getRightY(), 3) * 0.5))
-			.alongWith(
-				turret.run(() -> turret.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees() - Math.pow(manipulatorController.getRightX(), 3) * 2.0)))
-			)
-		);
+				hood.run(() -> hood.moveHoodTo(Rotation2d.fromDegrees(
+						hood.getHoodTargetAngle().getDegrees() - Math.pow(manipulatorController.getRightY(), 3) * 0.5)))
+						.alongWith(
+								turret.run(() -> turret
+										.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees()
+												- Math.pow(manipulatorController.getRightX(), 3) * 2.0)))));
 		manipulatorController.leftStick().toggleOnTrue(
-			flywheel.runFixedCommand(
-				() -> flywheel.getVelocitySetpoint()
-						.plus(RadiansPerSecond.of(
-							MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05))
-						)
-			)
-		);
+				flywheel.runFixedCommand(
+						() -> flywheel.getVelocitySetpoint()
+								.plus(RadiansPerSecond.of(
+										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
 	}
 
 	/**
@@ -416,41 +400,39 @@ public class RobotContainer {
 	 */
 	private void registerNamedCommands() {
 		// Intake Commands
-		NamedCommands.registerCommand("IntakeOn", 
-			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN))
-		);
-		
-		NamedCommands.registerCommand("IntakeOff", 
-			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE))
-		);
+		NamedCommands.registerCommand("IntakeOn",
+				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
+
+		NamedCommands.registerCommand("IntakeOff",
+				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)));
 
 		NamedCommands.registerCommand("IntakeStow",
-			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)
-		));
+				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 
 		NamedCommands.registerCommand("ShooterAim",
-			Commands.run(() -> hood.trackTarget().alongWith(flywheel.trackTarget()))
-		);
+				Commands.run(() -> hood.trackTarget().alongWith(flywheel.trackTarget())));
 
 		// TODO: Uncomment when shooter subsystem is enabled
 		// Shooter Commands - Start shooting sequence
-		// NamedCommands.registerCommand("StartShoot", 
-		// 	Commands.sequence(
-		// 		// First, start aiming
-		// 		Commands.runOnce(() -> shooterSubsystem.startAiming()),
-		// 		// Wait until shooter is ready to shoot
-		// 		Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
-		// 		// Once ready, turn on the hopper to feed the ball
-		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-		// 	)
+		// NamedCommands.registerCommand("StartShoot",
+		// Commands.sequence(
+		// // First, start aiming
+		// Commands.runOnce(() -> shooterSubsystem.startAiming()),
+		// // Wait until shooter is ready to shoot
+		// Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
+		// // Once ready, turn on the hopper to feed the ball
+		// Commands.runOnce(() ->
+		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+		// )
 		// );
 
 		// Shooter Commands - Stop all shooting motors
-		// NamedCommands.registerCommand("StopShoot", 
-		// 	Commands.sequence(
-		// 		Commands.runOnce(() -> shooterSubsystem.stop()),
-		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-		// 	)
+		// NamedCommands.registerCommand("StopShoot",
+		// Commands.sequence(
+		// Commands.runOnce(() -> shooterSubsystem.stop()),
+		// Commands.runOnce(() ->
+		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		// )
 		// );
 	}
 

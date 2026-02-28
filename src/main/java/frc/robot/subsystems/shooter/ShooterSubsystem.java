@@ -169,7 +169,7 @@ public class ShooterSubsystem extends SubsystemBase {
         if (straightData != null && straightData.isValid()) {
           // Use calculated flywheel speed and hood angle
           flywheel.runVelocity(RadiansPerSecond.of(straightData.flywheelSpeed()));
-          hood.moveHoodToDegrees(Math.toDegrees(straightData.hoodAngle()));
+          hood.moveHoodTo(straightData.hoodAngle());
         }
         break;
 
@@ -178,8 +178,8 @@ public class ShooterSubsystem extends SubsystemBase {
         var aimData = ShotCalculator.getInstance().getData();
         if (aimData != null && aimData.isValid()) {
           flywheel.runVelocity(RadiansPerSecond.of(aimData.flywheelSpeed()));
-          hood.moveHoodToDegrees(Math.toDegrees(aimData.hoodAngle()));
-          //turret.moveTurretToRadians(aimData.turretAngle().getRadians());
+          hood.moveHoodTo(aimData.hoodAngle());
+          turret.setTurretTarget((aimData.turretAngle()));
         }
         break;
 
@@ -188,8 +188,8 @@ public class ShooterSubsystem extends SubsystemBase {
         var shootData = ShotCalculator.getInstance().getData();
         if (shootData != null && shootData.isValid()) {
           flywheel.runVelocity(RadiansPerSecond.of(shootData.flywheelSpeed()));
-          hood.moveHoodToDegrees(Math.toDegrees(shootData.hoodAngle()));
-          //turret.moveTurretToRadians(shootData.turretAngle().getRadians());
+          hood.moveHoodTo(shootData.hoodAngle());
+          turret.setTurretTarget(shootData.turretAngle());
         }
         break;
     }

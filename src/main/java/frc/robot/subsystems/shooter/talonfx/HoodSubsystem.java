@@ -147,9 +147,7 @@ public class HoodSubsystem extends SubsystemBase {
   public Command trackTarget() {
       return run(() -> {
         var data = ShotCalculator.getInstance().getData();
-        double hoodRad = data.hoodAngle();
-        double hoodDeg = Math.toDegrees(hoodRad);
-        moveHoodToDegrees(hoodDeg);
+        moveHoodToDegrees(data.hoodAngle().getDegrees());
     });
   }
 }

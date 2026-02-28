@@ -47,8 +47,6 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kVTurret = new LoggedTunableNumber("Turret/kV", 0.0);
     public static final LoggedTunableNumber kATurret = new LoggedTunableNumber("Turret/kA", 0.0);
     public static final double kTurretAllowedError = 0.02;
-    // Maximum voltage to apply to turret motor
-    public static final double kMaxTurretVolts = 6.0; 
 
     // Hood (Motion Magic)
     public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 36.0/24.0 * 30.0/372.0;
@@ -94,7 +92,7 @@ public final class ShooterConstants {
 
     // Transform from robot pose to turret pose (default: identity)
     public static final Transform3d kRobotToTurretTransform =
-        new Transform3d(new Translation3d(), new Rotation3d());
+        new Transform3d(new Translation3d(-0.1473, 0.0907, 0.0), new Rotation3d());
         
     public static final Translation3d robotToTurret = kRobotToTurretTransform.getTranslation();
 }

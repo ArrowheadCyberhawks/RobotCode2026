@@ -32,11 +32,11 @@ public class ShotCalculator {
 
     // Last values used for simple derivative computations (angular velocities).
     private Rotation2d lastTurretAngle;
-    private double lastHoodAngle;
+    private Rotation2d lastHoodAngle;
 
     // Current computed setpoints (populated by getData()).
     private Rotation2d turretAngle;
-    private double hoodAngle = Double.NaN;
+    private Rotation2d hoodAngle;
     private double turretVelocity;
     private double hoodVelocity;
 
@@ -65,7 +65,7 @@ public class ShotCalculator {
             boolean isValid,
             Rotation2d turretAngle,
             double turretVelocity,
-            double hoodAngle,
+            Rotation2d hoodAngle,
             double hoodVelocity,
             double flywheelSpeed) {
     }
@@ -105,8 +105,9 @@ public class ShotCalculator {
 
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.
-        tofMap.put(5.60, 3.00);
-        tofMap.put(2.16, 0.90);
+
+        tofMap.put(5.60, 1000.00); //3
+        tofMap.put(2.16, 1000.00); //1.3
     }
 
     public ShotData getData() {
@@ -124,7 +125,7 @@ public class ShotCalculator {
         // Apply currently-configured target (default is the hub) with alliance flip
         Translation2d target = AllianceFlipUtil.apply(this.target);
         // Use the configured robot->turret transform from ShooterConstants (drop Z)
-        var robotToTurretTrans = ShooterConstants.kRobotToTurretTransform.getTranslation();
+        Translation3d robotToTurretTrans = ShooterConstants.kRobotToTurretTransform.getTranslation();
         Pose2d turretPosition = estimatedPose.transformBy(
                 new Transform2d(
                         new Translation2d(robotToTurretTrans.getX(), robotToTurretTrans.getY()),
@@ -181,18 +182,18 @@ public class ShotCalculator {
         Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
         Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
 
-        hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance).getRadians();
+        hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance);
         // Smooth hood angle as well
-        hoodAngle = hoodAngleFilter.calculate(hoodAngle);
+        hoodAngle = Rotation2d.fromRadians(hoodAngleFilter.calculate(hoodAngle.getRadians()));
 
         if (lastTurretAngle == null)
             lastTurretAngle = turretAngle;
-        if (Double.isNaN(lastHoodAngle))
+        if (lastHoodAngle == null)
             lastHoodAngle = hoodAngle;
 
         // Compute angular velocities (simple derivative on filtered angle)
         turretVelocity = (turretAngle.getRadians() - lastTurretAngle.getRadians()) / Constants.DriveConstants.kLoopPeriodSeconds;
-        hoodVelocity = (hoodAngle - lastHoodAngle) / Constants.DriveConstants.kLoopPeriodSeconds;
+        hoodVelocity = (hoodAngle.getRadians() - lastHoodAngle.getRadians()) / Constants.DriveConstants.kLoopPeriodSeconds;
 
         lastTurretAngle = turretAngle;
         lastHoodAngle = hoodAngle;

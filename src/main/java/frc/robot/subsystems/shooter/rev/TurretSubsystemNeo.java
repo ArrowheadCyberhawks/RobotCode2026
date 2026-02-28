@@ -28,6 +28,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final SparkMax turretMotor;
 	private final RelativeEncoder encoder;
 	private final SparkClosedLoopController turretController;
+	private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
 	private SparkMaxConfig turretConfig;
 
@@ -35,8 +36,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final LoggedTunableNumber turretKP = new LoggedTunableNumber("Turret/kP", ShooterConstants.kPTurret.get());
 	private final LoggedTunableNumber turretKI = new LoggedTunableNumber("Turret/kI", ShooterConstants.kITurret.get());
 	private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Turret/kD", ShooterConstants.kDTurret.get());
-	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance",
-			ShooterConstants.kTurretAllowedError);
+	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance", ShooterConstants.kTurretAllowedError);
 	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.15);
 	// Soft limits in radians (±135 degrees)
 	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", Math.PI / 5);
@@ -62,7 +62,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	 * Set target azimuth for the turret. The controller will rotate the turret to
 	 * the specified angle.
 	 * 
-	 * @param targetTurretAngle Target angle as a Rotation2d
+	 * @param targetTurretAngle Target angle as a Rotation2d. Zero is forward, positive is CCW, negative is CW.
 	 */
 	public void setTurretTarget(Rotation2d targetTurretAngle) {
 		// Clamp targetAngle to the configured soft limit range
@@ -132,16 +132,6 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	public void periodic() {
 		// Update PID constants if they've changed in NetworkTables
 		updateTurretPID();
-
-		// Periodically wrap encoder to [-π, π] to match ShotCalculator
-		// TODO - check if you actually need this with rev
-		// double currentRadians = getTurretRotation().getRadians();
-		// if (Math.abs(currentRadians) > 10.0 * Math.PI) {
-		// 	double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
-		// 	encoder.setPosition(wrappedRadians);
-		// }
-
-		// Clamp targetAngle to the configured soft limit range
 		
 		turretController.setSetpoint(targetRotation.getRadians(), ControlType.kPosition, ClosedLoopSlot.kSlot0);
 
@@ -152,7 +142,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 	public Command trackTarget() {
 		return run(() -> {
-			var data = ShotCalculator.getInstance().getData();
+			var data = shotCalculator.getData();
 			Logger.recordOutput("Turret/ShotData Exists", data != null);
 			if (data != null) {
 				Logger.recordOutput("Turret/ShotData Valid", data.isValid());

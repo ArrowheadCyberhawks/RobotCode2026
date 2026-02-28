@@ -11,14 +11,12 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -34,9 +32,9 @@ public class HoodSubsystemNeo extends SubsystemBase {
   private final SparkMax hoodMotor;
   private final RelativeEncoder encoder;
   private final PIDController pid;
+  private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
-  private boolean trackingEnabled = true;
-  private double targetDegrees = ShooterConstants.HoodPosition.STOW.getDegrees();
+  private Rotation2d targetAngle = Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
 
   public HoodSubsystemNeo() {
     this(ShooterConstants.kHoodMotorId);
@@ -49,8 +47,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
     pid.setTolerance(ShooterConstants.kHoodAllowedError);
 
     configureHood();
-    // resetHoodEncoderToDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
-    pid.setSetpoint(Math.toRadians(ShooterConstants.HoodPosition.STOW.getDegrees()));
+    resetHoodEncoder(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()));
+    pid.setSetpoint(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()).getRadians());
   
 
     Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
@@ -75,23 +73,22 @@ public class HoodSubsystemNeo extends SubsystemBase {
     hoodMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
-  public void setTrackingEnabled(boolean enabled) {
-    this.trackingEnabled = enabled;
-  }
-
   public void moveHoodTo(ShooterConstants.HoodPosition pos) {
-    moveHoodToDegrees(pos.getDegrees());
+    moveHoodTo(Rotation2d.fromDegrees(pos.getDegrees()));
   }
 
-  public void moveHoodToDegrees(double degrees) {
+  /**
+   * Move the hood to a specific angle. The angle will be clipped to the configured min/max range.
+   * @param angle Target angle as a Rotation2d. Zero is straight up, positive shoots the ball at a lower angle (raises the hood).
+   */
+  public void moveHoodTo(Rotation2d angle) {
+    double degrees = angle.getDegrees();
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
-    targetDegrees = clipped; // Store target for atGoal() check
-    // Convert degrees to radians since encoder is configured with radian conversion factor
-    double radians = Math.toRadians(clipped);
-    // SparkMax position controller expects the same units as the encoder conversion factor (radians)
-    pid.setSetpoint(radians);
-    Logger.recordOutput("Shooter/Hood Target", degrees);
+    targetAngle = Rotation2d.fromDegrees(clipped);
+    // PID setpoint in radians (encoder conversion factor uses radians)
+    pid.setSetpoint(targetAngle.getRadians());
+    Logger.recordOutput("Shooter/Hood Target", clipped);
   }
 
   public void stopHood() {
@@ -105,8 +102,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
    * @return true if the hood is within tolerance of the target
    */
   public boolean atGoal(double toleranceDegrees) {
-    double currentDegrees = getHoodAngle().in(Degrees);
-    return Math.abs(currentDegrees - targetDegrees) <= toleranceDegrees;
+    double currentDegrees = getHoodAngle().getDegrees();
+    return Math.abs(currentDegrees - targetAngle.getDegrees()) <= toleranceDegrees;
   }
 
   /**
@@ -118,27 +115,18 @@ public class HoodSubsystemNeo extends SubsystemBase {
     return atGoal(2.0); // 2 degree default tolerance
   }
 
-  public Angle getHoodAngle() {
-    // Encoder returns radians due to conversion factor, convert to degrees
-    return Radians.of(encoder.getPosition());
+  public Rotation2d getHoodAngle() {
+    // Encoder returns radians due to conversion factor
+    return Rotation2d.fromRadians(encoder.getPosition());
   }
 
-  public Angle getHoodTargetAngle() {
-    return Radians.of(pid.getSetpoint());
+  public Rotation2d getHoodTargetAngle() {
+    return Rotation2d.fromRadians(pid.getSetpoint());
   }
 
-  public void resetHoodEncoderToDegrees(double degrees) {
-    // Convert degrees to radians for encoder position
-    double radians = Math.toRadians(degrees);
-    encoder.setPosition(radians);
-  }
-
-  private double degreesToMotorRotations(double degrees) {
-    return (degrees / 360.0) * ShooterConstants.kHoodGearRatio;
-  }
-
-  private double motorRotationsToDegrees(double motorRot) {
-    return (motorRot / ShooterConstants.kHoodGearRatio) * 360.0;
+  public void resetHoodEncoder(Rotation2d angle) {
+    // Encoder uses radians due to conversion factor
+    encoder.setPosition(angle.getRadians());
   }
 
   @Override
@@ -150,32 +138,18 @@ public class HoodSubsystemNeo extends SubsystemBase {
         ShooterConstants.kVHood.hasChanged(hashCode()) ||
         ShooterConstants.kAHood.hasChanged(hashCode()) ||
         ShooterConstants.kGHood.hasChanged(hashCode())) {
-      // Reconfigure PID on the motor controller
-      // SparkMaxConfig cfg = new SparkMaxConfig();
       pid.setP(ShooterConstants.kPHood.get());
       pid.setI(ShooterConstants.kIHood.get());
       pid.setD(ShooterConstants.kDHood.get());
-      // hoodMotor.configure(cfg, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
-    hoodMotor.setVoltage(Volts.of(pid.calculate(getHoodAngle().in(Radians))));
-    Logger.recordOutput("Shooter/Hood Angle", getHoodAngle().in(Degrees));
+    hoodMotor.setVoltage(Volts.of(pid.calculate(getHoodAngle().getRadians())));
+    Logger.recordOutput("Shooter/Hood Angle", getHoodAngle().getDegrees());
     Logger.recordOutput("Shooter/Hood Current", hoodMotor.getOutputCurrent());
-    // if (trackingEnabled) {
-    //   var data = ShotCalculator.getInstance().getData();
-    //   if (data != null && data.isValid()) {
-    //     double hoodRad = data.hoodAngle();
-    //     double hoodDeg = Math.toDegrees(hoodRad);
-    //     moveHoodToDegrees(hoodDeg);
-    //   }
-    // }
   }
 
   public Command trackTarget() {
-    return run(() -> {
-      var data = ShotCalculator.getInstance().getData();
-      double hoodRad = data.hoodAngle();
-      double hoodDeg = Math.toDegrees(hoodRad);
-      moveHoodToDegrees(hoodDeg);
-    });
+    return run(() -> 
+      moveHoodTo(shotCalculator.getData().hoodAngle())
+    );
   }
 }

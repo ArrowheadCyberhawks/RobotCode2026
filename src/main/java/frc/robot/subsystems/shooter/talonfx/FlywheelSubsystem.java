@@ -124,7 +124,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     if (velocitySetpoint.isEquivalent(RadiansPerSecond.zero())) {
       leader.stopMotor();
-      atGoal = false;
+      // atGoal = false;
       return;
     }
 
@@ -150,7 +150,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   public void stop() {
     velocitySetpoint = RadiansPerSecond.zero();
     setpointLimiter.reset(0.0);
-    atGoal = false;
+    // atGoal = false;
   }
 
   public AngularVelocity getVelocity() {
