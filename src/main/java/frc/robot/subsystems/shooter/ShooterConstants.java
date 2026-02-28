@@ -46,7 +46,7 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kSTurret = new LoggedTunableNumber("Turret/kS", 0.0);
     public static final LoggedTunableNumber kVTurret = new LoggedTunableNumber("Turret/kV", 0.0);
     public static final LoggedTunableNumber kATurret = new LoggedTunableNumber("Turret/kA", 0.0);
-    public static final double kTurretAllowedError = 0.02;
+    public static final double kTurretAllowedError = 0.05;
 
     // Hood (Motion Magic)
     public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 36.0/24.0 * 30.0/372.0;

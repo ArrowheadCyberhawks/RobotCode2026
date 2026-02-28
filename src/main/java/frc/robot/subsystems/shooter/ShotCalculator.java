@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.util.FieldConstants;
+import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.geometry.AllianceFlipUtil;
 import frc.robot.util.geometry.GeomUtil;
 import org.littletonrobotics.junction.Logger;
@@ -29,6 +30,8 @@ public class ShotCalculator {
     // derivative calculations.
     private final LinearFilter turretAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.DriveConstants.kLoopPeriodSeconds));
     private final LinearFilter hoodAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.DriveConstants.kLoopPeriodSeconds));
+
+    private final LoggedTunableNumber velocityOffset = new LoggedTunableNumber("ShotCalculator/VelocityOffset", 0.0);
 
     // Last values used for simple derivative computations (angular velocities).
     private Rotation2d lastTurretAngle;
@@ -91,7 +94,7 @@ public class ShotCalculator {
         // phase delay used to offset calculations for shooter processing time.
         minDistance = 2.16;
         maxDistance = 5.60;
-        phaseDelay = 0.09; // started at .03, increased to 0.09 for better accuracy, will change based on
+        phaseDelay = 0.3; // started at .03, increased to 0.09 for better accuracy, will change based on
 
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
@@ -106,8 +109,8 @@ public class ShotCalculator {
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.
 
-        tofMap.put(5.60, 1000.00); //3
-        tofMap.put(2.16, 1000.00); //1.3
+        tofMap.put(5.60, 1.20);
+        tofMap.put(2.16, 0.94);
     }
 
     public ShotData getData() {
@@ -136,11 +139,11 @@ public class ShotCalculator {
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
         double turretVelocityX = robotVelocity.vxMetersPerSecond
-                // + robotVelocity.omegaRadiansPerSecond
+                //+ robotVelocity.omegaRadiansPerSecond
                 * (robotToTurretTrans.getY() * Math.cos(robotAngle)
                         - robotToTurretTrans.getX() * Math.sin(robotAngle));
         double turretVelocityY = robotVelocity.vyMetersPerSecond
-                // + robotVelocity.omegaRadiansPerSecond
+                //+ robotVelocity.omegaRadiansPerSecond
                 * (robotToTurretTrans.getX() * Math.cos(robotAngle)
                         - robotToTurretTrans.getY() * Math.sin(robotAngle));
 
@@ -154,7 +157,7 @@ public class ShotCalculator {
             double offsetX = turretVelocityX * timeOfFlight;
             double offsetY = turretVelocityY * timeOfFlight;
             lookaheadPose = new Pose2d(
-                    turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
+                    turretPosition.getTranslation().minus(new Translation2d(offsetX, offsetY)),
                     turretPosition.getRotation());
             lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         }
@@ -205,7 +208,7 @@ public class ShotCalculator {
                 turretVelocity,
                 hoodAngle,
                 hoodVelocity,
-                flywheelSpeedMap.get(lookaheadTurretToTargetDistance));
+                flywheelSpeedMap.get(lookaheadTurretToTargetDistance) + velocityOffset.get());
 
         // Log calculated values
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);

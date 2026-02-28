@@ -234,28 +234,23 @@ public class RobotContainer {
 		// }
 		// }));
 
-		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if
-		// already aiming/shooting
+		// // Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if
+		// // already aiming/shooting
 		// driverController.rightBumper().onTrue(Commands.either(
 		// // If shooter is in AIM or SHOOT state, stop everything
 		// Commands.sequence(
 		// Commands.runOnce(shooterSubsystem::stop),
-		// Commands.runOnce(() ->
-		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-		// ),
+		// Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))),
 		// // If shooter is IDLE or STRAIGHT, start aiming sequence
 		// Commands.sequence(
-		// // First, start aiming
-		// Commands.runOnce(shooterSubsystem::startAiming),
-		// // Wait until shooter is ready to shoot
-		// Commands.waitUntil(shooterSubsystem::isReadyToShoot),
-		// // Once ready, turn on the hopper to feed the ball
-		// Commands.runOnce(() ->
-		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
+		// 	Commands.runOnce(shooterSubsystem::startAiming),
+		// 	Commands.waitUntil(shooterSubsystem::isReadyToShoot),
+		// 	Commands.runOnce(() ->
+		// 	hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
 		// ),
 		// // Condition: true if shooter is already aiming or shooting
-		// () -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM ||
-		// shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
+		// () -> shooterSubsystem.getState() == ShooterSubsystem.ShooterState.AIM
+		// 	|| shooterSubsystem.getState() == ShooterSubsystem.ShooterState.SHOOT
 		// ));
 
 		// TEMP CODE
@@ -267,8 +262,7 @@ public class RobotContainer {
 		// Smart target selection based on field zone: D-pad down will set the target
 		// to the hub if we're in our alliance zone; otherwise choose left/right
 		// corner based on which side of the field we're on.
-		// TODO: Find a place to put this in so that it runs all the time (some
-		// periodic?)
+		// This may become obsolete when we make the proper Zone class
 		driverController.povLeft().onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			Pose2d pose = drivetrain.getPose();

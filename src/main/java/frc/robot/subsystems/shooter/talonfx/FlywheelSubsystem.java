@@ -81,7 +81,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Configure current limits for FOC
     cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
-    cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+    cfg.CurrentLimits.SupplyCurrentLimitEnable = false;
 
     cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     follower.getConfigurator().apply(cfg);
@@ -116,8 +116,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     AngularVelocity currentVelocity = RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
 
     Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
-    Logger.recordOutput("Flywheel/Velocity", currentVelocity);
-    Logger.recordOutput("Flywheel/AtGoal", atGoal);
+    Logger.recordOutput("Flywheel/Velocity", currentVelocity); // TODO: fix units of setpoint and velocity
+    Logger.recordOutput("Flywheel/AtGoal", atGoal); // when both logged in radians per second, current velocity reports as 6.28 times greater than setpoint so it's in the wrong units
     Logger.recordOutput("Flywheel/Error", leader.getClosedLoopError().getValueAsDouble());
     Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
     Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
