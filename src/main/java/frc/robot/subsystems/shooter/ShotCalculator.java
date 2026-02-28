@@ -94,7 +94,7 @@ public class ShotCalculator {
         // phase delay used to offset calculations for shooter processing time.
         minDistance = 2.16;
         maxDistance = 5.60;
-        phaseDelay = 0.3; // started at .03, increased to 0.09 for better accuracy, will change based on
+        phaseDelay = 0.03; // started at .03, increased to 0.09 for better accuracy, will change based on
 
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
@@ -140,12 +140,12 @@ public class ShotCalculator {
         double robotAngle = estimatedPose.getRotation().getRadians();
         double turretVelocityX = robotVelocity.vxMetersPerSecond
                 //+ robotVelocity.omegaRadiansPerSecond
-                * (robotToTurretTrans.getY() * Math.cos(robotAngle)
-                        - robotToTurretTrans.getX() * Math.sin(robotAngle));
+                + (robotToTurretTrans.getY() * Math.cos(robotAngle) //should be * once it's added
+                        + robotToTurretTrans.getX() * Math.sin(robotAngle));
         double turretVelocityY = robotVelocity.vyMetersPerSecond
                 //+ robotVelocity.omegaRadiansPerSecond
-                * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-                        - robotToTurretTrans.getY() * Math.sin(robotAngle));
+                + (robotToTurretTrans.getX() * Math.cos(robotAngle)
+                        + robotToTurretTrans.getY() * Math.sin(robotAngle));
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
@@ -157,7 +157,7 @@ public class ShotCalculator {
             double offsetX = turretVelocityX * timeOfFlight;
             double offsetY = turretVelocityY * timeOfFlight;
             lookaheadPose = new Pose2d(
-                    turretPosition.getTranslation().minus(new Translation2d(offsetX, offsetY)),
+                    turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
                     turretPosition.getRotation());
             lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         }
