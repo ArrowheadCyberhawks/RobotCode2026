@@ -27,6 +27,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -38,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.Constants.DriveConstants;
@@ -56,9 +58,10 @@ import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
-import frc.robot.util.FieldConstants;
 import frc.robot.util.HubTracker;
 import frc.robot.util.HubTracker.Shift;
+import frc.robot.util.field.FieldConstants;
+import frc.robot.util.field.FieldZones;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 import frc.robot.subsystems.intake.IntakeConstants;
@@ -72,8 +75,7 @@ public class RobotContainer {
 			// .withDeadband(DriveConstants.kDriveDeadband *
 			// DriveConstants.kMaxSpeed.in(MetersPerSecond))
 			.withRotationalDeadband(
-					DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate.in(RadiansPerSecond)) // Add a 10%
-																											// deadband
+					DriveConstants.kRotationDeadband * DriveConstants.kMaxAngularRate.in(RadiansPerSecond)) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
 	private final SwerveRequest.FieldCentric driveFacingAngleRequest = new SwerveRequest.FieldCentric()
@@ -134,37 +136,48 @@ public class RobotContainer {
 	SlewRateLimiter rotationLimiter = new SlewRateLimiter(
 			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
+	//no do not switch these to colons, they have mutiple methods to be recomputed
+	//switch to hood pose
+	private final Trigger inTrench =
+			new Trigger(() -> FieldZones.TRENCH().contains(drivetrain.getPose().getTranslation()));
+	private final Trigger inAim =
+			new Trigger(() -> FieldZones.AIM().contains(drivetrain.getPose().getTranslation()));
+	private final Trigger inPass =
+			new Trigger(() -> FieldZones.PASS().contains(drivetrain.getPose().getTranslation()));
+
 	public RobotContainer() {
 		constructField();
 		configureBindings();
+		configureTriggers();
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
-
-		// Configure ShotCalculator with robot pose supplier
-		// This is critical - without this, the calculator thinks the robot is always at
-		// (0,0)
 		// and the hood/turret won't adjust based on distance!
+
+		// TODO: simplify the number of suppliers given by just giving robotrelative speeds and pose and determining
+		// the rest in ShotCalculator
 		ShotCalculator.getInstance().setPoseSupplier(drivetrain::getPose);
-		// Field-relative velocities (used for turret velocity calculation)
 		ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
+		ShotCalculator.getInstance().setFieldVelocitySupplier(
+			() -> ChassisSpeeds.fromRobotRelativeSpeeds(drivetrain.getState().Speeds, drivetrain.getPose().getRotation())
+		);
 
 		// Robot-relative velocities (used for pose prediction during shot flight)
-		ShotCalculator.getInstance().setFieldVelocitySupplier(() -> {
-			ChassisSpeeds robotSpeeds = drivetrain.getState().Speeds;
-			Rotation2d robotRotation = drivetrain.getPose().getRotation();
+		// Old manual calculation before I found out some methods that may do it for me
+		// ShotCalculator.getInstance().setFieldVelocitySupplier(() -> {
+		// 	ChassisSpeeds robotSpeeds = drivetrain.getState().Speeds;
+		// 	Rotation2d robotRotation = drivetrain.getPose().getRotation();
 
-			// Convert robot-relative to field-relative by rotating velocity vector
-			double cosAngle = robotRotation.getCos();
-			double sinAngle = robotRotation.getSin();
+		// 	// Convert robot-relative to field-relative by rotating velocity vector
+		// 	double cosAngle = robotRotation.getCos();
+		// 	double sinAngle = robotRotation.getSin();
 
-			return new ChassisSpeeds(
-					robotSpeeds.vxMetersPerSecond * cosAngle - robotSpeeds.vyMetersPerSecond * sinAngle,
-					robotSpeeds.vxMetersPerSecond * sinAngle + robotSpeeds.vyMetersPerSecond * cosAngle,
-					robotSpeeds.omegaRadiansPerSecond);
-		});
-
-		// TODO: Add velocity suppliers for moving shot compensation if needed
+		// 	return new ChassisSpeeds(
+		// 			robotSpeeds.vxMetersPerSecond * cosAngle - robotSpeeds.vyMetersPerSecond * sinAngle,
+		// 			robotSpeeds.vxMetersPerSecond * sinAngle + robotSpeeds.vyMetersPerSecond * cosAngle,
+		// 			robotSpeeds.omegaRadiansPerSecond);			
+		// });
 
 		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
+		// Maybe don't do this if the LL pose is closer to the pose given by autobuilder
 		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
 			drivetrain.resetPose(pose);
 			questNavSubsystem.resetPose(pose);
@@ -264,27 +277,27 @@ public class RobotContainer {
 		// to the hub if we're in our alliance zone; otherwise choose left/right
 		// corner based on which side of the field we're on.
 		// This may become obsolete when we make the proper Zone class
-		driverController.povLeft().onTrue(Commands.runOnce(() -> {
-			ShotCalculator sc = ShotCalculator.getInstance();
-			Pose2d pose = drivetrain.getPose();
-			double x = pose.getX();
-			double y = pose.getY();
+		// driverController.povLeft().onTrue(Commands.runOnce(() -> {
+		// 	ShotCalculator sc = ShotCalculator.getInstance();
+		// 	Pose2d pose = drivetrain.getPose();
+		// 	double x = pose.getX();
+		// 	double y = pose.getY();
 
-			// Check if we're in the neutral zone (past neutralZoneNear)
-			if (x < FieldConstants.LinesVertical.neutralZoneNear) {
-				// We're in our alliance zone - shoot at the hub
-				sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
-			} else {
-				// We're in neutral/opponent zone - choose corner based on Y position
-				if (y > FieldConstants.LinesHorizontal.center) {
-					// Above center - shoot at left corner
-					sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
-				} else {
-					// Below center - shoot at right corner
-					sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
-				}
-			}
-		}));
+		// 	// Check if we're in the neutral zone (past neutralZoneNear)
+		// 	if (x < FieldConstants.LinesVertical.neutralZoneNear) {
+		// 		// We're in our alliance zone - shoot at the hub
+		// 		sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+		// 	} else {
+		// 		// We're in neutral/opponent zone - choose corner based on Y position
+		// 		if (y > FieldConstants.LinesHorizontal.center) {
+		// 			// Above center - shoot at left corner
+		// 			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
+		// 		} else {
+		// 			// Below center - shoot at right corner
+		// 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
+		// 		}
+		// 	}
+		// }));
 
 		// Idle while the robot is disabled. This ensures the configured
 		// neutral mode is applied to the drive motors while disabled.
@@ -301,7 +314,8 @@ public class RobotContainer {
 		driverController.povUp().whileTrue(
 				new DriveToPose(
 						drivetrain,
-						() -> new Pose2d(0, 0, new Rotation2d(0)), // always drive to origin
+						//TODO: make this pose flip using alliancefliputil
+						() -> new Pose2d(1.196, 4.741, new Rotation2d(Units.degreesToRadians(180))),
 						driveFacingAngleRequest));
 
 		driverController.povDown().onTrue(
@@ -389,6 +403,21 @@ public class RobotContainer {
 										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
 	}
 
+	private void configureTriggers() {
+		inAim.onTrue(Commands.runOnce(() -> {
+			ShotCalculator sc = ShotCalculator.getInstance();
+			sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+		}));
+
+		//TODO: add a passing zone that is to the left corner and one that is to the right corner
+		inPass.onTrue(Commands.runOnce(() -> {
+			ShotCalculator sc = ShotCalculator.getInstance();
+			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
+		}));
+		
+        inTrench.whileTrue(hood.down());
+	}
+
 	/**
 	 * Register named commands for use in PathPlanner autos.
 	 * These commands can be referenced by name in the PathPlanner GUI.
@@ -405,7 +434,7 @@ public class RobotContainer {
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 
 		NamedCommands.registerCommand("ShooterAim",
-				Commands.run(() -> hood.trackTarget().alongWith(flywheel.trackTarget())));
+				hood.trackTarget().alongWith(flywheel.trackTarget()));
 
 		// TODO: Uncomment when shooter subsystem is enabled
 		// Shooter Commands - Start shooting sequence

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.2147075606276743,
-        "y": 4.235549215406562
+        "x": 4.051395348837209,
+        "y": 7.417996422182468
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.934600226101736,
-        "y": 4.251774617911033
+        "x": 5.771288014311271,
+        "y": 7.434221824686939
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
@@ -20,8 +20,8 @@
         "y": 5.130214669051878
       },
       "prevControl": {
-        "x": 7.34515205724508,
-        "y": 7.6127012522361355
+        "x": 7.474955277280859,
+        "y": 7.4828980322003575
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +31,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.27807486631016054,
-      "rotationDegrees": 180.0
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [],
@@ -47,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 94.9697407281102
+    "rotation": -85.03025927188968
   },
   "reversed": false,
   "folder": "Cycles",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.85509739626673
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
