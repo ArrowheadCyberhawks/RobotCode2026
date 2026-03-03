@@ -196,6 +196,7 @@ public class ShotCalculator {
         Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
         Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
         Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
+        //Logger.recordOutput("ShotCalculator/Target", );
 
         hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance);
         // Smooth hood angle as well
@@ -214,7 +215,7 @@ public class ShotCalculator {
         lastHoodAngle = hoodAngle;
         // Valid only when distance in range AND turret angle is within +/- 3/4*pi
         latestData = new ShotData(
-                lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
+                true, //lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
                 //&& ((filteredTurretAngleRad) >= (1.0 / 2.0) * Math.PI && (filteredTurretAngleRad) <= (1.0/4.0) * Math.PI), // clamp to 180 degree max range (1/4 pi on each side)
                 turretAngle,
                 turretVelocity,
