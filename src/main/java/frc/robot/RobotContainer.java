@@ -62,6 +62,7 @@ import frc.robot.util.HubTracker;
 import frc.robot.util.HubTracker.Shift;
 import frc.robot.util.field.FieldConstants;
 import frc.robot.util.field.FieldZones;
+import frc.robot.util.geometry.AllianceFlipUtil;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 import frc.robot.subsystems.intake.IntakeConstants;
@@ -142,8 +143,12 @@ public class RobotContainer {
 			new Trigger(() -> FieldZones.TRENCH().contains(drivetrain.getPose().getTranslation()));
 	private final Trigger inAim =
 			new Trigger(() -> FieldZones.AIM().contains(drivetrain.getPose().getTranslation()));
-	private final Trigger inPass =
-			new Trigger(() -> FieldZones.PASS().contains(drivetrain.getPose().getTranslation()));
+	// private final Trigger inPass =
+	// 		new Trigger(() -> FieldZones.PASS().contains(drivetrain.getPose().getTranslation()));
+	private final Trigger inLeftPass =
+			new Trigger(() -> FieldZones.LEFTPASS().contains(drivetrain.getPose().getTranslation()));
+	private final Trigger inRightPass =
+			new Trigger(() -> FieldZones.RIGHTPASS().contains(drivetrain.getPose().getTranslation()));
 
 	public RobotContainer() {
 		constructField();
@@ -273,32 +278,6 @@ public class RobotContainer {
 		driverController.y().whileTrue(flywheel.diagnosePhase());
 		// driverController.y().whileTrue(turret.trackTarget());
 
-		// Smart target selection based on field zone: D-pad down will set the target
-		// to the hub if we're in our alliance zone; otherwise choose left/right
-		// corner based on which side of the field we're on.
-		// This may become obsolete when we make the proper Zone class
-		// driverController.povLeft().onTrue(Commands.runOnce(() -> {
-		// 	ShotCalculator sc = ShotCalculator.getInstance();
-		// 	Pose2d pose = drivetrain.getPose();
-		// 	double x = pose.getX();
-		// 	double y = pose.getY();
-
-		// 	// Check if we're in the neutral zone (past neutralZoneNear)
-		// 	if (x < FieldConstants.LinesVertical.neutralZoneNear) {
-		// 		// We're in our alliance zone - shoot at the hub
-		// 		sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
-		// 	} else {
-		// 		// We're in neutral/opponent zone - choose corner based on Y position
-		// 		if (y > FieldConstants.LinesHorizontal.center) {
-		// 			// Above center - shoot at left corner
-		// 			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
-		// 		} else {
-		// 			// Below center - shoot at right corner
-		// 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
-		// 		}
-		// 	}
-		// }));
-
 		// Idle while the robot is disabled. This ensures the configured
 		// neutral mode is applied to the drive motors while disabled.
 		final var idle = new SwerveRequest.Idle();
@@ -314,8 +293,7 @@ public class RobotContainer {
 		driverController.povUp().whileTrue(
 				new DriveToPose(
 						drivetrain,
-						//TODO: make this pose flip using alliancefliputil
-						() -> new Pose2d(1.196, 4.741, new Rotation2d(Units.degreesToRadians(180))),
+						() -> AllianceFlipUtil.apply(new Pose2d(1.196, 4.741, new Rotation2d(Units.degreesToRadians(180)))),
 						driveFacingAngleRequest));
 
 		driverController.povDown().onTrue(
@@ -331,7 +309,7 @@ public class RobotContainer {
 
 		// reset the field-centric heading on b button press
 		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
-				drivetrain.getState().Pose.getRotation() // drivetrain.getPose().getRotation()
+				drivetrain.getState().Pose.getRotation()
 		)));
 
 		// driverController.leftBumper().onTrue(drivetrain.runOnce(() ->
@@ -404,15 +382,21 @@ public class RobotContainer {
 	}
 
 	private void configureTriggers() {
+		// should probably put sc.setTarget before this so I don't have get the instance each time
+
 		inAim.onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
 		}));
 
-		//TODO: add a passing zone that is to the left corner and one that is to the right corner
-		inPass.onTrue(Commands.runOnce(() -> {
+		inLeftPass.onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
+		}));
+
+		inRightPass.onTrue(Commands.runOnce(() -> {
+			ShotCalculator sc = ShotCalculator.getInstance();
+			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
 		
         inTrench.whileTrue(hood.down());

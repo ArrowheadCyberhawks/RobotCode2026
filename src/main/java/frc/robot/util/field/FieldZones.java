@@ -67,6 +67,18 @@ public final class FieldZones {
                         .difference(TRENCH());
         }
 
+        public static Zone LEFTPASS() {
+                return PASS().intersection(new Zone.RectangleZone(
+                        0.0, FieldConstants.fieldLength,
+                        FieldConstants.LinesHorizontal.center, FieldConstants.fieldWidth));
+        }
+
+        public static Zone RIGHTPASS() {
+                return PASS().intersection(new Zone.RectangleZone(
+                        0.0, FieldConstants.fieldLength,
+                        0.0, FieldConstants.LinesHorizontal.center));
+        }
+
         public static void updateTrenchMargin(double newMargin) {
                 trenchXMargin = newMargin;
                 trenchZone = buildTrenchZone();
@@ -78,6 +90,14 @@ public final class FieldZones {
 
         public static boolean inPASS(Translation2d position) {
                 return PASS().contains(position);
+        }
+
+        public static boolean inLEFTPASS(Translation2d position) {
+                return LEFTPASS().contains(position);
+        }
+
+        public static boolean inRIGHTPASS(Translation2d position) {
+                return RIGHTPASS().contains(position);
         }
 
         public static boolean inTRENCH(Translation2d position) {

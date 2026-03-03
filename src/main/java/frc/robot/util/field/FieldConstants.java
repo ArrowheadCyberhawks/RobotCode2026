@@ -308,17 +308,11 @@ public class FieldConstants {
         new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
   }
 
-    /**
-     * Common corner reference points for the blue alliance side.
-     *
-     * blueRight is the field origin (0,0,0) in our coordinate system.
-     */
     public static class Corners {
         // Blue alliance - right corner (field origin)
-        public static final Translation3d right = new Translation3d(0.0, 0.0, 0.0);
-
+        public static final Translation3d right = new Translation3d(2.0, 1.5, 0.0);
         // Blue alliance - left corner (same X as origin, Y at far side of field)
-        public static final Translation3d left = new Translation3d(0.0, fieldWidth, 0.0);
+        public static final Translation3d left = new Translation3d(2.0, 6.5, 0.0);
     }
 
     public enum FieldType {
