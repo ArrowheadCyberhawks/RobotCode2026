@@ -81,7 +81,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Configure current limits for FOC
     cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
-    cfg.CurrentLimits.SupplyCurrentLimitEnable = false;
+    cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     follower.getConfigurator().apply(cfg);
@@ -108,6 +108,8 @@ public class FlywheelSubsystem extends SubsystemBase {
       // Configure current limits for FOC
       cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
       cfg.CurrentLimits.SupplyCurrentLimitEnable = false;
+      cfg.CurrentLimits.StatorCurrentLimit = 40.0;
+      cfg.CurrentLimits.StatorCurrentLimitEnable = true;
       follower.getConfigurator().apply(cfg);
       leader.getConfigurator().apply(cfg);
     }

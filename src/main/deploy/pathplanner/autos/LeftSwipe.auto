@@ -13,25 +13,6 @@
                 "data": {
                   "pathName": "LeftTrenchToNeutral"
                 }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 4.0
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "IntakeOn"
-                      }
-                    }
-                  ]
-                }
               }
             ]
           }
@@ -51,27 +32,40 @@
                 "data": {
                   "commands": [
                     {
-                      "type": "named",
+                      "type": "wait",
                       "data": {
-                        "name": "IntakeOff"
+                        "waitTime": 9.0
                       }
                     },
                     {
                       "type": "named",
                       "data": {
-                        "name": "IntakeStow"
+                        "name": "ShooterAim"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 10.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "HopperOn"
                       }
                     }
                   ]
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ShooterAim"
           }
         }
       ]

@@ -20,6 +20,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -418,7 +420,13 @@ public class RobotContainer {
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 
 		NamedCommands.registerCommand("ShooterAim",
-				hood.trackTarget().alongWith(flywheel.trackTarget()));
+				hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
+
+		NamedCommands.registerCommand("HopperOn",
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
+
+		NamedCommands.registerCommand("HopperOff",
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
 
 		// TODO: Uncomment when shooter subsystem is enabled
 		// Shooter Commands - Start shooting sequence

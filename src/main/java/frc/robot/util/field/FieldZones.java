@@ -67,13 +67,13 @@ public final class FieldZones {
                         .difference(TRENCH());
         }
 
-        public static Zone LEFTPASS() {
+        public static Zone RIGHTPASS() {
                 return PASS().intersection(new Zone.RectangleZone(
                         0.0, FieldConstants.fieldLength,
                         FieldConstants.LinesHorizontal.center, FieldConstants.fieldWidth));
         }
 
-        public static Zone RIGHTPASS() {
+        public static Zone LEFTPASS() {
                 return PASS().intersection(new Zone.RectangleZone(
                         0.0, FieldConstants.fieldLength,
                         0.0, FieldConstants.LinesHorizontal.center));
