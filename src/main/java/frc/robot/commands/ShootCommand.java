@@ -44,7 +44,7 @@ public class ShootCommand extends Command {
         } else {
             // Normal AIM + fire sequence
             shooter.requestState(ShooterSubsystem.ShooterState.AIM);
-            if (!hopperTriggered && shooter.isReady()) {
+            if (!hopperTriggered && shooter.areAllSubsystemsAtGoal()) {
                 hopper.setHopperState(HopperSubsystem.HopperState.ON);
                 hopperTriggered = true;
             }

@@ -161,6 +161,9 @@ public class HopperSubsystem extends SubsystemBase {
         }
     
         Logger.recordOutput("Hopper/State", hopperState.name());
+        Logger.recordOutput("Hopper/Current", hopperMotor.getOutputCurrent());
+        Logger.recordOutput("Kicker/Current", kickerMotor.getOutputCurrent());
+
 
         // Update motor control and PID parameters
         updateHopperControl();

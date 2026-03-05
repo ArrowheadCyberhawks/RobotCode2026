@@ -26,10 +26,6 @@ public class ShooterSubsystem extends SubsystemBase {
   private ShooterState currentState = ShooterState.IDLE;
   private ShooterState desiredState = ShooterState.IDLE;
 
-  // One-shot readiness detection
-  private boolean wasAtGoalLastCycle = false;
-  private boolean shooterReady = false;
-
   public ShooterSubsystem(
       FlywheelSubsystem flywheel,
       HoodSubsystemNeo hood,
@@ -43,11 +39,9 @@ public class ShooterSubsystem extends SubsystemBase {
   public void periodic() {
     updateState();
     executeState();
-    updateReadiness();
 
     Logger.recordOutput("Shooter/State", currentState.name());
     Logger.recordOutput("Shooter/AllAtGoal", areAllSubsystemsAtGoal());
-    Logger.recordOutput("Shooter/ReadyPulse", shooterReady);
   }
 
   public void requestState(ShooterState state) {
@@ -68,34 +62,15 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /**
-   * Returns true ONLY ONCE when AIM first reaches goal.
-   * RobotContainer should poll this.
+   * Returns true whenever all subsystems are at their goal.
    */
   public boolean isReady() {
-    boolean ready = shooterReady;
-    shooterReady = false;
-    return ready;
+    return areAllSubsystemsAtGoal();
   }
 
   private void updateState() {
     if (currentState != desiredState) {
       currentState = desiredState;
-      wasAtGoalLastCycle = false; // reset readiness detection on state change
-    }
-  }
-
-  private void updateReadiness() {
-    if (currentState == ShooterState.AIM) {
-      boolean atGoal = areAllSubsystemsAtGoal();
-
-      // Rising edge detection
-      if (atGoal && !wasAtGoalLastCycle) {
-        shooterReady = true;
-      }
-
-      wasAtGoalLastCycle = atGoal;
-    } else {
-      wasAtGoalLastCycle = false;
     }
   }
 

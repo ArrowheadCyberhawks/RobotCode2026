@@ -145,6 +145,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
     hoodMotor.setVoltage(Volts.of(pid.calculate(getHoodAngle().getRadians())));
     Logger.recordOutput("Shooter/Hood Angle", getHoodAngle().getDegrees());
     Logger.recordOutput("Shooter/Hood Current", hoodMotor.getOutputCurrent());
+    Logger.recordOutput("Shooter/Hood AtGoal", isAtGoal());
   }
 
   public Command trackTarget() {

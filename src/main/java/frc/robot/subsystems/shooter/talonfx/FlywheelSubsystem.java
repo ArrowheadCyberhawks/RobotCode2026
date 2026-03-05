@@ -115,32 +115,24 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     // Get current velocity in rotations per second, convert to rad/s for internal use
+
     AngularVelocity currentVelocity = RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
 
-    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
-    Logger.recordOutput("Flywheel/Velocity", currentVelocity); // TODO: fix units of setpoint and velocity
-    Logger.recordOutput("Flywheel/AtGoal", atGoal); // when both logged in radians per second, current velocity reports as 6.28 times greater than setpoint so it's in the wrong units
-    Logger.recordOutput("Flywheel/Error", leader.getClosedLoopError().getValueAsDouble());
+    Logger.recordOutput("Flywheel/SetpointRPS", velocitySetpoint.in(RotationsPerSecond));
+    Logger.recordOutput("Flywheel/VelocityRPS", currentVelocity.in(RotationsPerSecond));
+    Logger.recordOutput("Flywheel/AtGoal", isAtGoal());
+    Logger.recordOutput("Flywheel/ClosedLoopErrorRPS", leader.getClosedLoopError().getValueAsDouble());
     Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
     Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
 
     if (velocitySetpoint.isEquivalent(RadiansPerSecond.zero())) {
       leader.stopMotor();
-      // atGoal = false;
       return;
     }
 
-    boolean inTolerance = currentVelocity.isNear(velocitySetpoint, RadiansPerSecond.of(velocityTolerance.get()));
-    atGoal = inTolerance;
-
-    // Use VelocityTorqueCurrentFOC closed-loop control
+    // Use VelocityVoltage closed-loop control
     velocityRequest.Velocity = velocitySetpoint.in(RotationsPerSecond);
     leader.setControl(velocityRequest);
-
-    Logger.recordOutput("Flywheel/Setpoint", velocitySetpoint);
-    Logger.recordOutput("Flywheel/AtGoal", atGoal);
-    Logger.recordOutput("Flywheel/Current", leader.getSupplyCurrent().getValueAsDouble());
-    Logger.recordOutput("Flywheel/TorqueCurrent", leader.getTorqueCurrent().getValueAsDouble());
   }
 
   // setpoint runner used by commands and direct callers
@@ -152,7 +144,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   public void stop() {
     velocitySetpoint = RadiansPerSecond.zero();
     setpointLimiter.reset(0.0);
-    // atGoal = false;
+    atGoal = false;
   }
 
   public AngularVelocity getVelocity() {
@@ -165,7 +157,12 @@ public class FlywheelSubsystem extends SubsystemBase {
   }
 
   public boolean isAtGoal() {
-    return atGoal;
+    // Use the TalonFX's own closed-loop error (in RPS) for a more accurate check
+    double closedLoopErrorRPS = leader.getClosedLoopError().getValueAsDouble();
+    // Convert tolerance from rad/s to RPS for comparison
+    double toleranceRPS = velocityTolerance.get() / (2.0 * Math.PI);
+    return !velocitySetpoint.isEquivalent(RadiansPerSecond.zero())
+        && Math.abs(closedLoopErrorRPS) <= toleranceRPS;
   }
 
   public Command trackTarget() {
