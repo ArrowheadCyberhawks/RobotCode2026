@@ -270,4 +270,8 @@ public class ShotCalculator {
     public Translation2d getTarget() {
         return AllianceFlipUtil.apply(this.target);
     }
+
+    public boolean shotValid() {
+        return latestData != null && latestData.isValid;
+    }
 }
