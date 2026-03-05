@@ -169,6 +169,10 @@ public class RobotContainer {
 
 
 	public RobotContainer() {
+
+		// Register Named Commands for PathPlanner BEFORE creating any autos
+		registerNamedCommands();
+
 		constructField();
 		configureBindings();
 		configureTriggers();
@@ -190,10 +194,7 @@ public class RobotContainer {
 			questNavSubsystem.resetPose(pose);
 		});
 
-		// Register Named Commands for PathPlanner BEFORE creating any autos
-		registerNamedCommands();
-
-		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Left1Cycle"));
+		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("LeftSwipe"));
 
 		// Warmup PathPlanner to avoid Java pauses
 		CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
@@ -255,9 +256,9 @@ public class RobotContainer {
 		// }
 		// }));
 
-		// Right bumper - Toggle shooter: Start aiming sequence if idle, or stop if
-		// already aiming/shooting
+		// Right bumper - Toggle shooter
 		driverController.rightBumper().toggleOnTrue(shootMode);
+
 		// TEMP CODE
 		// driverController.rightBumper()
 		// 		.whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
@@ -273,7 +274,6 @@ public class RobotContainer {
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
 
-		// driverController.leftBumper().whileTrue(drivetrain.applyRequest(limelightSubsystem::pointAtTag));
 		driverController.povUp().whileTrue(
 				new DriveToPose(
 						drivetrain,
@@ -296,16 +296,11 @@ public class RobotContainer {
 				drivetrain.getState().Pose.getRotation()
 		)));
 
-		// driverController.leftBumper().onTrue(drivetrain.runOnce(() ->
-		// drivetrain.seedFieldCentric()));
-
 		// driverController.start()
 		// .whileTrue(limelightSubsystem
 		// .startRun(() -> LimelightSubsystem.SetIMUMode(1),
 		// () -> limelightSubsystem.updateVisionPoseMT1(true))
 		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
-
-		driverController.start().whileTrue(flywheel.diagnosePhase());
 
 		driverController.back()
 				.whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
