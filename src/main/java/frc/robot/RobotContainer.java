@@ -147,7 +147,6 @@ public class RobotContainer {
 			new Trigger(() -> FieldZones.RIGHTPASS().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
 
-	private boolean shootModeActive = false;
 	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean);
 
 	// Command shootMode = Commands.sequence(
@@ -278,7 +277,7 @@ public class RobotContainer {
 		driverController.povUp().whileTrue(
 				new DriveToPose(
 						drivetrain,
-						() -> AllianceFlipUtil.apply(new Pose2d(1.196, 4.741, new Rotation2d(Units.degreesToRadians(180)))),
+						() -> AllianceFlipUtil.apply(new Pose2d(1.140, 3.285, new Rotation2d(Units.degreesToRadians(90)))),
 						driveFacingAngleRequest));
 
 		driverController.povDown().onTrue(
@@ -428,11 +427,9 @@ public class RobotContainer {
 
 		// Shooter Commands - Stop all shooting motors
 		NamedCommands.registerCommand("StopShoot",
-		Commands.sequence(
-		Commands.runOnce(() -> shooterSubsystem.stop()),
-		Commands.runOnce(() ->
-		hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-		)
+			Commands.sequence(
+			Commands.runOnce(() -> shooterSubsystem.stop()),
+			Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)))
 		);
 	}
 

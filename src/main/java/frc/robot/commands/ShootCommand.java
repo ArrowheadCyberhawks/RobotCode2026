@@ -4,7 +4,9 @@ import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.hopper.HopperSubsystem;
+import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 
 public class ShootCommand extends Command {
     private final ShooterSubsystem shooter;
@@ -28,7 +30,7 @@ public class ShootCommand extends Command {
 
     @Override
     public void initialize() {
-        shooter.requestState(ShooterSubsystem.ShooterState.AIM);
+        shooter.requestState(ShooterState.AIM);
         hopperTriggered = false;
     }
 
@@ -38,14 +40,15 @@ public class ShootCommand extends Command {
             // Request TRENCH state so the shooter state machine knows we are inside the trench.
             // The hood going down is handled by the inTrench.whileTrue(hood.down()) trigger.
             // Pause the hopper and re-arm so it fires again once we leave the trench.
-            shooter.requestState(ShooterSubsystem.ShooterState.TRENCH);
-            hopper.setHopperState(HopperSubsystem.HopperState.IDLE);
+            shooter.requestState(ShooterState.TRENCH);
+            hopper.setHopperState(HopperState.IDLE);
             hopperTriggered = false;
         } else {
             // Normal AIM + fire sequence
-            shooter.requestState(ShooterSubsystem.ShooterState.AIM);
+            shooter.requestState(ShooterState.AIM);
+            hopper.setHopperState(HopperState.KICKER);
             if (!hopperTriggered && shooter.areAllSubsystemsAtGoal()) {
-                hopper.setHopperState(HopperSubsystem.HopperState.ON);
+                hopper.setHopperState(HopperState.ON);
                 hopperTriggered = true;
             }
         }
@@ -54,7 +57,7 @@ public class ShootCommand extends Command {
     @Override
     public void end(boolean interrupted) {
         shooter.stop();
-        hopper.setHopperState(HopperSubsystem.HopperState.IDLE);
+        hopper.setHopperState(HopperState.IDLE);
     }
 
     @Override

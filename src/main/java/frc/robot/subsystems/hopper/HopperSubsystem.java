@@ -62,6 +62,7 @@ public class HopperSubsystem extends SubsystemBase {
     public enum HopperState {
         IDLE,   //Both motors off
         ON,      //Both motors running at given speed
+        KICKER,
         REVERSE
     }
 
@@ -152,6 +153,11 @@ public class HopperSubsystem extends SubsystemBase {
             case ON:
                 //Runs both motors at given speed
                 runHopper();
+                runKicker();
+                break;
+            case KICKER:
+                //Runs only the kicker at given speed (hopper off)
+                stopHopper();
                 runKicker();
                 break;
             case REVERSE:
