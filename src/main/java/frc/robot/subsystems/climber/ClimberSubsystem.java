@@ -1,120 +1,50 @@
 package frc.robot.subsystems.climber;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-/**
- * ClimberSubsystem
- *
- * Provides low-level control for a two-motor climber using CTRE Phoenix6
- * TalonFX controllers. This class configures the motors and exposes simple
- * methods to move the climber using Motion Magic (position) and velocity
- * control. Both motors are commanded together here so higher-level commands
- * don't need to duplicate logic.
- */
+
+
 public class ClimberSubsystem extends SubsystemBase {
 
-    private final TalonFX leftMotor = new TalonFX(ClimberConstants.kLeftMotorId);
-    private final TalonFX rightMotor = new TalonFX(ClimberConstants.kRightMotorId);
-    private final MotionMagicVoltage climbRequest = new MotionMagicVoltage(0);
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
-    private final NeutralOut neutralOut = new NeutralOut();
+    private final TalonFX climberMotor = new TalonFX(ClimberConstants.kClimberMotorId);
+    private boolean isClimbing;
 
+    
     public ClimberSubsystem() {
-        configureMotor(leftMotor);
-        configureMotor(rightMotor);
-        // Zero encoders at startup
-        leftMotor.setPosition(0.0);
-        rightMotor.setPosition(0.0);
+
+        new ProfiledPIDController(
+            ClimberConstants.kPClimb.get(), 
+            ClimberConstants.kIClimb.get(), 
+            ClimberConstants.kDClimb.get(),
+            new TrapezoidProfile.Constraints(ClimberConstants.kVClimb.get(), 
+                                            ClimberConstants.kAClimb.get()));
+        }
+
+    public boolean isClimbing(){
+        return this.isClimbing;   
     }
 
-    private void configureMotor(TalonFX motor) {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-        config.Slot0.kP = ClimberConstants.kPClimb;
-        config.Slot0.kI = ClimberConstants.kIClimb;
-        config.Slot0.kD = ClimberConstants.kDClimb;
-        config.Slot0.kG = ClimberConstants.kGClimb;
-        config.Slot0.kV = ClimberConstants.kVClimb;
-        config.Slot0.kA = ClimberConstants.kAClimb;
-
-        config.MotionMagic.MotionMagicCruiseVelocity = ClimberConstants.kClimbCruiseRps;
-        config.MotionMagic.MotionMagicAcceleration = ClimberConstants.kClimbAccelRps2;
-
-        motor.getConfigurator().apply(config);
+    public void stop( ) {
+        climberMotor.stopMotor();
+        this.isClimbing = false;
+    }
+    
+    public void setClimberSpeed(double speed) {
+        climberMotor.set(speed);
+        this.isClimbing = true;
     }
 
-    /**
-     * Move both climber motors to an absolute position (motor rotations) using Motion Magic.
-     * @param motorRotations absolute motor rotations (motor-side units)
-     */
-    public void moveToMotorRotations(double motorRotations) {
-        leftMotor.setControl(climbRequest.withPosition(motorRotations));
-        rightMotor.setControl(climbRequest.withPosition(motorRotations));
+    public Command climbCommand(double speed) {
+        return runEnd(() -> setClimberSpeed(speed), this::stop);
     }
 
-    /**
-     * Move the climber by a delta (relative) in motor rotations.
-     */
-    public void moveByMotorRotations(double deltaRotations) {
-        double current = getMotorRotations();
-        moveToMotorRotations(current + deltaRotations);
-    }
-
-    /**
-     * Convenience: move using climber-side rotations (mechanism rotations).
-     * Converts mechanism rotations -> motor rotations using gear ratio.
-     */
-    public void moveToClimberRotations(double climberRotations) {
-        double motorRot = climberRotations * ClimberConstants.kClimberGearRatio;
-        moveToMotorRotations(motorRot);
-    }
-
-    /**
-     * Set both motors to a velocity (motor RPS).
-     */
-    public void setVelocityRps(double motorRps) {
-        leftMotor.setControl(velocityRequest.withVelocity(motorRps));
-        rightMotor.setControl(velocityRequest.withVelocity(motorRps));
-    }
-
-    /**
-     * Stop both motors (neutral output / brake behavior will hold position).
-     */
-    public void stop() {
-        leftMotor.setControl(neutralOut);
-        rightMotor.setControl(neutralOut);
-    }
-
-    /**
-     * Reset both encoder positions to zero (motor rotations).
-     */
-    public void resetEncoders() {
-        leftMotor.setPosition(0.0);
-        rightMotor.setPosition(0.0);
-    }
-
-    /**
-     * Return the average motor rotations of the two climber motors.
-     */
-    public double getMotorRotations() {
-        double left = leftMotor.getPosition().getValueAsDouble();
-        double right = rightMotor.getPosition().getValueAsDouble();
-        return (left + right) / 2.0;
-    }
-
-    @Override
-    public void periodic() {
-        // Publish a few useful diagnostics
-        SmartDashboard.putNumber("Climber/MotorRotations", getMotorRotations());
+    public Command runClimbCommand() {
+        return runEnd(() -> setClimberSpeed(0), this::stop); // This is where Alex stopped on Thursday, 03/05.
     }
 
 }
