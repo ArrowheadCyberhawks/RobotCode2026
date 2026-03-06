@@ -112,11 +112,11 @@ public class RobotContainer {
 
 	// public final VisionSubsystem visionSubsystem = new
 	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	// public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-	// () -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to
+	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
+	() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to
 	// gyro-based not pose estimator
-	// drivetrain,
-	// field2d);
+	drivetrain,
+	field2d);
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
@@ -296,11 +296,11 @@ public class RobotContainer {
 				drivetrain.getState().Pose.getRotation()
 		)));
 
-		// driverController.start()
-		// .whileTrue(limelightSubsystem
-		// .startRun(() -> LimelightSubsystem.SetIMUMode(1),
-		// () -> limelightSubsystem.updateVisionPoseMT1(true))
-		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
+		driverController.start()
+		.whileTrue(limelightSubsystem
+		.startRun(() -> LimelightSubsystem.SetIMUMode(1),
+		() -> limelightSubsystem.updateVisionPoseMT1(true))
+		.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
 
 		driverController.back()
 				.whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));

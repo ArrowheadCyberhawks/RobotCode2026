@@ -50,9 +50,9 @@ public class LimelightSubsystem extends SubsystemBase {
 	updateVisionPoseMT2(); // megatag2 is broken so just disable it
 	//updateVisionPoseMT1(false);
 	updateField(true);
-	if(DriverStation.isDisabled()) {
-		updateVisionPoseMT1(true);
-	}
+	// if(DriverStation.isDisabled()) {
+	// 	updateVisionPoseMT1(true);
+	// }
   }
 
   /**
@@ -118,9 +118,9 @@ public class LimelightSubsystem extends SubsystemBase {
 				rejectUpdate = true;
 			}
 
-			if (limelightMeasurementMT2.rawFiducials[0].ambiguity > 0.7) {
-				rejectUpdate = true;
-			}
+			// if (limelightMeasurementMT2.rawFiducials[0].ambiguity > 0.7) {
+			// 	rejectUpdate = true;
+			// }
 
 			if (!rejectUpdate) {
 				drivetrain.addVisionMeasurement(
