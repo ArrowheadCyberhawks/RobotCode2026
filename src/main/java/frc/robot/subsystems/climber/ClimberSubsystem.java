@@ -2,8 +2,6 @@ package frc.robot.subsystems.climber;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -12,39 +10,27 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ClimberSubsystem extends SubsystemBase {
 
     private final TalonFX climberMotor = new TalonFX(ClimberConstants.kClimberMotorId);
-    private boolean isClimbing;
-
-    
-    public ClimberSubsystem() {
-
-        new ProfiledPIDController(
-            ClimberConstants.kPClimb.get(), 
-            ClimberConstants.kIClimb.get(), 
-            ClimberConstants.kDClimb.get(),
-            new TrapezoidProfile.Constraints(ClimberConstants.kVClimb.get(), 
-                                            ClimberConstants.kAClimb.get()));
-        }
-
-    public boolean isClimbing(){
-        return this.isClimbing;   
-    }
-
-    public void stop( ) {
+    //stop climber motor
+    public void stopMotor() {
         climberMotor.stopMotor();
-        this.isClimbing = false;
     }
     
+    //set climber speed 
     public void setClimberSpeed(double speed) {
         climberMotor.set(speed);
-        this.isClimbing = true;
     }
 
+    //run climber at given speed
     public Command climbCommand(double speed) {
-        return runEnd(() -> setClimberSpeed(speed), this::stop);
+        return runEnd(() -> setClimberSpeed(speed), this::stopMotor);
     }
-
-    public Command runClimbCommand() {
-        return runEnd(() -> setClimberSpeed(0), this::stop); // This is where Alex stopped on Thursday, 03/05.
+    //run climber in reverse
+    public Command runClimbdown() {
+        return runEnd(() -> setClimberSpeed(-0.5), this::stopMotor);
     }
-
+    //run Climber forward
+    public Command runClimberup() {
+        return runEnd(() -> setClimberSpeed(0.5), this::stopMotor);
+    }
 }
+

@@ -17,6 +17,9 @@ public class ClimberConstants {
         public static final LoggedTunableNumber kVClimb = new LoggedTunableNumber("Climber/V", 0.0);
         public static final LoggedTunableNumber kAClimb = new LoggedTunableNumber("Climber/A", 0.0);
     
+        public static final double L1 = 0.6858; // bar height in meters
+        public static final double climberHeight = 0; // climber height in meters
+
         private ClimberConstants() {}
 
 }
