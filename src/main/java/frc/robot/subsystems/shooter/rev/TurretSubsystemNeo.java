@@ -138,6 +138,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		// Log telemetry
 		Logger.recordOutput("Turret/Current Position", getTurretRotation());
 		Logger.recordOutput("Turret/Target Position", targetRotation);
+		Logger.recordOutput("Turret/AtGoal", isAtGoal());
 	}
 
 	public Command trackTarget() {

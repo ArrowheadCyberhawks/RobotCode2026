@@ -30,7 +30,7 @@ public final class HopperConstants {
         public static final LoggedTunableNumber kDKicker = 
             new LoggedTunableNumber("Hopper/PIDConstants/kDKicker", 0.0);
         public static final LoggedTunableNumber kVKicker = 
-            new LoggedTunableNumber("Hopper/PIDConstants/kVKicker", 0.2);
+            new LoggedTunableNumber("Hopper/PIDConstants/kVKicker", 0.1125);
         public static final LoggedTunableNumber kSKicker = 
             new LoggedTunableNumber("Hopper/PIDConstants/kSKicker", 0.0);
         public static final LoggedTunableNumber kKickerMaxVelocityRps = 
