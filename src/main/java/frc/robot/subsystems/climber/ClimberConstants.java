@@ -3,8 +3,7 @@ import frc.robot.util.LoggedTunableNumber;
 
 public class ClimberConstants {
         // CAN IDs
-        public static final int kClimberId = 30;
-        public static final int kClimberMotorId = 31;
+        public static final int kClimberMotorId = 30;
     
         // Gear ratio: motor rotations per climber rotation
         public static final double kClimberGearRatio = 45;
