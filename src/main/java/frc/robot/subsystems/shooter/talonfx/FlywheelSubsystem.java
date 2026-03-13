@@ -44,6 +44,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private boolean atGoal = false;
 
   // Slew rate limiter to smooth setpoint changes (rotations/s per second)
+  // Maybe lower this because this is basically instantanious
   private final SlewRateLimiter setpointLimiter = new SlewRateLimiter(160.0);
 
   // Tuning published in NetworkTables via LoggedTunableNumber (used for runtime tolerances)
@@ -131,7 +132,11 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityVoltage closed-loop control even when the setpoint is zero so the error converges to 0
     velocityRequest.Velocity = velocitySetpointRps;
+    velocityTorqueCurrentRequest.Velocity = velocitySetpointRps;
     leader.setControl(velocityRequest);
+    //leader.setControl(velocityTorqueCurrentRequest);
+    // Realized velocitytorquecontrol probably doesn't actually work bc I forgot to set it to use that in periodic,
+    // here it is above if you want to test it
   }
 
   // setpoint runner used by commands and direct callers
@@ -142,6 +147,9 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Apply slew rate limiting and clamp in TalonFX-native units (rotations per second)
     velocitySetpointRps = MathUtil.clamp(targetRps, minRps, maxRps); //TODO: why doesn't the slew rate limiter work?
+
+    // The slew rate limiter didn't work because it never calculated velocitySetpointRps using the rate limiter :D
+    velocitySetpointRps = setpointLimiter.calculate(velocitySetpointRps);
     System.out.println(getVelocitySetpoint().in(RotationsPerSecond));
   }
 
@@ -170,6 +178,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   }
 
   public Command trackTarget() {
+    //TODO: get rid of radians per second completely and just run everything in rotations per second since TalonFX uses that natively and it's less confusing to convert back and forth all the time
     return runEnd(() -> runVelocity(RadiansPerSecond.of(ShotCalculator.getInstance().getData().flywheelSpeed())), this::stop);
   }
 

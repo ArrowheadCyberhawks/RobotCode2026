@@ -134,6 +134,7 @@ public class RobotContainer {
 
 	//create triggers to happen automatically
 	//do not switch these to colons, they have mutiple methods to be recomputed
+	// It will pause the robot if it runs into the trench, which is OK for now
 	private final Trigger inTrench =
 			new Trigger(() -> FieldZones.TRENCH().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
@@ -282,7 +283,11 @@ public class RobotContainer {
 
 		driverController.povDown().onTrue(
 				intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
-		driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodTo(Rotation2d.fromDegrees(30.0))));
+		
+		// I'm a little confused about the purpose of this, especially on the driver controller, but here is the newer version
+		driverController.povRight().onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
+		
+		// driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodTo(Rotation2d.fromDegrees(30.0))));
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -353,17 +358,26 @@ public class RobotContainer {
 		// 						turret.run(() -> turret
 		// 								.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees()
 		// 										- Math.pow(manipulatorController.getRightX(), 3) * 2.0)))));
+		// manipulatorController.rightStick().whileTrue(
+		// 	turret.run(() -> turret.setTurretTarget(Rotation2d.fromDegrees(75)))
+		// );
+		
+		//TODO: use these instead to avoid conflicts with the shootersubsystem (I added a couple things)
 		manipulatorController.rightStick().whileTrue(
-			turret.run(() -> turret.setTurretTarget(Rotation2d.fromDegrees(75)))
+			shooterSubsystem.manualTurret(() -> -Math.pow(manipulatorController.getRightX(), 3) * 2.0)
+			.alongWith(shooterSubsystem.manualHood(() -> Math.pow(manipulatorController.getRightY(), 3) * 0.5))
 		);
 		manipulatorController.leftStick().toggleOnTrue(
-				flywheel.runFixedCommand(
-						() -> {System.out.println(flywheel.getVelocitySetpoint().in(RotationsPerSecond));
-							return RotationsPerSecond.of(20); // TODO: IT DOESN'T WORK BECAUSE STATE MACHINES AAAAAAAAAAAAAAA
-						// flywheel.getVelocitySetpoint()
-						// 		.plus(RadiansPerSecond.of(
-						// 				MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)));
-									}));
+			shooterSubsystem.manualFlywheel(() -> -manipulatorController.getLeftY()));
+
+		// manipulatorController.leftStick().toggleOnTrue(
+		// 		flywheel.runFixedCommand(
+		// 				() -> {System.out.println(flywheel.getVelocitySetpoint().in(RotationsPerSecond));
+		// 					return RotationsPerSecond.of(20); // TODO: IT DOESN'T WORK BECAUSE STATE MACHINES AAAAAAAAAAAAAAA
+		// 				// flywheel.getVelocitySetpoint()
+		// 				// 		.plus(RadiansPerSecond.of(
+		// 				// 				MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)));
+		// 							}));
 	}
 
 	private void configureTriggers() {
@@ -385,7 +399,8 @@ public class RobotContainer {
 		}));
 		
         //inTrench.whileTrue(hood.down());
-		inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
+		inTrench.whileTrue(shooterSubsystem.trenchCommand());
+		// inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
 	}
 
 	/**
@@ -402,9 +417,11 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("IntakeStow",
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
+		
+		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
 
-		NamedCommands.registerCommand("ShooterAim",
-				hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
+		// NamedCommands.registerCommand("ShooterAim",
+		// 		hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
 
 		NamedCommands.registerCommand("HopperOn",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));

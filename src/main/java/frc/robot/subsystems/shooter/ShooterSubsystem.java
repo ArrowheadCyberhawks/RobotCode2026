@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
@@ -7,6 +8,8 @@ import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+
+import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -16,7 +19,8 @@ public class ShooterSubsystem extends SubsystemBase {
     IDLE,
     STRAIGHT,
     AIM,
-    TRENCH
+    TRENCH,
+    MANUAL
   }
 
   private final FlywheelSubsystem flywheel;
@@ -33,6 +37,7 @@ public class ShooterSubsystem extends SubsystemBase {
     this.flywheel = flywheel;
     this.hood = hood;
     this.turret = turret;
+    
   }
 
   @Override
@@ -53,12 +58,25 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void stop() {
-    desiredState = ShooterState.IDLE;
-    currentState = ShooterState.IDLE;
+    // desiredState = ShooterState.IDLE;
+    // currentState = ShooterState.IDLE;
+    requestState(ShooterState.IDLE);
   }
 
   public boolean areAllSubsystemsAtGoal() {
     return flywheel.isAtGoal() && hood.isAtGoal() && turret.isAtGoal();
+  }
+
+  public HoodSubsystemNeo getHood() {
+    return hood;
+  }
+
+  public TurretSubsystemNeo getTurret() {
+      return turret;
+  }
+
+  public FlywheelSubsystem getFlywheel() {
+      return flywheel;
   }
 
   /**
@@ -105,6 +123,60 @@ public class ShooterSubsystem extends SubsystemBase {
       case TRENCH:
         hood.moveHoodTo(ShooterConstants.HoodPosition.STOW);
         break;
+
+      case MANUAL:
+        break;
+
     }
   }
+
+  // Simplification so you don't have to use run()
+
+  public Command idleCommand() {
+    return runOnce(() -> requestState(ShooterState.IDLE));
+  }
+
+  public Command aimCommand() {
+      return run(() -> requestState(ShooterState.AIM));
+  }
+
+  public Command straightCommand() {
+      return run(() -> requestState(ShooterState.STRAIGHT));
+  }
+
+  public Command trenchCommand() {
+      return run(() -> requestState(ShooterState.TRENCH));
+  }
+
+  // Manual Controls within shootersubsystem to avoid touching the specific subsystems
+  public Command manualTurret(DoubleSupplier input) {
+    return run(() -> {
+        requestState(ShooterState.MANUAL);
+        turret.setTurretTarget(
+            turret.getTurretTarget().plus(
+                Rotation2d.fromDegrees(input.getAsDouble() * 2.0)
+            )
+        );
+    });
+  }
+
+  public Command manualHood(DoubleSupplier input) {
+      return run(() -> {
+          requestState(ShooterState.MANUAL);
+          hood.moveHoodTo(
+              hood.getHoodTargetAngle().plus(
+                  Rotation2d.fromDegrees(input.getAsDouble())
+              )
+          );
+      });
+  }
+
+  public Command manualFlywheel(DoubleSupplier speed) {
+      return run(() -> {
+          requestState(ShooterState.MANUAL);
+          flywheel.runVelocity(RadiansPerSecond.of(speed.getAsDouble()));
+      });
+  }
+
+
 }
