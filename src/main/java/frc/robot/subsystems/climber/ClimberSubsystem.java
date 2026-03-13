@@ -14,7 +14,6 @@ public class ClimberSubsystem extends SubsystemBase {
 
     private final TalonFX climberMotor;
 
-
         public ClimberSubsystem() {
             climberMotor = new TalonFX(ClimberConstants.kClimberMotorId);
             configureClimber();
@@ -52,7 +51,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
             climberconfig.Slot0.kP = ClimberConstants.kPClimb.get();
             climberconfig.Slot0.kI = ClimberConstants.kIClimb.get();
-            climberconfig.Slot0.kD = ClimberConstants.kPClimb.get();
+            climberconfig.Slot0.kD = ClimberConstants.kDClimb.get();
             climberconfig.Slot0.kA = ClimberConstants.kAClimb.get();
             climberconfig.Slot0.kV = ClimberConstants.kVClimb.get();
             climberconfig.Slot0.kG = ClimberConstants.kGClimb.get();
