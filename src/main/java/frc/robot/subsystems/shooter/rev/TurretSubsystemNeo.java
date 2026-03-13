@@ -39,8 +39,8 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance", ShooterConstants.kTurretAllowedError);
 	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.60);
 	// Soft limits in radians (±135 degrees)
-	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", Math.PI / 5);
-	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -3 * Math.PI / 2); //TODO: move these into shooterconstants
+	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 2 * Math.PI);
+	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -Math.PI / 4); //TODO: move these into shooterconstants
 
 	private Rotation2d targetRotation = new Rotation2d();
 

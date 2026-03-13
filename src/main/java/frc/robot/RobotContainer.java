@@ -346,18 +346,24 @@ public class RobotContainer {
 								() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 
 		// Manipulator controller - Manual controls for testing
+		// manipulatorController.rightStick().whileTrue(
+		// 		hood.run(() -> hood.moveHoodTo(Rotation2d.fromDegrees(
+		// 				hood.getHoodTargetAngle().getDegrees() - Math.pow(manipulatorController.getRightY(), 3) * 0.5)))
+		// 				.alongWith(
+		// 						turret.run(() -> turret
+		// 								.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees()
+		// 										- Math.pow(manipulatorController.getRightX(), 3) * 2.0)))));
 		manipulatorController.rightStick().whileTrue(
-				hood.run(() -> hood.moveHoodTo(Rotation2d.fromDegrees(
-						hood.getHoodTargetAngle().getDegrees() - Math.pow(manipulatorController.getRightY(), 3) * 0.5)))
-						.alongWith(
-								turret.run(() -> turret
-										.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees()
-												- Math.pow(manipulatorController.getRightX(), 3) * 2.0)))));
+			turret.run(() -> turret.setTurretTarget(Rotation2d.fromDegrees(75)))
+		);
 		manipulatorController.leftStick().toggleOnTrue(
 				flywheel.runFixedCommand(
-						() -> flywheel.getVelocitySetpoint()
-								.plus(RadiansPerSecond.of(
-										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
+						() -> {System.out.println(flywheel.getVelocitySetpoint().in(RotationsPerSecond));
+							return RotationsPerSecond.of(20); // TODO: IT DOESN'T WORK BECAUSE STATE MACHINES AAAAAAAAAAAAAAA
+						// flywheel.getVelocitySetpoint()
+						// 		.plus(RadiansPerSecond.of(
+						// 				MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)));
+									}));
 	}
 
 	private void configureTriggers() {

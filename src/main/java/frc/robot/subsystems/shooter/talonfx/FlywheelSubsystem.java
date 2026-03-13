@@ -44,7 +44,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private boolean atGoal = false;
 
   // Slew rate limiter to smooth setpoint changes (rotations/s per second)
-  private final SlewRateLimiter setpointLimiter = new SlewRateLimiter(80.0);
+  private final SlewRateLimiter setpointLimiter = new SlewRateLimiter(160.0);
 
   // Tuning published in NetworkTables via LoggedTunableNumber (used for runtime tolerances)
   private static final LoggedTunableNumber velocityTolerance =
@@ -141,7 +141,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     double maxRps = ShooterConstants.kFlywheelMaxVel.in(RotationsPerSecond);
 
     // Apply slew rate limiting and clamp in TalonFX-native units (rotations per second)
-    velocitySetpointRps = MathUtil.clamp(setpointLimiter.calculate(targetRps), minRps, maxRps);
+    velocitySetpointRps = MathUtil.clamp(targetRps, minRps, maxRps); //TODO: why doesn't the slew rate limiter work?
+    System.out.println(getVelocitySetpoint().in(RotationsPerSecond));
   }
 
   public void stop() {

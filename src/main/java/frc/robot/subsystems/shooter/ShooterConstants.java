@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -34,8 +35,8 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 0.15);
     public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.25);
 
-    public static final AngularVelocity kFlywheelMaxVel = RadiansPerSecond.of(55.0);
-    public static final AngularVelocity kFlywheelMinVel = RadiansPerSecond.of(10.0);
+    public static final AngularVelocity kFlywheelMaxVel = RotationsPerSecond.of(55.0);
+    public static final AngularVelocity kFlywheelMinVel = RotationsPerSecond.of(10.0);
     // Turret gear ratio (turret motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;
     

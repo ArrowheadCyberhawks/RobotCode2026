@@ -181,7 +181,6 @@ public class ShotCalculator {
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
         // Normalize to [-π, π]
         double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
-        rawTurretAngleRad -= rawTurretAngleRad > Math.PI / 2.0 ? 2.0 * Math.PI : 0;
 
         // Filter the turret angle to smooth noisy measurements
         double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
