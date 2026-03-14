@@ -14,12 +14,13 @@ import com.revrobotics.PersistMode;
 import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.util.LoggedTunableNumber;
-
+import static frc.robot.subsystems.shooter.ShooterConstants.*;
 /**
  * Turret implementation using REV CANSparkMax (NEO).
  * Uses REV onboard PID controller for position control.
@@ -30,18 +31,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final SparkClosedLoopController turretController;
 	private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
-	private SparkMaxConfig turretConfig;
-
-	// Tunable PID constants for Turret
-	private final LoggedTunableNumber turretKP = new LoggedTunableNumber("Turret/kP", ShooterConstants.kPTurret.get());
-	private final LoggedTunableNumber turretKI = new LoggedTunableNumber("Turret/kI", ShooterConstants.kITurret.get());
-	private final LoggedTunableNumber turretKD = new LoggedTunableNumber("Turret/kD", ShooterConstants.kDTurret.get());
-	private final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance", ShooterConstants.kTurretAllowedError);
-	private final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.60);
-	// Soft limits in radians (±135 degrees)
-	private final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 2 * Math.PI);
-	private final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -Math.PI / 4); //TODO: move these into shooterconstants
-
+	private SparkMaxConfig turretConfig;	
 	private Rotation2d targetRotation = new Rotation2d();
 
 	public TurretSubsystemNeo() {
@@ -66,7 +56,12 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	 */
 	public void setSetpoint(Rotation2d targetTurretAngle) {
 		// Clamp targetAngle to the configured soft limit range
-		targetRotation = Rotation2d.fromRadians(Math.max(turretMinAngle.get(), Math.min(turretMaxAngle.get(), targetTurretAngle.getRadians())));
+		targetRotation = Rotation2d.fromRadians(
+			MathUtil.clamp(
+				targetTurretAngle.getRadians(),
+				ShooterConstants.turretMinAngle.get(),
+				ShooterConstants.turretMaxAngle.get())
+		);
 	}
 
 	public Rotation2d getSetpoint() {
@@ -167,15 +162,18 @@ public class TurretSubsystemNeo extends SubsystemBase {
 				.idleMode(IdleMode.kBrake)
 				.inverted(true)
 				.closedLoop
-					.outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
-					.p(turretKP.get())
-					.i(turretKI.get())
-					.d(turretKD.get())
-					.allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
-
+					.outputRange(-ShooterConstants.turretMaxPercentOutput.get(), ShooterConstants.turretMaxPercentOutput.get())
+					.p(ShooterConstants.kPTurret.get())
+					.i(ShooterConstants.kITurret.get())
+					.d(ShooterConstants.kDTurret.get())
+					.allowedClosedLoopError(ShooterConstants.turretTolerance.get(), ClosedLoopSlot.kSlot0)
+				.feedForward
+						.kS(ShooterConstants.kSTurret.get())
+						.kV(ShooterConstants.kVTurret.get())
+						.kA(ShooterConstants.kATurret.get());
 		turretConfig.softLimit
-				.forwardSoftLimit(turretMaxAngle.get())
-				.reverseSoftLimit(turretMinAngle.get())
+				.forwardSoftLimit(ShooterConstants.turretMaxAngle.get())
+				.reverseSoftLimit(ShooterConstants.turretMinAngle.get())
 				.forwardSoftLimitEnabled(true)
 				.reverseSoftLimitEnabled(true);
 
@@ -192,22 +190,26 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private void updateTurretPID() {
 		// Check if any values changed (using hashCode as ID)
 		int id = this.hashCode();
-		if (turretKP.hasChanged(id) || turretKI.hasChanged(id) ||
-				turretKD.hasChanged(id) || turretTolerance.hasChanged(id) ||
-				turretMaxPercentOutput.hasChanged(id)) {
+		if (ShooterConstants.kPTurret.hasChanged(id) || ShooterConstants.kITurret.hasChanged(id) ||
+				ShooterConstants.kDTurret.hasChanged(id) || ShooterConstants.turretTolerance.hasChanged(id) ||
+				ShooterConstants.turretMaxPercentOutput.hasChanged(id)) {
 
 			turretConfig.closedLoop
-					.outputRange(-turretMaxPercentOutput.get(), turretMaxPercentOutput.get())
-					.p(turretKP.get())
-					.i(turretKI.get())
-					.d(turretKD.get())
-					.allowedClosedLoopError(turretTolerance.get(), ClosedLoopSlot.kSlot0);
+					.outputRange(-ShooterConstants.turretMaxPercentOutput.get(), ShooterConstants.turretMaxPercentOutput.get())
+						.p(ShooterConstants.kPTurret.get())
+						.i(ShooterConstants.kITurret.get())
+						.d(ShooterConstants.kDTurret.get())
+					.allowedClosedLoopError(ShooterConstants.turretTolerance.get(), ClosedLoopSlot.kSlot0)
+					.feedForward
+						.kS(ShooterConstants.kSTurret.get())
+						.kV(ShooterConstants.kVTurret.get())
+						.kA(ShooterConstants.kATurret.get());
 
 			turretMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
 			Logger.recordOutput("Turret/PID Status",
 					String.format("Updated: P=%.3f I=%.3f D=%.3f MaxOut=%.2f",
-							turretKP.get(), turretKI.get(), turretKD.get(), turretMaxPercentOutput.get()));
+							ShooterConstants.kPTurret.get(), ShooterConstants.kITurret.get(), ShooterConstants.kDTurret.get(), ShooterConstants.turretMaxPercentOutput.get()));
 		}
 	}
 }

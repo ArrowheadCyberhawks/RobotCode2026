@@ -30,7 +30,7 @@ public final class ShooterConstants {
 
     // Flywheel (velocity control)
     public static final double kFlywheelGearRatio = 1.0;
-    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.40);
+    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.20);
     public static final LoggedTunableNumber kIFlywheel = new LoggedTunableNumber("Flywheel/kI", 0.0);
     public static final LoggedTunableNumber kDFlywheel = new LoggedTunableNumber("Flywheel/kD", 0.02);
     public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 0.12);
@@ -48,7 +48,10 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kSTurret = new LoggedTunableNumber("Turret/kS", 0.0);
     public static final LoggedTunableNumber kVTurret = new LoggedTunableNumber("Turret/kV", 0.0);
     public static final LoggedTunableNumber kATurret = new LoggedTunableNumber("Turret/kA", 0.0);
-    public static final double kTurretAllowedError = 0.05;
+    public static final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance", 0.05);
+	public static final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.60);
+	public static final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 2 * Math.PI);
+	public static final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -Math.PI / 4); //TODO: move these into shooterconstants
 
     // Hood (Motion Magic)
     public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 30.0/364.0;
