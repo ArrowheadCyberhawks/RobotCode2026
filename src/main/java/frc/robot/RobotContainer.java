@@ -49,6 +49,7 @@ import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
@@ -122,6 +123,14 @@ public class RobotContainer {
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
+	public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
+	// public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(
+	// flywheel,
+	// hood,
+	// turret
+	// );
+
+	// Intake subsystem
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
@@ -358,6 +367,10 @@ public class RobotContainer {
 						() -> flywheel.getVelocitySetpoint()
 								.plus(RadiansPerSecond.of(
 										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
+		driverController.povDown().whileTrue(
+				climberSubsystem.runClimberDown());
+		driverController.povUp().whileTrue(
+				climberSubsystem.runClimberUp());
 	}
 
 	private void configureTriggers() {
