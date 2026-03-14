@@ -112,14 +112,12 @@ public class FlywheelSubsystem extends SubsystemBase {
       
       // Configure current limits for FOC
       cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
-      cfg.CurrentLimits.SupplyCurrentLimitEnable = false;
+      cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
       cfg.CurrentLimits.StatorCurrentLimit = 40.0;
       cfg.CurrentLimits.StatorCurrentLimitEnable = true;
       follower.getConfigurator().apply(cfg);
       leader.getConfigurator().apply(cfg);
     }
-
-    // Get current velocity in rotations per second, convert to rad/s for internal use
 
   AngularVelocity currentVelocity = RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
 
@@ -168,7 +166,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     // Compute error in TalonFX-native units (RPS)
     double measuredRps = getVelocity().in(RotationsPerSecond);
     double errorRps = velocitySetpointRps - measuredRps;
-    double toleranceRps = velocityToleranceRps.get() / (2.0 * Math.PI); // convert rad/s -> rps
+    double toleranceRps = velocityToleranceRps.get(); // rps
 
     return Math.abs(velocitySetpointRps) > 1e-4 && Math.abs(errorRps) <= toleranceRps;
   }

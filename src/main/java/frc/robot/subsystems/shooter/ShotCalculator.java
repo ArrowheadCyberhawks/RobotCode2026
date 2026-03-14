@@ -117,6 +117,7 @@ public class ShotCalculator {
         // Calculate estimated pose while accounting for time between calculation
         Pose2d estimatedPose = poseSupplier.get();
         ChassisSpeeds robotRelativeVelocity = robotRelativeVelocitySupplier.get();
+        
         estimatedPose = estimatedPose.exp(
             new Twist2d(
                 robotRelativeVelocity.vxMetersPerSecond * phaseDelay,

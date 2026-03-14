@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.787546362339516,
-        "y": 5.4647218259629105
+        "x": 7.7653922967189715,
+        "y": 5.4517831669044226
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.771320959837102,
-        "y": 7.249516101454073
+        "x": 7.7491668942165575,
+        "y": 7.2365774423955855
       },
       "isLocked": false,
       "linkedName": "LeftNeutral"
@@ -53,7 +53,7 @@
   "folder": "Cycles",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -110.37643521383643
   },
   "useDefaultConstraints": true
 }

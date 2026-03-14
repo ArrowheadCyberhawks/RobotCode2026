@@ -151,25 +151,6 @@ public class RobotContainer {
 
 	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean);
 
-	// Command shootMode = Commands.sequence(
-	// 	// request AIM once on toggle
-	// 	new InstantCommand(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.AIM)),
-
-	// 	// continuously check for just-became-ready to trigger hopper
-	// 	Commands.run(
-	// 		() -> {
-	// 			if (shooterSubsystem.isReady()) {
-	// 				hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON);
-	// 			}
-	// 		},
-	// 		hopperSubsystem
-	// 	).until(() -> !shooterSubsystem.getState().equals(ShooterSubsystem.ShooterState.AIM)),
-
-	// 	// cleanup if interrupted
-	// 	new InstantCommand(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-	// );
-
-
 	public RobotContainer() {
 
 		// Register Named Commands for PathPlanner BEFORE creating any autos
@@ -181,8 +162,7 @@ public class RobotContainer {
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 		// and the hood/turret won't adjust based on distance!
 
-		// TODO: simplify the number of suppliers given by just giving robotrelative speeds and pose and determining
-		// the rest in ShotCalculator
+		// TODO: simplify the number of suppliers given by just giving robotrelative speeds and pose
 		ShotCalculator.getInstance().setPoseSupplier(drivetrain::getPose);
 		ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
 		ShotCalculator.getInstance().setFieldVelocitySupplier(
@@ -341,7 +321,6 @@ public class RobotContainer {
 								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
 								() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 		
-		//TODO: use these instead to avoid conflicts with the shootersubsystem (I added a couple things)
 		manipulatorController.rightStick().whileTrue(
 			shooterSubsystem.manualTurretCommand(() -> Rotation2d.fromDegrees(turret.getSetpoint().getDegrees() + -Math.pow(manipulatorController.getRightX(), 3) * 2.0))
 			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(manipulatorController.getRightY(), 3) * 0.5))))
@@ -399,20 +378,6 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("HopperOff",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
-
-		// TODO: Uncomment when shooter subsystem is enabled
-		// Shooter Commands - Start shooting sequence
-		// NamedCommands.registerCommand("StartShoot",
-		// Commands.sequence(
-		// // First, start aiming
-		// Commands.runOnce(() -> shooterSubsystem.startAiming()),
-		// // Wait until shooter is ready to shoot
-		// Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
-		// // Once ready, turn on the hopper to feed the ball
-		// Commands.runOnce(() ->
-		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-		// )
-		// );
 
 		// Shooter Commands - Stop all shooting motors
 		NamedCommands.registerCommand("StopShoot",
