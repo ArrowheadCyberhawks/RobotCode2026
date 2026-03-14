@@ -1,25 +1,24 @@
 package frc.robot.subsystems.climber;
+import frc.robot.util.LoggedTunableNumber;
 
 public class ClimberConstants {
         // CAN IDs
-        public static final int kLeftMotorId = 30; //this is the one we are using
-        public static final int kRightMotorId = 31; //this we are not using
+        public static final int kClimberMotorId = 30;
     
         // Gear ratio: motor rotations per climber rotation
-        public static final double kClimberGearRatio = 100.0;
+        public static final double kClimberGearRatio = 45;
     
-        // Motion Magic constraints (motor-side, rotations)
-        public static final double kClimbCruiseRps = 2.0;     // motor rotations/sec
-        public static final double kClimbAccelRps2 = 4.0;    // motor rotations/sec^2
+        // PID
+        public static final LoggedTunableNumber kPClimb = new LoggedTunableNumber("Climber/P", 0.0);
+        public static final LoggedTunableNumber kIClimb = new LoggedTunableNumber("Climber/I", 0.0);
+        public static final LoggedTunableNumber kDClimb = new LoggedTunableNumber("Climber/D", 0.0);
+        public static final LoggedTunableNumber kGClimb = new LoggedTunableNumber("Climber/G", 0.0);
+        public static final LoggedTunableNumber kVClimb = new LoggedTunableNumber("Climber/V", 0.0);
+        public static final LoggedTunableNumber kAClimb = new LoggedTunableNumber("Climber/A", 0.0);
     
-        // PID + FF
-        public static final double kPClimb = 60.0;
-        public static final double kIClimb = 0.0;
-        public static final double kDClimb = 4.0;
-        public static final double kGClimb = 0.4;  // gravity feedforward
-        public static final double kVClimb = 0.0;
-        public static final double kAClimb = 0.0;
-    
+        public static final double L1 = 0.6858; // bar height in meters
+        public static final double climberHeight = 0; // climber height in meters
+
         private ClimberConstants() {}
 
 }
