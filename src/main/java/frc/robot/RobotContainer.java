@@ -389,9 +389,9 @@ public class RobotContainer {
 								.plus(RadiansPerSecond.of(
 										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
 		driverController.povDown().whileTrue(
-				climberSubsystem.climbCommand(0.5));
+				climberSubsystem.runClimberDown());
 		driverController.povUp().whileTrue(
-				climberSubsystem.climbCommand(-0.5));
+				climberSubsystem.runClimberUp());
 	}
 
 	/**

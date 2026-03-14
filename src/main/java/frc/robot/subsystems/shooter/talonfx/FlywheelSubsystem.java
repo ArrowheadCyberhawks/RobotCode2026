@@ -70,6 +70,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     
     // Set neutral mode to coast for flywheel
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    
 
     // Configure Slot0 closed-loop gains (used by VelocityTorqueCurrentFOC)
     // Note: VelocityTorqueCurrentFOC uses kP, kI, kD, kV, kS like VelocityDutyCycle
