@@ -27,7 +27,7 @@ public class ShootCommand extends Command {
         this.inTrench = inTrench;
         addRequirements(shooter, hopper);
         //RETEST THE TRENCH WITH THIS QUICK FIX IF IT  IS USED AT SOME POINT, MIGHT CAUSE ISSUES
-        //addRequirements(shooter, hopper, shooter.getHood(), shooter.getTurret(), shooter.getFlywheel());
+        addRequirements(shooter, hopper, shooter.getHoodSubsystem(), shooter.getTurretSubsystem(), shooter.getFlywheelSubsystem());
     }
 
     @Override

@@ -17,7 +17,7 @@ import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
@@ -48,7 +48,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private final SlewRateLimiter setpointLimiter = new SlewRateLimiter(160.0);
 
   // Tuning published in NetworkTables via LoggedTunableNumber (used for runtime tolerances)
-  private static final LoggedTunableNumber velocityTolerance =
+  private static final LoggedTunableNumber velocityToleranceRps =
       new LoggedTunableNumber("Flywheel/VelocityTolerance", 5.0);
 
   public FlywheelSubsystem(int leaderId, int followerId) {
@@ -140,17 +140,13 @@ public class FlywheelSubsystem extends SubsystemBase {
   }
 
   // setpoint runner used by commands and direct callers
-  public void runVelocity(AngularVelocity velocity) {
+  public void setSetpoint(AngularVelocity velocity) {
     double targetRps = velocity.in(RotationsPerSecond);
     double minRps = ShooterConstants.kFlywheelMinVel.in(RotationsPerSecond);
     double maxRps = ShooterConstants.kFlywheelMaxVel.in(RotationsPerSecond);
 
     // Apply slew rate limiting and clamp in TalonFX-native units (rotations per second)
-    velocitySetpointRps = MathUtil.clamp(targetRps, minRps, maxRps); //TODO: why doesn't the slew rate limiter work?
-
-    // The slew rate limiter didn't work because it never calculated velocitySetpointRps using the rate limiter :D
-    velocitySetpointRps = setpointLimiter.calculate(velocitySetpointRps);
-    System.out.println(getVelocitySetpoint().in(RotationsPerSecond));
+    velocitySetpointRps = setpointLimiter.calculate(MathUtil.clamp(targetRps, minRps, maxRps));
   }
 
   public void stop() {
@@ -164,26 +160,25 @@ public class FlywheelSubsystem extends SubsystemBase {
     return RotationsPerSecond.of(leader.getVelocity().getValueAsDouble());
   }
 
-  public AngularVelocity getVelocitySetpoint() {
+  public AngularVelocity getSetpoint() {
     return RotationsPerSecond.of(velocitySetpointRps);
   }
 
   public boolean isAtGoal() {
     // Compute error in TalonFX-native units (RPS)
-    double measuredRps = leader.getVelocity().getValueAsDouble();
+    double measuredRps = getVelocity().in(RotationsPerSecond);
     double errorRps = velocitySetpointRps - measuredRps;
-    double toleranceRps = velocityTolerance.get() / (2.0 * Math.PI); // convert rad/s -> rps
+    double toleranceRps = velocityToleranceRps.get() / (2.0 * Math.PI); // convert rad/s -> rps
 
     return Math.abs(velocitySetpointRps) > 1e-4 && Math.abs(errorRps) <= toleranceRps;
   }
 
   public Command trackTarget() {
-    //TODO: get rid of radians per second completely and just run everything in rotations per second since TalonFX uses that natively and it's less confusing to convert back and forth all the time
-    return runEnd(() -> runVelocity(RadiansPerSecond.of(ShotCalculator.getInstance().getData().flywheelSpeed())), this::stop);
+    return runEnd(() -> setSetpoint(RotationsPerSecond.of(ShotCalculator.getInstance().getData().flywheelSpeed())), this::stop);
   }
 
   public Command runFixedCommand(Supplier<AngularVelocity> velocity) {
-    return runEnd(() -> runVelocity(velocity.get()), this::stop);
+    return runEnd(() -> setSetpoint(velocity.get()), this::stop);
   }
 
   public Command stopCommand() {

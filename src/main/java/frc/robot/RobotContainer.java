@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -148,7 +149,8 @@ public class RobotContainer {
 			new Trigger(() -> FieldZones.RIGHTPASS().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
 
-	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean);
+	// CAREFUL: this command will not interrupt itself when another command attempts to use the shooter subsystem, so it will not be affected by other commands such as the trench trigger.
+	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
 
 	// Command shootMode = Commands.sequence(
 	// 	// request AIM once on toggle
@@ -247,16 +249,6 @@ public class RobotContainer {
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
 
-		// Left bumper - Toggle intake between RUN and OFF
-		// driverController.leftTrigger().onTrue(Commands.runOnce(() -> {
-		// IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
-		// if (currentState == IntakeConstants.IntakeState.RUN) {
-		// intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
-		// } else {
-		// intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
-		// }
-		// }));
-
 		// Right bumper - Toggle shooter
 		driverController.rightBumper().toggleOnTrue(shootMode);
 
@@ -349,35 +341,16 @@ public class RobotContainer {
 						hopperSubsystem.runEnd(
 								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
 								() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
-
-		// Manipulator controller - Manual controls for testing
-		// manipulatorController.rightStick().whileTrue(
-		// 		hood.run(() -> hood.moveHoodTo(Rotation2d.fromDegrees(
-		// 				hood.getHoodTargetAngle().getDegrees() - Math.pow(manipulatorController.getRightY(), 3) * 0.5)))
-		// 				.alongWith(
-		// 						turret.run(() -> turret
-		// 								.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees()
-		// 										- Math.pow(manipulatorController.getRightX(), 3) * 2.0)))));
-		// manipulatorController.rightStick().whileTrue(
-		// 	turret.run(() -> turret.setTurretTarget(Rotation2d.fromDegrees(75)))
-		// );
 		
 		//TODO: use these instead to avoid conflicts with the shootersubsystem (I added a couple things)
 		manipulatorController.rightStick().whileTrue(
-			shooterSubsystem.manualTurret(() -> -Math.pow(manipulatorController.getRightX(), 3) * 2.0)
-			.alongWith(shooterSubsystem.manualHood(() -> Math.pow(manipulatorController.getRightY(), 3) * 0.5))
+			shooterSubsystem.manualTurretCommand(() -> turret.getSetpoint().plus(Rotation2d.fromDegrees(-Math.pow(manipulatorController.getRightX(), 3) * 2.0)))
+			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(manipulatorController.getRightY(), 3) * 0.5))))
 		);
 		manipulatorController.leftStick().toggleOnTrue(
-			shooterSubsystem.manualFlywheel(() -> -manipulatorController.getLeftY()));
-
-		// manipulatorController.leftStick().toggleOnTrue(
-		// 		flywheel.runFixedCommand(
-		// 				() -> {System.out.println(flywheel.getVelocitySetpoint().in(RotationsPerSecond));
-		// 					return RotationsPerSecond.of(20); // TODO: IT DOESN'T WORK BECAUSE STATE MACHINES AAAAAAAAAAAAAAA
-		// 				// flywheel.getVelocitySetpoint()
-		// 				// 		.plus(RadiansPerSecond.of(
-		// 				// 				MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)));
-		// 							}));
+			shooterSubsystem.manualFlywheelCommand(() -> flywheel.getSetpoint()
+								.plus(RotationsPerSecond.of(
+										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
 	}
 
 	private void configureTriggers() {
@@ -398,7 +371,6 @@ public class RobotContainer {
 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
 		
-        //inTrench.whileTrue(hood.down());
 		inTrench.whileTrue(shooterSubsystem.trenchCommand());
 		// inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
 	}

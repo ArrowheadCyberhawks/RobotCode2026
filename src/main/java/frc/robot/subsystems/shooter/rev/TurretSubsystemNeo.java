@@ -64,12 +64,12 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	 * 
 	 * @param targetTurretAngle Target angle as a Rotation2d. Zero is forward, positive is CCW, negative is CW.
 	 */
-	public void setTurretTarget(Rotation2d targetTurretAngle) {
+	public void setSetpoint(Rotation2d targetTurretAngle) {
 		// Clamp targetAngle to the configured soft limit range
 		targetRotation = Rotation2d.fromRadians(Math.max(turretMinAngle.get(), Math.min(turretMaxAngle.get(), targetTurretAngle.getRadians())));
 	}
 
-	public Rotation2d getTurretTarget() {
+	public Rotation2d getSetpoint() {
 		return targetRotation;
 	}
 
@@ -150,7 +150,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 				Rotation2d desired = data.turretAngle();
 				Logger.recordOutput("Turret/ShotCalc Angle", desired);
 				if (data.isValid()) {
-					setTurretTarget(desired);
+					setSetpoint(desired);
 					Logger.recordOutput("Turret/ShotCalc Angle Goal", desired);
 				}
 			}

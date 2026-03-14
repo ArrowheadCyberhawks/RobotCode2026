@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -78,8 +79,8 @@ public final class ShooterConstants {
             return degrees;
         }
 
-        public Angle getAngle() {
-            return Degrees.of(degrees);
+        public Rotation2d getRotation() {
+            return Rotation2d.fromDegrees(degrees);
         }
     }
 

@@ -73,15 +73,11 @@ public class HoodSubsystemNeo extends SubsystemBase {
     hoodMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
-  public void moveHoodTo(ShooterConstants.HoodPosition pos) {
-    moveHoodTo(Rotation2d.fromDegrees(pos.getDegrees()));
-  }
-
   /**
    * Move the hood to a specific angle. The angle will be clipped to the configured min/max range.
    * @param angle Target angle as a Rotation2d. Zero is straight up, positive shoots the ball at a lower angle (raises the hood).
    */
-  public void moveHoodTo(Rotation2d angle) {
+  public void setSetpoint(Rotation2d angle) {
     double degrees = angle.getDegrees();
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
@@ -120,7 +116,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
     return Rotation2d.fromRadians(encoder.getPosition());
   }
 
-  public Rotation2d getHoodTargetAngle() {
+  public Rotation2d getSetpoint() {
     return Rotation2d.fromRadians(pid.getSetpoint());
   }
 
@@ -150,13 +146,13 @@ public class HoodSubsystemNeo extends SubsystemBase {
 
   public Command trackTarget() {
     return run(() -> 
-      moveHoodTo(shotCalculator.getData().hoodAngle())
+      setSetpoint(shotCalculator.getData().hoodAngle())
     );
   }
 
   public Command down() {
     return runOnce(() -> {
-      moveHoodTo(ShooterConstants.HoodPosition.STOW);
+      setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
     });
   }
 }

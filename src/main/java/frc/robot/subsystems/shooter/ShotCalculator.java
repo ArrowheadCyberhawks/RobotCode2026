@@ -102,7 +102,7 @@ public class ShotCalculator {
         hoodAngleMap.put(2.16, Rotation2d.fromDegrees(30));
         hoodAngleMap.put(7.104, Rotation2d.fromDegrees(46.38));
 
-        // Populate the flywheel speed calibration map (distance -> RPS). (radians per second)
+        // Populate the flywheel speed calibration map (distance -> RPS). (rotations per second)
         flywheelSpeedMap.put(2.16, 19.89); //2.16
         flywheelSpeedMap.put(43.0, 31.6); //7.104
 
