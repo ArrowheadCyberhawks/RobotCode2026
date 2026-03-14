@@ -19,20 +19,25 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  * control. Both motors are commanded together here so higher-level commands
  * don't need to duplicate logic.
  */
+
+ /** Side note: we currently need to rewrite some of the code. Our climber only uses one motor
+  *  (CAN ID 30), so we need to either remove the second motor code or rewrite it so it is irrelevent. 
+  TLDR; keep kleft motor, rewrite/remove right motor.
+  */
 public class ClimberSubsystem extends SubsystemBase {
 
     private final TalonFX leftMotor = new TalonFX(ClimberConstants.kLeftMotorId);
-    private final TalonFX rightMotor = new TalonFX(ClimberConstants.kRightMotorId);
+   // private final TalonFX rightMotor = new TalonFX(ClimberConstants.kRightMotorId);
     private final MotionMagicVoltage climbRequest = new MotionMagicVoltage(0);
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
     private final NeutralOut neutralOut = new NeutralOut();
 
     public ClimberSubsystem() {
         configureMotor(leftMotor);
-        configureMotor(rightMotor);
+        //configureMotor(rightMotor);
         // Zero encoders at startup
-        leftMotor.setPosition(0.0);
-        rightMotor.setPosition(0.0);
+        leftMotor.setPosition(0.0); //need to fact check
+        //rightMotor.setPosition(0.0);
     }
 
     private void configureMotor(TalonFX motor) {
@@ -58,7 +63,7 @@ public class ClimberSubsystem extends SubsystemBase {
      */
     public void moveToMotorRotations(double motorRotations) {
         leftMotor.setControl(climbRequest.withPosition(motorRotations));
-        rightMotor.setControl(climbRequest.withPosition(motorRotations));
+       // rightMotor.setControl(climbRequest.withPosition(motorRotations));
     }
 
     /**
@@ -83,15 +88,19 @@ public class ClimberSubsystem extends SubsystemBase {
      */
     public void setVelocityRps(double motorRps) {
         leftMotor.setControl(velocityRequest.withVelocity(motorRps));
-        rightMotor.setControl(velocityRequest.withVelocity(motorRps));
+      //  rightMotor.setControl(velocityRequest.withVelocity(motorRps));
     }
 
     /**
      * Stop both motors (neutral output / brake behavior will hold position).
      */
+
+
+
+    
     public void stop() {
         leftMotor.setControl(neutralOut);
-        rightMotor.setControl(neutralOut);
+     //   rightMotor.setControl(neutralOut);
     }
 
     /**
@@ -99,7 +108,7 @@ public class ClimberSubsystem extends SubsystemBase {
      */
     public void resetEncoders() {
         leftMotor.setPosition(0.0);
-        rightMotor.setPosition(0.0);
+        //rightMotor.setPosition(0.0);
     }
 
     /**
@@ -107,8 +116,9 @@ public class ClimberSubsystem extends SubsystemBase {
      */
     public double getMotorRotations() {
         double left = leftMotor.getPosition().getValueAsDouble();
-        double right = rightMotor.getPosition().getValueAsDouble();
-        return (left + right) / 2.0;
+        //double right = rightMotor.getPosition().getValueAsDouble();
+        return (left) / 2.0; //alternative to needing to keep right motor in code
+        //return (left + right) / 2.0;
     }
 
     @Override
@@ -117,4 +127,7 @@ public class ClimberSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Climber/MotorRotations", getMotorRotations());
     }
 
+    
+//next step is to set up the maximum height (zero out climber before turning robot on)
 }
+ 

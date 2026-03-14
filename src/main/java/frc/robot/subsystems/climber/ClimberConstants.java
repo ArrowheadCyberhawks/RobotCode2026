@@ -2,8 +2,8 @@ package frc.robot.subsystems.climber;
 
 public class ClimberConstants {
         // CAN IDs
-        public static final int kLeftMotorId = 30;
-        public static final int kRightMotorId = 31;
+        public static final int kLeftMotorId = 30; //this is the one we are using
+        public static final int kRightMotorId = 31; //this we are not using
     
         // Gear ratio: motor rotations per climber rotation
         public static final double kClimberGearRatio = 100.0;
