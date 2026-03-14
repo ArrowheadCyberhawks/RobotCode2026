@@ -2,12 +2,9 @@ package frc.robot.subsystems.shooter.rev;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
@@ -15,11 +12,17 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
-
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.util.LoggedTunableNumber;
+
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.shooter.ShooterConstants.*;
 /**
  * Turret implementation using REV CANSparkMax (NEO).
@@ -28,7 +31,9 @@ import static frc.robot.subsystems.shooter.ShooterConstants.*;
 public class TurretSubsystemNeo extends SubsystemBase {
 	private final SparkMax turretMotor;
 	private final RelativeEncoder encoder;
-	private final SparkClosedLoopController turretController;
+	private final PIDController pidController;
+	private SimpleMotorFeedforward feedforward;
+	
 	private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
 	private SparkMaxConfig turretConfig;	
@@ -41,7 +46,17 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	public TurretSubsystemNeo(int motorId) {
 		turretMotor = new SparkMax(motorId, MotorType.kBrushless);
 		encoder = turretMotor.getEncoder();
-		turretController = turretMotor.getClosedLoopController();
+
+		pidController = new PIDController(
+			ShooterConstants.kPTurret.get(),
+			ShooterConstants.kITurret.get(),
+			ShooterConstants.kDTurret.get()
+		);
+		feedforward = new SimpleMotorFeedforward(
+			ShooterConstants.kSTurret.get(),
+			ShooterConstants.kVTurret.get(),
+			ShooterConstants.kATurret.get()
+		);
 
 		turretConfig = new SparkMaxConfig();
 
@@ -76,13 +91,13 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		}
 	}
 
-	public void setTurretVoltage(double volts) {
+	public void setTurretVoltage(Voltage volts) {
 		turretMotor.setVoltage(volts);
 	}
 
 	public void stopTurret() {
 		targetRotation = getTurretRotation(); // Update target to current position to prevent jumps when resuming control
-		turretController.setSetpoint(targetRotation.getRadians(), ControlType.kPosition, ClosedLoopSlot.kSlot0);
+		turretMotor.setVoltage(0.0);
 	}
 
 	/**
@@ -128,11 +143,25 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		// Update PID constants if they've changed in NetworkTables
 		updateTurretPID();
 		
-		turretController.setSetpoint(targetRotation.getRadians(), ControlType.kPosition, ClosedLoopSlot.kSlot0);
+		double currentPos = getTurretRotation().getRadians();
+		double targetPos = targetRotation.getRadians();
+
+		double pidOut = pidController.calculate(currentPos, targetPos);
+		
+		// Use ProfiledPIDController's current setpoint velocity for feedforward
+		double setpointVelocity = pidController.getSetpoint();
+		double ffOut = isAtGoal() ? 0.0 : feedforward.calculate(setpointVelocity);
+
+		// Apply voltage clamp
+		double maxVolts = ShooterConstants.turretMaxPercentOutput.get() * 12.0;
+		double totalOut = MathUtil.clamp(pidOut, -maxVolts, maxVolts);
+
+		turretMotor.setVoltage(Volts.of(totalOut));
 
 		// Log telemetry
 		Logger.recordOutput("Turret/Current Position", getTurretRotation());
 		Logger.recordOutput("Turret/Target Position", targetRotation);
+		Logger.recordOutput("Turret/Current", turretMotor.getOutputCurrent());
 		Logger.recordOutput("Turret/AtGoal", isAtGoal());
 	}
 
@@ -160,24 +189,14 @@ public class TurretSubsystemNeo extends SubsystemBase {
 
 		turretConfig
 				.idleMode(IdleMode.kBrake)
-				.inverted(true)
-				.closedLoop
-					.outputRange(-ShooterConstants.turretMaxPercentOutput.get(), ShooterConstants.turretMaxPercentOutput.get())
-					.p(ShooterConstants.kPTurret.get())
-					.i(ShooterConstants.kITurret.get())
-					.d(ShooterConstants.kDTurret.get())
-					.allowedClosedLoopError(ShooterConstants.turretTolerance.get(), ClosedLoopSlot.kSlot0)
-				.feedForward
-						.kS(ShooterConstants.kSTurret.get())
-						.kV(ShooterConstants.kVTurret.get())
-						.kA(ShooterConstants.kATurret.get());
+				.inverted(true);
 		turretConfig.softLimit
 				.forwardSoftLimit(ShooterConstants.turretMaxAngle.get())
 				.reverseSoftLimit(ShooterConstants.turretMinAngle.get())
 				.forwardSoftLimitEnabled(true)
 				.reverseSoftLimitEnabled(true);
 
-		turretConfig.smartCurrentLimit(20);
+		turretConfig.smartCurrentLimit(40);
 
 		// Use kNoPersistParameters to avoid slow flash writes
 		turretMotor.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -194,19 +213,19 @@ public class TurretSubsystemNeo extends SubsystemBase {
 				ShooterConstants.kDTurret.hasChanged(id) || ShooterConstants.turretTolerance.hasChanged(id) ||
 				ShooterConstants.turretMaxPercentOutput.hasChanged(id)) {
 
-			turretConfig.closedLoop
-					.outputRange(-ShooterConstants.turretMaxPercentOutput.get(), ShooterConstants.turretMaxPercentOutput.get())
-						.p(ShooterConstants.kPTurret.get())
-						.i(ShooterConstants.kITurret.get())
-						.d(ShooterConstants.kDTurret.get())
-					.allowedClosedLoopError(ShooterConstants.turretTolerance.get(), ClosedLoopSlot.kSlot0)
-					.feedForward
-						.kS(ShooterConstants.kSTurret.get())
-						.kV(ShooterConstants.kVTurret.get())
-						.kA(ShooterConstants.kATurret.get());
+			pidController.setPID(
+				ShooterConstants.kPTurret.get(),
+				ShooterConstants.kITurret.get(),
+				ShooterConstants.kDTurret.get()
+			);
 
-			turretMotor.configure(turretConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+			feedforward = new SimpleMotorFeedforward(
+				ShooterConstants.kSTurret.get(),
+				ShooterConstants.kVTurret.get(),
+				ShooterConstants.kATurret.get()
+			);
 
+			// We still log the change
 			Logger.recordOutput("Turret/PID Status",
 					String.format("Updated: P=%.3f I=%.3f D=%.3f MaxOut=%.2f",
 							ShooterConstants.kPTurret.get(), ShooterConstants.kITurret.get(), ShooterConstants.kDTurret.get(), ShooterConstants.turretMaxPercentOutput.get()));

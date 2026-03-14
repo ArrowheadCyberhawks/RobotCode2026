@@ -99,8 +99,8 @@ public class ShotCalculator {
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
-        hoodAngleMap.put(2.16, Rotation2d.fromDegrees(30));
-        hoodAngleMap.put(7.104, Rotation2d.fromDegrees(46.38));
+        hoodAngleMap.put(2.16, Rotation2d.fromDegrees(15));
+        hoodAngleMap.put(7.104, Rotation2d.fromDegrees(30));
 
         // Populate the flywheel speed calibration map (distance -> RPS). (rotations per second)
         flywheelSpeedMap.put(2.16, 19.89); //2.16
@@ -180,8 +180,8 @@ public class ShotCalculator {
         double fieldRelativeAngleRad = target.minus(lookaheadPose.getTranslation()).getAngle().getRadians();
         // Convert to robot-relative by subtracting robot heading
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
-        // Normalize to [-π, π]
-        double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
+        // Normalize to [0, 2π]
+        double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad)) + Math.PI;
 
         // Filter the turret angle to smooth noisy measurements
         double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);

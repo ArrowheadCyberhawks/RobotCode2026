@@ -33,6 +33,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -322,7 +323,7 @@ public class RobotContainer {
 								() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 		
 		manipulatorController.rightStick().whileTrue(
-			shooterSubsystem.manualTurretCommand(() -> Rotation2d.fromDegrees(turret.getSetpoint().getDegrees() + -Math.pow(manipulatorController.getRightX(), 3) * 2.0))
+			shooterSubsystem.manualTurretCommand(() -> Rotation2d.fromDegrees(turret.getSetpoint().getDegrees() + -Math.pow(manipulatorController.getRightX(), 5) * 2.0))
 			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(manipulatorController.getRightY(), 3) * 0.5))))
 		);
 		manipulatorController.leftStick().toggleOnTrue(
