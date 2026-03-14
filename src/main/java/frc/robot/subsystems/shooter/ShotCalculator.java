@@ -16,8 +16,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import java.util.function.Supplier;
 import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.util.FieldConstants;
 import frc.robot.util.LoggedTunableNumber;
+import frc.robot.util.field.FieldConstants;
 import frc.robot.util.geometry.AllianceFlipUtil;
 import frc.robot.util.geometry.GeomUtil;
 import org.littletonrobotics.junction.Logger;
@@ -94,7 +94,7 @@ public class ShotCalculator {
         // phase delay used to offset calculations for shooter processing time.
         minDistance = 2.16;
         maxDistance = 5.60;
-        phaseDelay = 0.3; // started at .03, increased to 0.09 for better accuracy, will change based on
+        phaseDelay = 0.03; // started at .03, increased to 0.09 for better accuracy, will change based on
 
         // Populate the hood angle calibration map (distance -> angle). These
         // values should be tuned on the field; interpolation fills in values
@@ -102,9 +102,9 @@ public class ShotCalculator {
         hoodAngleMap.put(2.16, Rotation2d.fromDegrees(30));
         hoodAngleMap.put(7.104, Rotation2d.fromDegrees(46.38));
 
-        // Populate the flywheel speed calibration map (distance -> RPS).  (radians per second)
-        flywheelSpeedMap.put(2.16, 19.89); //150
-        flywheelSpeedMap.put(7.104, 31.6); //250
+        // Populate the flywheel speed calibration map (distance -> RPS). (radians per second)
+        flywheelSpeedMap.put(2.16, 19.89); //2.16
+        flywheelSpeedMap.put(43.0, 31.6); //7.104
 
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.
@@ -114,38 +114,48 @@ public class ShotCalculator {
     }
 
     public ShotData getData() {
-        // Calculate estimated pose while accounting for time between calculation and
-        // the shot
+        // Calculate estimated pose while accounting for time between calculation
         Pose2d estimatedPose = poseSupplier.get();
         ChassisSpeeds robotRelativeVelocity = robotRelativeVelocitySupplier.get();
         estimatedPose = estimatedPose.exp(
-                new Twist2d(
-                        robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
-                        robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
-                        robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
-
+            new Twist2d(
+                robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
+                robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
+                robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
+        
         // Calculate distance from turret to target
         // Apply currently-configured target (default is the hub) with alliance flip
         Translation2d target = AllianceFlipUtil.apply(this.target);
         // Use the configured robot->turret transform from ShooterConstants (drop Z)
         Translation3d robotToTurretTrans = ShooterConstants.kRobotToTurretTransform.getTranslation();
         Pose2d turretPosition = estimatedPose.transformBy(
-                new Transform2d(
-                        new Translation2d(robotToTurretTrans.getX(), robotToTurretTrans.getY()),
-                        new Rotation2d()));
+            new Transform2d(
+                new Translation2d(robotToTurretTrans.getX(), robotToTurretTrans.getY()),
+                new Rotation2d()));
         double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
 
         // Calculate field relative turret velocity
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
+        // double turretVelocityX = robotVelocity.vxMetersPerSecond
+        //     //+ robotVelocity.omegaRadiansPerSecond
+        //     + (robotToTurretTrans.getY() * Math.cos(robotAngle) //should be * once it's added
+        //     + robotToTurretTrans.getX() * Math.sin(robotAngle));
+        // double turretVelocityY = robotVelocity.vyMetersPerSecond
+        //     //+ robotVelocity.omegaRadiansPerSecond
+        //     + (robotToTurretTrans.getX() * Math.cos(robotAngle)
+        //     + robotToTurretTrans.getY() * Math.sin(robotAngle));
+
+        // v_robot + w x r
         double turretVelocityX = robotVelocity.vxMetersPerSecond
-                //+ robotVelocity.omegaRadiansPerSecond
-                * (robotToTurretTrans.getY() * Math.cos(robotAngle)
-                        - robotToTurretTrans.getX() * Math.sin(robotAngle));
+            - robotVelocity.omegaRadiansPerSecond //maybe need to be +
+                * (robotToTurretTrans.getX() * Math.sin(robotAngle)
+                + robotToTurretTrans.getY() * Math.cos(robotAngle));
+
         double turretVelocityY = robotVelocity.vyMetersPerSecond
-                //+ robotVelocity.omegaRadiansPerSecond
+            + robotVelocity.omegaRadiansPerSecond
                 * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-                        - robotToTurretTrans.getY() * Math.sin(robotAngle));
+                - robotToTurretTrans.getY() * Math.sin(robotAngle));
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
@@ -157,13 +167,15 @@ public class ShotCalculator {
             double offsetX = turretVelocityX * timeOfFlight;
             double offsetY = turretVelocityY * timeOfFlight;
             lookaheadPose = new Pose2d(
-                    turretPosition.getTranslation().minus(new Translation2d(offsetX, offsetY)),
-                    turretPosition.getRotation());
+                //CHANGE THIS IF LOOKAHEAD IS OPPOSITE
+                turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
+                turretPosition.getRotation());
             lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         }
 
         // Calculate parameters accounted for imparted velocity
         // Get field-relative angle from turret to target
+        // CHANGE THIS IF MOVING IN OPPOSITE DIRECTION
         double fieldRelativeAngleRad = target.minus(lookaheadPose.getTranslation()).getAngle().getRadians();
         // Convert to robot-relative by subtracting robot heading
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
@@ -184,6 +196,7 @@ public class ShotCalculator {
         Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
         Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
         Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
+        //Logger.recordOutput("ShotCalculator/Target", );
 
         hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance);
         // Smooth hood angle as well
@@ -202,7 +215,7 @@ public class ShotCalculator {
         lastHoodAngle = hoodAngle;
         // Valid only when distance in range AND turret angle is within +/- 3/4*pi
         latestData = new ShotData(
-                true,//lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
+                true, //lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
                 //&& ((filteredTurretAngleRad) >= (1.0 / 2.0) * Math.PI && (filteredTurretAngleRad) <= (1.0/4.0) * Math.PI), // clamp to 180 degree max range (1/4 pi on each side)
                 turretAngle,
                 turretVelocity,
@@ -256,5 +269,9 @@ public class ShotCalculator {
      */
     public Translation2d getTarget() {
         return AllianceFlipUtil.apply(this.target);
+    }
+
+    public boolean shotValid() {
+        return latestData != null && latestData.isValid;
     }
 }

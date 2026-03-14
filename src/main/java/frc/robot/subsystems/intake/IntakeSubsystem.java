@@ -49,7 +49,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     private double rollerTargetPercent = 0.0;
     /** Current high-level intake state (controls pivot + roller behavior) */
-    private IntakeState intakeState = IntakeState.STOW;
+    private IntakeState intakeState = IntakeState.IDLE;
 
     public IntakeSubsystem() {
         // Create motors
@@ -122,7 +122,9 @@ public class IntakeSubsystem extends SubsystemBase {
         // Motor output settings - simple voltage control (no PID on motor controller)
         rollerConfig
             .idleMode(IdleMode.kCoast)
-            .inverted(false);
+            .inverted(false)
+            .smartCurrentLimit(40, 30);
+            
 
         // Apply configuration
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -262,6 +264,8 @@ public class IntakeSubsystem extends SubsystemBase {
         Logger.recordOutput("Intake/Pivot/FF Output", feedforward);
         Logger.recordOutput("Intake/Pivot/Gravity Output", gravityCompensation);
         Logger.recordOutput("Intake/Pivot/Total Output", totalOutput);
+        Logger.recordOutput("Intake/Pivot Current", pivotMotor.getOutputCurrent());
+        Logger.recordOutput("Intake/Roller Current", rollerMotor.getOutputCurrent());
     }
 
     /**

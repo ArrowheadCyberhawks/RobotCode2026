@@ -66,7 +66,7 @@ public final class IntakeConstants {
     public enum IntakeState {
         STOW(Degrees.of(110.0), 0.0), // pivot up and rollers stopped
         IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
-        RUN(Degrees.of(0.0), 1.00),   // pivot down and rollers running to intake
+        RUN(Degrees.of(0.0), 0.5),   // pivot down and rollers running to intake
         REVERSE(Degrees.of(0.0), -1.00);
 
         public final Angle pivotTarget;

@@ -150,6 +150,12 @@ public class HoodSubsystem extends SubsystemBase {
         moveHoodToDegrees(data.hoodAngle().getDegrees());
     });
   }
+
+  public Command down() {
+    return runOnce(() -> {
+      moveHoodToDegrees(ShooterConstants.kHoodMinDegrees);
+    });
+  }
 }
 
 

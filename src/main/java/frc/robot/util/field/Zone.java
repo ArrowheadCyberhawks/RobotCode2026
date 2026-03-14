@@ -1,5 +1,5 @@
 //Based off of FRC 4481's explanation of zones: 
-package frc.robot.util;
+package frc.robot.util.field;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.button.Trigger;

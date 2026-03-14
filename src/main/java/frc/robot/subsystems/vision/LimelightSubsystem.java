@@ -15,6 +15,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -49,9 +50,9 @@ public class LimelightSubsystem extends SubsystemBase {
 	updateVisionPoseMT2(); // megatag2 is broken so just disable it
 	//updateVisionPoseMT1(false);
 	updateField(true);
-	if(DriverStation.isDisabled()) {
-		updateVisionPoseMT1(true);
-	}
+	// if(DriverStation.isDisabled()) {
+	// 	updateVisionPoseMT1(true);
+	// }
   }
 
   /**
@@ -94,14 +95,44 @@ public class LimelightSubsystem extends SubsystemBase {
 
 	public void updateVisionPoseMT2() {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = getPoseEstimateMT2();
+		
+		if (limelightMeasurementMT2 == null
+                || limelightMeasurementMT2.pose.equals(Pose2d.kZero)
+                || limelightMeasurementMT2.tagCount == 0
+                || limelightMeasurementMT2.rawFiducials == null
+                || limelightMeasurementMT2.rawFiducials.length == 0) {
+            return;
+        }
+			// not doing an OR here bc I want to be able to test them individually
+			boolean rejectUpdate = true;
 
-		if (limelightMeasurementMT2 != null && !limelightMeasurementMT2.pose.equals(Pose2d.kZero)) {
-			drivetrain.addVisionMeasurement(limelightMeasurementMT2.pose, Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds), VecBuilder.fill(.5,.5,9999999));
+			if (limelightMeasurementMT2.tagCount >= 2) {
+				rejectUpdate = false;
+			}
+
+			if (limelightMeasurementMT2.tagCount == 1 && limelightMeasurementMT2.avgTagArea > 0.7) {
+				rejectUpdate = false;
+			}
+
+			if (Math.abs(drivetrain.getState().Speeds.omegaRadiansPerSecond) > Units.degreesToRadians(450)) { // replace 1.0 with appropriate threshold
+				rejectUpdate = true;
+			}
+
+			// if (limelightMeasurementMT2.rawFiducials[0].ambiguity > 0.7) {
+			// 	rejectUpdate = true;
+			// }
+
+			if (!rejectUpdate) {
+				drivetrain.addVisionMeasurement(
+					limelightMeasurementMT2.pose,
+					Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds),
+					VecBuilder.fill(.7,.7,9999999));
+			}
+
 			// horrible inefficient garbage telemetry code
 			// SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
 			// SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
 			// limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
-		}
 	}
 
   public double getTX() {

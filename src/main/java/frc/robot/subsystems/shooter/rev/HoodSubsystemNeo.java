@@ -67,7 +67,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
     cfg.softLimit.forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
         .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
 
-    cfg.smartCurrentLimit(20);
+    cfg.smartCurrentLimit(15, 10);
 
     // Use kNoPersistParameters to avoid slow flash writes that cause 6-second delays
     hoodMotor.configure(cfg, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -145,11 +145,18 @@ public class HoodSubsystemNeo extends SubsystemBase {
     hoodMotor.setVoltage(Volts.of(pid.calculate(getHoodAngle().getRadians())));
     Logger.recordOutput("Shooter/Hood Angle", getHoodAngle().getDegrees());
     Logger.recordOutput("Shooter/Hood Current", hoodMotor.getOutputCurrent());
+    Logger.recordOutput("Shooter/Hood AtGoal", isAtGoal());
   }
 
   public Command trackTarget() {
     return run(() -> 
       moveHoodTo(shotCalculator.getData().hoodAngle())
     );
+  }
+
+  public Command down() {
+    return runOnce(() -> {
+      moveHoodTo(ShooterConstants.HoodPosition.STOW);
+    });
   }
 }

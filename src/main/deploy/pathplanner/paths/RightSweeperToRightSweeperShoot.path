@@ -8,27 +8,32 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.156624999999998,
-        "y": 0.1699431818181827
+        "x": 8.27,
+        "y": 0.11656529516994629
       },
       "isLocked": false,
       "linkedName": "RightSweeper"
     },
     {
       "anchor": {
-        "x": 2.879534090909091,
-        "y": 0.9
+        "x": 3.710661896243291,
+        "y": 0.6682289803220032
       },
       "prevControl": {
-        "x": 3.621625,
-        "y": 0.45680681818181823
+        "x": 4.619284436493739,
+        "y": 0.6357781753130587
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5748663101604281,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,7 +47,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": -0.6461078713718094
   },
   "reversed": false,
   "folder": "Sweepers",
