@@ -4,7 +4,9 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -28,19 +30,19 @@ public final class ShooterConstants {
 
     // Flywheel (velocity control)
     public static final double kFlywheelGearRatio = 1.0;
-    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.20);
+    public static final LoggedTunableNumber kPFlywheel = new LoggedTunableNumber("Flywheel/kP", 0.40);
     public static final LoggedTunableNumber kIFlywheel = new LoggedTunableNumber("Flywheel/kI", 0.0);
-    public static final LoggedTunableNumber kDFlywheel = new LoggedTunableNumber("Flywheel/kD", 0.0);
-    public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 0.15);
+    public static final LoggedTunableNumber kDFlywheel = new LoggedTunableNumber("Flywheel/kD", 0.02);
+    public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 0.12);
     public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.25);
 
-    public static final AngularVelocity kFlywheelMaxVel = RadiansPerSecond.of(55.0);
-    public static final AngularVelocity kFlywheelMinVel = RadiansPerSecond.of(10.0);
+    public static final AngularVelocity kFlywheelMaxVel = RotationsPerSecond.of(55.0);
+    public static final AngularVelocity kFlywheelMinVel = RotationsPerSecond.of(10.0);
     // Turret gear ratio (turret motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;
     
     // Turret PID (units: volts per radian)
-    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 1.9);
+    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 1.0);
     public static final LoggedTunableNumber kITurret = new LoggedTunableNumber("Turret/kI", 0.0);
     public static final LoggedTunableNumber kDTurret = new LoggedTunableNumber("Turret/kD", 0.0);
     public static final LoggedTunableNumber kSTurret = new LoggedTunableNumber("Turret/kS", 0.0);
@@ -49,7 +51,7 @@ public final class ShooterConstants {
     public static final double kTurretAllowedError = 0.05;
 
     // Hood (Motion Magic)
-    public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 36.0/24.0 * 30.0/372.0;
+    public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 30.0/364.0;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
     public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 20);
@@ -77,8 +79,8 @@ public final class ShooterConstants {
             return degrees;
         }
 
-        public Angle getAngle() {
-            return Degrees.of(degrees);
+        public Rotation2d getRotation() {
+            return Rotation2d.fromDegrees(degrees);
         }
     }
 

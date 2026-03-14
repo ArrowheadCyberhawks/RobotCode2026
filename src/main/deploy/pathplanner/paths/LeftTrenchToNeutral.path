@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.166370996570754,
-        "y": 7.53843167183053
+        "x": 6.989072753209699,
+        "y": 7.444336661911555
       },
       "isLocked": false,
       "linkedName": "LeftTrench"
     },
     {
       "anchor": {
-        "x": 8.787546362339516,
-        "y": 5.4647218259629105
+        "x": 7.7653922967189715,
+        "y": 5.4517831669044226
       },
       "prevControl": {
-        "x": 8.842576028858852,
-        "y": 6.647859656128664
+        "x": 7.972410841654776,
+        "y": 7.094992867332382
       },
       "nextControl": null,
       "isLocked": false,
@@ -60,7 +60,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -110.37643521383643
   },
   "reversed": false,
   "folder": "Cycles",

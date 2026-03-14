@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -134,6 +135,7 @@ public class RobotContainer {
 
 	//create triggers to happen automatically
 	//do not switch these to colons, they have mutiple methods to be recomputed
+	// It will pause the robot if it runs into the trench, which is OK for now
 	private final Trigger inTrench =
 			new Trigger(() -> FieldZones.TRENCH().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
@@ -149,25 +151,6 @@ public class RobotContainer {
 
 	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean);
 
-	// Command shootMode = Commands.sequence(
-	// 	// request AIM once on toggle
-	// 	new InstantCommand(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.AIM)),
-
-	// 	// continuously check for just-became-ready to trigger hopper
-	// 	Commands.run(
-	// 		() -> {
-	// 			if (shooterSubsystem.isReady()) {
-	// 				hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON);
-	// 			}
-	// 		},
-	// 		hopperSubsystem
-	// 	).until(() -> !shooterSubsystem.getState().equals(ShooterSubsystem.ShooterState.AIM)),
-
-	// 	// cleanup if interrupted
-	// 	new InstantCommand(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-	// );
-
-
 	public RobotContainer() {
 
 		// Register Named Commands for PathPlanner BEFORE creating any autos
@@ -179,8 +162,7 @@ public class RobotContainer {
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 		// and the hood/turret won't adjust based on distance!
 
-		// TODO: simplify the number of suppliers given by just giving robotrelative speeds and pose and determining
-		// the rest in ShotCalculator
+		// TODO: simplify the number of suppliers given by just giving robotrelative speeds and pose
 		ShotCalculator.getInstance().setPoseSupplier(drivetrain::getPose);
 		ShotCalculator.getInstance().setRobotRelativeVelocitySupplier(() -> drivetrain.getState().Speeds);
 		ShotCalculator.getInstance().setFieldVelocitySupplier(
@@ -246,16 +228,6 @@ public class RobotContainer {
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
 
-		// Left bumper - Toggle intake between RUN and OFF
-		// driverController.leftTrigger().onTrue(Commands.runOnce(() -> {
-		// IntakeConstants.IntakeState currentState = intakeSubsystem.getIntakeState();
-		// if (currentState == IntakeConstants.IntakeState.RUN) {
-		// intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE);
-		// } else {
-		// intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN);
-		// }
-		// }));
-
 		// Right bumper - Toggle shooter
 		driverController.rightBumper().toggleOnTrue(shootMode);
 
@@ -282,7 +254,11 @@ public class RobotContainer {
 
 		driverController.povDown().onTrue(
 				intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
-		driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodTo(Rotation2d.fromDegrees(30.0))));
+		
+		// I'm a little confused about the purpose of this, especially on the driver controller, but here is the newer version
+		driverController.povRight().onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
+		
+		// driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodTo(Rotation2d.fromDegrees(30.0))));
 
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -344,19 +320,14 @@ public class RobotContainer {
 						hopperSubsystem.runEnd(
 								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
 								() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
-
-		// Manipulator controller - Manual controls for testing
+		
 		manipulatorController.rightStick().whileTrue(
-				hood.run(() -> hood.moveHoodTo(Rotation2d.fromDegrees(
-						hood.getHoodTargetAngle().getDegrees() - Math.pow(manipulatorController.getRightY(), 3) * 0.5)))
-						.alongWith(
-								turret.run(() -> turret
-										.setTurretTarget(Rotation2d.fromDegrees(turret.getTurretTarget().getDegrees()
-												- Math.pow(manipulatorController.getRightX(), 3) * 2.0)))));
+			shooterSubsystem.manualTurretCommand(() -> Rotation2d.fromDegrees(turret.getSetpoint().getDegrees() + -Math.pow(manipulatorController.getRightX(), 3) * 2.0))
+			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(manipulatorController.getRightY(), 3) * 0.5))))
+		);
 		manipulatorController.leftStick().toggleOnTrue(
-				flywheel.runFixedCommand(
-						() -> flywheel.getVelocitySetpoint()
-								.plus(RadiansPerSecond.of(
+			shooterSubsystem.manualFlywheelCommand(() -> flywheel.getSetpoint()
+								.plus(RotationsPerSecond.of(
 										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
 	}
 
@@ -378,8 +349,8 @@ public class RobotContainer {
 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
 		
-        //inTrench.whileTrue(hood.down());
-		inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
+		inTrench.whileTrue(shooterSubsystem.trenchCommand());
+		// inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
 	}
 
 	/**
@@ -396,29 +367,17 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("IntakeStow",
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
+		
+		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
 
-		NamedCommands.registerCommand("ShooterAim",
-				hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
+		// NamedCommands.registerCommand("ShooterAim",
+		// 		hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
 
 		NamedCommands.registerCommand("HopperOn",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
 
 		NamedCommands.registerCommand("HopperOff",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
-
-		// TODO: Uncomment when shooter subsystem is enabled
-		// Shooter Commands - Start shooting sequence
-		// NamedCommands.registerCommand("StartShoot",
-		// Commands.sequence(
-		// // First, start aiming
-		// Commands.runOnce(() -> shooterSubsystem.startAiming()),
-		// // Wait until shooter is ready to shoot
-		// Commands.waitUntil(() -> shooterSubsystem.isReadyToShoot()),
-		// // Once ready, turn on the hopper to feed the ball
-		// Commands.runOnce(() ->
-		// hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON))
-		// )
-		// );
 
 		// Shooter Commands - Stop all shooting motors
 		NamedCommands.registerCommand("StopShoot",

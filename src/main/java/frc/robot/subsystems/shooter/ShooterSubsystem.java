@@ -1,12 +1,19 @@
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -16,7 +23,8 @@ public class ShooterSubsystem extends SubsystemBase {
     IDLE,
     STRAIGHT,
     AIM,
-    TRENCH
+    TRENCH,
+    MANUAL
   }
 
   private final FlywheelSubsystem flywheel;
@@ -33,6 +41,7 @@ public class ShooterSubsystem extends SubsystemBase {
     this.flywheel = flywheel;
     this.hood = hood;
     this.turret = turret;
+    
   }
 
   @Override
@@ -53,12 +62,23 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void stop() {
-    desiredState = ShooterState.IDLE;
-    currentState = ShooterState.IDLE;
+    requestState(ShooterState.IDLE);
   }
 
   public boolean areAllSubsystemsAtGoal() {
     return flywheel.isAtGoal() && hood.isAtGoal() && turret.isAtGoal();
+  }
+
+  public HoodSubsystemNeo getHoodSubsystem() {
+    return hood;
+  }
+
+  public TurretSubsystemNeo getTurretSubsystem() {
+      return turret;
+  }
+
+  public FlywheelSubsystem getFlywheelSubsystem() {
+      return flywheel;
   }
 
   /**
@@ -84,27 +104,97 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case STRAIGHT:
-        turret.setTurretTarget(new Rotation2d());
+        turret.setSetpoint(new Rotation2d());
 
         var straightData = ShotCalculator.getInstance().getData();
         if (straightData != null && straightData.isValid()) {
-          flywheel.runVelocity(RadiansPerSecond.of(straightData.flywheelSpeed()));
-          hood.moveHoodTo(straightData.hoodAngle());
+          flywheel.setSetpoint(RadiansPerSecond.of(straightData.flywheelSpeed()));
+          hood.setSetpoint(straightData.hoodAngle());
         }
         break;
 
       case AIM:
         var aimData = ShotCalculator.getInstance().getData();
         if (aimData != null && aimData.isValid()) {
-          flywheel.runVelocity(RadiansPerSecond.of(aimData.flywheelSpeed()));
-          hood.moveHoodTo(aimData.hoodAngle());
-          turret.setTurretTarget(aimData.turretAngle());
+          flywheel.setSetpoint(RadiansPerSecond.of(aimData.flywheelSpeed()));
+          hood.setSetpoint(aimData.hoodAngle());
+          turret.setSetpoint(aimData.turretAngle());
         }
         break;
 
       case TRENCH:
-        hood.moveHoodTo(ShooterConstants.HoodPosition.STOW);
+        hood.setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
         break;
+
+      case MANUAL:
+        break;
+
     }
   }
+
+  // Simplification so you don't have to use run()
+
+  /**
+   * Command to set the shooter to the IDLE state, which stops all subsystems and holds them in place.
+   * @return A Command that requires the shooter, hood, turret, and flywheel subsystems, and when executed, transitions the shooter to the IDLE state and holds this state until interrupted.
+   */
+  public Command idleCommand() {
+    return Commands.run(() -> requestState(ShooterState.IDLE), this, hood, turret, flywheel);
+  }
+
+  public Command aimCommand() {
+      return Commands.run(() -> requestState(ShooterState.AIM), this, hood, turret, flywheel);
+  }
+
+  public Command straightCommand() {
+      return Commands.run(() -> requestState(ShooterState.STRAIGHT), this, hood, turret, flywheel);
+  }
+
+  public Command trenchCommand() {
+      return Commands.run(() -> requestState(ShooterState.TRENCH), this, hood);
+  }
+
+  /**
+   * Manual control command for the turret.
+   * @param input A Supplier that provides the desired turret angle as a Rotation2d, typically based on joystick input or other manual controls.
+   * @return A Command that requires the shooter and turret subsystems, and when executed, updates the turret's target angle based on the provided input. 
+   */
+  public Command manualTurretCommand(Supplier<Rotation2d> input) {
+    return Commands.runEnd(() -> {
+        requestState(ShooterState.MANUAL);
+        turret.setSetpoint(input.get());
+      },
+      this::stop,
+      turret);
+  }
+
+  /**
+   * Manual control command for the hood.
+   * @param setpoint A Supplier that provides the desired hood angle as a Rotation2d, typically based on joystick input or other manual controls.
+   * @return A Command that requires the shooter and hood subsystems, and when executed, updates the hood's target angle based on the provided input.
+   */
+  public Command manualHoodCommand(Supplier<Rotation2d> setpoint) {
+      return Commands.runEnd(() -> {
+          requestState(ShooterState.MANUAL);
+          hood.setSetpoint(setpoint.get());
+        },
+        this::stop,
+        hood);
+  }
+
+  /**
+   * Manual control command for the flywheel.
+   * @param setpoint A DoubleSupplier that provides the manual input for flywheel control, representing the desired flywheel speed in rotations per second.
+   * @return A Command that requires the shooter and flywheel subsystems, and when executed, updates the flywheel's target speed based on the provided input.
+   */
+  public Command manualFlywheelCommand(Supplier<AngularVelocity> setpoint) {
+      return Commands.runEnd(() -> {
+          requestState(ShooterState.MANUAL);
+          flywheel.setSetpoint(setpoint.get());
+        },
+       this::stop,
+       flywheel);
+  }
+
+
 }

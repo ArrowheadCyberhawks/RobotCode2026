@@ -102,7 +102,7 @@ public class ShotCalculator {
         hoodAngleMap.put(2.16, Rotation2d.fromDegrees(30));
         hoodAngleMap.put(7.104, Rotation2d.fromDegrees(46.38));
 
-        // Populate the flywheel speed calibration map (distance -> RPS). (radians per second)
+        // Populate the flywheel speed calibration map (distance -> RPS). (rotations per second)
         flywheelSpeedMap.put(2.16, 19.89); //2.16
         flywheelSpeedMap.put(43.0, 31.6); //7.104
 
@@ -117,6 +117,7 @@ public class ShotCalculator {
         // Calculate estimated pose while accounting for time between calculation
         Pose2d estimatedPose = poseSupplier.get();
         ChassisSpeeds robotRelativeVelocity = robotRelativeVelocitySupplier.get();
+        
         estimatedPose = estimatedPose.exp(
             new Twist2d(
                 robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
@@ -181,7 +182,6 @@ public class ShotCalculator {
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
         // Normalize to [-π, π]
         double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
-        rawTurretAngleRad -= rawTurretAngleRad > Math.PI / 2.0 ? 2.0 * Math.PI : 0;
 
         // Filter the turret angle to smooth noisy measurements
         double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);

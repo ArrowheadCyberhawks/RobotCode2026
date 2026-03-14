@@ -3,16 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.815688729874777,
-        "y": 2.404347048300538
+        "x": 7.775607186832946,
+        "y": 3.2314408756023125
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.923291592128802,
-        "y": 1.0089624329159212
+        "x": 7.416048502139798,
+        "y": 1.8160199714693293
       },
       "isLocked": false,
       "linkedName": "RightNeutral"
+    },
+    {
+      "anchor": {
+        "x": 6.859686162624821,
+        "y": 1.0008844507845935
+      },
+      "prevControl": {
+        "x": 7.118459343794578,
+        "y": 1.156148359486449
+      },
+      "nextControl": {
+        "x": 6.599311071803162,
+        "y": 0.8446593962915966
+      },
+      "isLocked": false,
+      "linkedName": null
     },
     {
       "anchor": {
@@ -46,15 +62,15 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.9,
+      "waypointRelativePos": 1.8,
       "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 1.27807486631016,
+      "waypointRelativePos": 2.2780748663101598,
       "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 1.9037433155080217,
+      "waypointRelativePos": 2.903743315508022,
       "rotationDegrees": 90.0
     }
   ],
@@ -77,7 +93,7 @@
   "folder": "Outpost",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 101.88865803962823
   },
   "useDefaultConstraints": true
 }
