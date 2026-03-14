@@ -149,8 +149,7 @@ public class RobotContainer {
 			new Trigger(() -> FieldZones.RIGHTPASS().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
 
-	// CAREFUL: this command will not interrupt itself when another command attempts to use the shooter subsystem, so it will not be affected by other commands such as the trench trigger.
-	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean);
 
 	// Command shootMode = Commands.sequence(
 	// 	// request AIM once on toggle
