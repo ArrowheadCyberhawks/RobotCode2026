@@ -343,7 +343,7 @@ public class RobotContainer {
 		
 		//TODO: use these instead to avoid conflicts with the shootersubsystem (I added a couple things)
 		manipulatorController.rightStick().whileTrue(
-			shooterSubsystem.manualTurretCommand(() -> turret.getSetpoint().plus(Rotation2d.fromDegrees(-Math.pow(manipulatorController.getRightX(), 3) * 2.0)))
+			shooterSubsystem.manualTurretCommand(() -> Rotation2d.fromDegrees(turret.getSetpoint().getDegrees() + -Math.pow(manipulatorController.getRightX(), 3) * 2.0))
 			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(manipulatorController.getRightY(), 3) * 0.5))))
 		);
 		manipulatorController.leftStick().toggleOnTrue(
