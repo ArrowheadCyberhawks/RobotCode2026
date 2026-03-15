@@ -65,12 +65,12 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.0);
     public static final double kHoodAllowedError = 1.0;
 
-    public static final double kHoodMinDegrees = 30.0;
-    public static final double kHoodMaxDegrees = 67.0; // i swear this is actually the maximum
+    public static final double kHoodMinDegrees = 20.0;
+    public static final double kHoodMaxDegrees = 45.0;
 
     /** Common hood presets */
     public enum HoodPosition {
-        STOW(15.0);
+        STOW(kHoodMinDegrees);
 
         private final double degrees;
 

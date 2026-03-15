@@ -116,7 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case AIM:
         var aimData = ShotCalculator.getInstance().getData();
         if (aimData != null && aimData.isValid()) {
-          flywheel.setSetpoint(RadiansPerSecond.of(aimData.flywheelSpeed()));
+          flywheel.setSetpoint(RotationsPerSecond.of(aimData.flywheelSpeed()));
           hood.setSetpoint(aimData.hoodAngle());
           turret.setSetpoint(aimData.turretAngle());
         }

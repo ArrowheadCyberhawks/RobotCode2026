@@ -10,6 +10,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 
@@ -20,8 +21,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HopperSubsystem extends SubsystemBase {
 
-    private final SparkMax hopperMotor;
-    private final SparkMax kickerMotor;
+    private final SparkFlex hopperMotor;
+    private final SparkFlex kickerMotor;
 
     private final SparkClosedLoopController hopperPIDController;
     private final SparkClosedLoopController kickerPIDController;
@@ -39,8 +40,8 @@ public class HopperSubsystem extends SubsystemBase {
 
         public HopperSubsystem()    {
             //create motors
-            hopperMotor = new SparkMax(HopperConstants.hopperMotor.hopperMotor, MotorType.kBrushless);
-            kickerMotor = new SparkMax(HopperConstants.hopperMotor.kickerMotor, MotorType.kBrushless);
+            hopperMotor = new SparkFlex(HopperConstants.hopperMotor.hopperMotor, MotorType.kBrushless);
+            kickerMotor = new SparkFlex(HopperConstants.hopperMotor.kickerMotor, MotorType.kBrushless);
 
             //Get encoders
             hopperEncoder = hopperMotor.getEncoder();

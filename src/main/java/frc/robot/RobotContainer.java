@@ -324,7 +324,7 @@ public class RobotContainer {
 		
 		manipulatorController.rightStick().whileTrue(
 			shooterSubsystem.manualTurretCommand(() -> Rotation2d.fromDegrees(turret.getSetpoint().getDegrees() + -Math.pow(manipulatorController.getRightX(), 5) * 2.0))
-			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(manipulatorController.getRightY(), 3) * 0.5))))
+			.alongWith(shooterSubsystem.manualHoodCommand(() -> hood.getSetpoint().plus(Rotation2d.fromDegrees(Math.pow(-manipulatorController.getRightY(), 3) * 0.5))))
 		);
 		manipulatorController.leftStick().toggleOnTrue(
 			shooterSubsystem.manualFlywheelCommand(() -> flywheel.getSetpoint()
@@ -350,7 +350,7 @@ public class RobotContainer {
 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
 		
-		inTrench.whileTrue(shooterSubsystem.trenchCommand());
+		// inTrench.whileTrue(shooterSubsystem.trenchCommand());
 		// inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
 	}
 
@@ -361,7 +361,10 @@ public class RobotContainer {
 	private void registerNamedCommands() {
 		// Intake Commands
 		NamedCommands.registerCommand("IntakeOn",
-				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
+				Commands.runOnce(
+						() -> intakeSubsystem.setIntakeState(IntakeState.RUN)));
+		
+		// CommandScheduler.getInstance().schedule(Commands.run(() -> intakeSubsystem.setIntakeState(IntakeState.RUN)));
 
 		NamedCommands.registerCommand("IntakeOff",
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)));
@@ -369,10 +372,9 @@ public class RobotContainer {
 		NamedCommands.registerCommand("IntakeStow",
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		
-		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
+		NamedCommands.registerCommand("ShooterCommand", shootMode);
 
-		// NamedCommands.registerCommand("ShooterAim",
-		// 		hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
+		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
 
 		NamedCommands.registerCommand("HopperOn",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));

@@ -33,9 +33,9 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     /** Transform from robot center → Quest mount (tune to your actual mount) */
     private static final Transform3d ROBOT_TO_QUEST = new Transform3d(
-        Inches.of(-12), // x offset
-        Inches.of(-8.5), // y offset
-        Inches.of(10.5), // z offset
+        Inches.of(-10.5), // x offset
+        Inches.of(-7.5), // y offset
+        Inches.of(14.5), // z offset
         new Rotation3d(0.0, 0.0, Math.PI) // rotation offset
     );
 
