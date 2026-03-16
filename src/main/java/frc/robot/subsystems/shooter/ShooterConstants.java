@@ -20,6 +20,9 @@ import frc.robot.util.LoggedTunableNumber;
  * Shooter constants and enums.
  */
 public final class ShooterConstants {
+    public static final LoggedTunableNumber kMaxTurretAcceleration = new LoggedTunableNumber("Turret/MaxAcceleration", 10.0);
+    public static final LoggedTunableNumber kMaxTurretVelocity = new LoggedTunableNumber("Turret/MaxVelocity", 10.0);
+
     private ShooterConstants() {}
 
     // CAN IDs

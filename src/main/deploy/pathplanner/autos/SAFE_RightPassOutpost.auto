@@ -1,0 +1,25 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "NEW_RightTrenchToNearNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "NEW_RightNearNeutralToOutpost"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "NEW_Right",
+  "choreoAuto": false
+}

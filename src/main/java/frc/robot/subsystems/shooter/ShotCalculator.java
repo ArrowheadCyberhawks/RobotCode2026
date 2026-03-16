@@ -93,6 +93,11 @@ public class ShotCalculator {
     private static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap();
     private static final InterpolatingDoubleTreeMap tofMap = new InterpolatingDoubleTreeMap();
 
+        private static final InterpolatingTreeMap<Double, Rotation2d> hoodAngleMapPassing = 
+        new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), Rotation2d::interpolate);
+    private static final InterpolatingDoubleTreeMap flywheelSpeedMapPassing = new InterpolatingDoubleTreeMap();
+    private static final InterpolatingDoubleTreeMap tofMapPassing = new InterpolatingDoubleTreeMap();
+
     static {
         // Reasonable operating bounds for the shooter (meters) and a small
         // phase delay used to offset calculations for shooter processing time.
@@ -157,25 +162,27 @@ public class ShotCalculator {
         // Calculate field relative turret velocity
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
-        // double turretVelocityX = robotVelocity.vxMetersPerSecond
-        //     //+ robotVelocity.omegaRadiansPerSecond
-        //     + (robotToTurretTrans.getY() * Math.cos(robotAngle) //should be * once it's added
-        //     + robotToTurretTrans.getX() * Math.sin(robotAngle));
-        // double turretVelocityY = robotVelocity.vyMetersPerSecond
-        //     //+ robotVelocity.omegaRadiansPerSecond
-        //     + (robotToTurretTrans.getX() * Math.cos(robotAngle)
-        //     + robotToTurretTrans.getY() * Math.sin(robotAngle));
 
         // v_robot + w x r
-        double turretVelocityX = robotVelocity.vxMetersPerSecond
-            - robotVelocity.omegaRadiansPerSecond //maybe need to be +
-                * (robotToTurretTrans.getX() * Math.sin(robotAngle)
-                + robotToTurretTrans.getY() * Math.cos(robotAngle));
+        // double turretVelocityX = robotVelocity.vxMetersPerSecond
+        //     - robotVelocity.omegaRadiansPerSecond //maybe need to be +
+        //         * (robotToTurretTrans.getX() * Math.sin(robotAngle)
+        //         + robotToTurretTrans.getY() * Math.cos(robotAngle));
 
-        double turretVelocityY = robotVelocity.vyMetersPerSecond
+        // double turretVelocityY = robotVelocity.vyMetersPerSecond
+        //     + robotVelocity.omegaRadiansPerSecond
+        //         * (robotToTurretTrans.getX() * Math.cos(robotAngle)
+        //         - robotToTurretTrans.getY() * Math.sin(robotAngle));
+
+        double turretVelocityX = robotVelocity.vxMetersPerSecond
+            + robotVelocity.omegaRadiansPerSecond
+                * (robotToTurretTrans.getY() * Math.cos(robotAngle)
+                    - robotToTurretTrans.getX() * Math.sin(robotAngle));
+        double turretVelocityY =
+        robotVelocity.vyMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
                 * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-                - robotToTurretTrans.getY() * Math.sin(robotAngle));
+                    - robotToTurretTrans.getY() * Math.sin(robotAngle));
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
@@ -204,9 +211,10 @@ public class ShotCalculator {
         rawTurretAngleRad += rawTurretAngleRad < ShooterConstants.turretMinAngle.get() ? 2 * Math.PI : 0;
 
         // Filter the turret angle to smooth noisy measurements
-        double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
+        //double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
 
-        turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
+        //turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
+        turretAngle = Rotation2d.fromRadians(rawTurretAngleRad);
 
         // Log calculated values for debugging
         Logger.recordOutput("ShotCalculator/RobotPose", estimatedPose);
@@ -215,7 +223,7 @@ public class ShotCalculator {
         Logger.recordOutput("ShotCalculator/FieldRelativeAngle", fieldRelativeAngleRad);
         Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
         Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
-        Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
+        //Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
         Logger.recordOutput("ShotCalculator/FlywheelSpeed", flywheelSpeedMap.get(lookaheadTurretToTargetDistance));
 
         //Logger.recordOutput("ShotCalculator/Target", );

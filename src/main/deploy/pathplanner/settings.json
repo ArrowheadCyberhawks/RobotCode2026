@@ -5,12 +5,19 @@
   "pathFolders": [
     "Cycles",
     "Depot",
+    "NEW Left",
+    "NEW Middle",
+    "NEW Right",
+    "PID",
     "Outpost",
     "Sweepers"
   ],
   "autoFolders": [
     "Center",
     "Left",
+    "NEW_Right",
+    "NEW_Left",
+    "NEW_Middle",
     "PID",
     "Right"
   ],

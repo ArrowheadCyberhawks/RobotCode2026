@@ -8,51 +8,70 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.6787208345941576,
-        "y": 7.526809257338002
+        "x": 7.620670454545454,
+        "y": 7.930977272727272
       },
       "isLocked": false,
       "linkedName": "LeftNeutral"
     },
     {
       "anchor": {
-        "x": 2.8813222222222223,
-        "y": 7.348111111111112
+        "x": 3.374261363636363,
+        "y": 7.4465568181818185
       },
       "prevControl": {
-        "x": 3.4958632363988387,
-        "y": 7.356304991300133
+        "x": 5.600534090909091,
+        "y": 7.477477272727273
       },
       "nextControl": {
-        "x": 2.1504888888888885,
-        "y": 7.338366666666667
+        "x": 2.0605213927538175,
+        "y": 7.428310429697339
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LeftShoot"
     },
     {
       "anchor": {
-        "x": 0.7667777777777778,
-        "y": 6.188522222222222
+        "x": 0.7666363636363633,
+        "y": 6.2715795454545455
       },
       "prevControl": {
-        "x": 2.121255555555556,
-        "y": 6.1787777777777775
+        "x": 2.395113636363636,
+        "y": 6.323113636363637
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Depot"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.5117764471057931,
+      "waypointRelativePos": 0.6918238993710691,
       "rotationDegrees": 180.0
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 0.8617594254937164,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "HopperOn",
+      "waypointRelativePos": 0.9982046678635544,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "IntakeOn",
+      "waypointRelativePos": 1.1454219030520683,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 1.0,
     "maxAcceleration": 0.5,
@@ -66,7 +85,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Cycles",
+  "folder": "NEW Left",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -110.37643521383643

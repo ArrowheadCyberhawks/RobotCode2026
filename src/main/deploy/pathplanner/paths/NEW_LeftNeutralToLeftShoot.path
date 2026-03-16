@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.635365506588494,
-        "y": 6.664953366400255
+        "x": 7.713431818181817,
+        "y": 7.43625
       },
       "isLocked": false,
       "linkedName": "LeftNeutral"
@@ -36,7 +36,26 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 0.834829443447036,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "IntakeOn",
+      "waypointRelativePos": 0.8976660682226199,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "HopperOn",
+      "waypointRelativePos": 0.9012567324955113,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 1.0,
     "maxAcceleration": 0.5,
@@ -50,7 +69,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Cycles",
+  "folder": "NEW Left",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -110.37643521383643

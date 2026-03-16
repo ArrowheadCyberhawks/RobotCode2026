@@ -36,7 +36,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   private final TalonFX follower;
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
-  private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
+  private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0).withEnableFOC(true);
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentRequest = new VelocityTorqueCurrentFOC(0.0);
 
   // Store setpoint internally in rotations per second to match TalonFX units
@@ -56,8 +56,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     follower = new TalonFX(followerId);
 
     configureFlywheel();
-
-    velocityRequest.EnableFOC = true;
     
     // Configure follower to mirror leader (opposed direction for typical flywheels)
     //leader.setControl(velocityRequest);
@@ -115,6 +113,7 @@ public class FlywheelSubsystem extends SubsystemBase {
       cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
       cfg.CurrentLimits.StatorCurrentLimit = 40.0;
       cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+
       follower.getConfigurator().apply(cfg);
       leader.getConfigurator().apply(cfg);
     }
@@ -130,11 +129,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityVoltage closed-loop control even when the setpoint is zero so the error converges to 0
     velocityRequest.Velocity = velocitySetpointRps;
-    velocityTorqueCurrentRequest.Velocity = velocitySetpointRps;
-    leader.setControl(velocityRequest);
-    //leader.setControl(velocityTorqueCurrentRequest);
-    // Realized velocitytorquecontrol probably doesn't actually work bc I forgot to set it to use that in periodic,
-    // here it is above if you want to test it
+    // leader.setControl(velocityRequest);
+    leader.setControl(velocityTorqueCurrentRequest.withVelocity(velocitySetpointRps));
   }
 
   // setpoint runner used by commands and direct callers
@@ -194,10 +190,6 @@ public class FlywheelSubsystem extends SubsystemBase {
           Logger.recordOutput("Flywheel/Sensor", "CORRECT");
         }
       });
-
-
-
-    
   }
 }
 
