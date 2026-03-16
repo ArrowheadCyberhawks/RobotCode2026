@@ -21,6 +21,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.events.EventTrigger;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.MathUtil;
@@ -57,8 +58,8 @@ import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
 import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
-import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
-import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
+// import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
+// import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
@@ -156,6 +157,7 @@ public class RobotContainer {
 
 		// Register Named Commands for PathPlanner BEFORE creating any autos
 		registerNamedCommands();
+		registerEventMarkers();
 
 		constructField();
 		configureBindings();
@@ -247,7 +249,7 @@ public class RobotContainer {
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
 
-		driverController.povUp().whileTrue(
+		driverController.povLeft().whileTrue(
 				new DriveToPose(
 						drivetrain,
 						() -> AllianceFlipUtil.apply(new Pose2d(1.140, 3.285, new Rotation2d(Units.degreesToRadians(90)))),
@@ -295,9 +297,8 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		// intake controls
-		driverController.leftTrigger()
-				.or(manipulatorController.leftTrigger())
+
+		manipulatorController.leftTrigger()
 				.whileTrue(Commands.runEnd(
 						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
 						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
@@ -386,6 +387,31 @@ public class RobotContainer {
 			Commands.runOnce(() -> shooterSubsystem.stop()),
 			Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)))
 		);
+	}
+
+	private void registerEventMarkers() {
+		new EventTrigger("IntakeOn").onTrue(
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
+		new EventTrigger("IntakeStow").onTrue(
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
+		new EventTrigger("IntakeOff").onTrue(
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)));
+		new EventTrigger("IntakeTrench").onTrue(
+			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.TRENCH)));
+
+		new EventTrigger("ShooterAim").onTrue(shooterSubsystem.aimCommand());
+		new EventTrigger("HopperOn").onTrue(
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
+		new EventTrigger("HopperOff").onTrue(
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
+
+		// Shooter Commands - Stop all shooting motors
+		new EventTrigger("ShooterOff").onTrue(
+			Commands.sequence(
+			Commands.runOnce(() -> shooterSubsystem.stop()),
+			Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))));
+
+		
 	}
 
 	public Command getAutonomousCommand() {

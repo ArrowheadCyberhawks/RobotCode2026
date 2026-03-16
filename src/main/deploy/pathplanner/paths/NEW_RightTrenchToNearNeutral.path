@@ -1,0 +1,95 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.392128801431126,
+        "y": 0.603327370304114
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.476852272727273,
+        "y": 0.63375
+      },
+      "isLocked": false,
+      "linkedName": "RightTrench"
+    },
+    {
+      "anchor": {
+        "x": 7.466068181818181,
+        "y": 0.8501931818181823
+      },
+      "prevControl": {
+        "x": 7.1133189194705,
+        "y": 0.5100421074114903
+      },
+      "nextControl": {
+        "x": 7.804487913017533,
+        "y": 1.1765264940461289
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.775607186832946,
+        "y": 3.2314408756023125
+      },
+      "prevControl": {
+        "x": 7.775607186832946,
+        "y": 2.592193362038679
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "RightNeutral"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 1.0161579892280088,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "IntakeOn",
+      "waypointRelativePos": 1.1454219030520656,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "HopperOn",
+      "waypointRelativePos": 1.4901256732495474,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterOff",
+      "waypointRelativePos": 1.684021543985638,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 1.0,
+    "maxAcceleration": 0.5,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 101.88865803962823
+  },
+  "reversed": false,
+  "folder": "NEW Right",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

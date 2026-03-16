@@ -65,6 +65,7 @@ public final class IntakeConstants {
     /** High-level intake states that control pivot and roller behavior */
     public enum IntakeState {
         STOW(Degrees.of(125.0), 0.0), // pivot up and rollers stopped
+        TRENCH(Degrees.of(50.0), 0.0), // pivot down (ready) but rollers not running
         IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
         RUN(Degrees.of(0.0), 1.0),   // pivot down and rollers running to intake
         REVERSE(Degrees.of(0.0), -1.00);

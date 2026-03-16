@@ -32,6 +32,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final SparkMax turretMotor;
 	private final RelativeEncoder encoder;
 	private final PIDController pidController;
+	private final ProfiledPIDController profiledPIDController;
 	private SimpleMotorFeedforward feedforward;
 	
 	private ShotCalculator shotCalculator = ShotCalculator.getInstance();
@@ -52,6 +53,18 @@ public class TurretSubsystemNeo extends SubsystemBase {
 			ShooterConstants.kITurret.get(),
 			ShooterConstants.kDTurret.get()
 		);
+		
+		//unused
+		profiledPIDController = new ProfiledPIDController(
+			ShooterConstants.kPTurret.get(),
+			ShooterConstants.kITurret.get(),
+			ShooterConstants.kDTurret.get(),
+			new TrapezoidProfile.Constraints(
+				ShooterConstants.kMaxTurretVelocity.get(),
+				ShooterConstants.kMaxTurretAcceleration.get()
+			)
+		);
+
 		feedforward = new SimpleMotorFeedforward(
 			ShooterConstants.kSTurret.get(),
 			ShooterConstants.kVTurret.get(),
@@ -126,13 +139,13 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		return atGoal(Math.toRadians(3.0)); // 3 degree default tolerance
 	}
 
-	public void resetTurretEncoder() {
-		// Get current position in radians
-		double currentRadians = encoder.getPosition();
-		// Wrap to [-π, π] range to match ShotCalculator
-		double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
-		encoder.setPosition(wrappedRadians);
-	}
+	// public void resetTurretEncoder() {
+	// 	// Get current position in radians
+	// 	double currentRadians = encoder.getPosition();
+	// 	// Wrap to [-π, π] range to match ShotCalculator
+	// 	double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
+	// 	encoder.setPosition(wrappedRadians);
+	// }
 
 	public void manualResetTurretEncoder(double rotations) {
 		encoder.setPosition(rotations);
@@ -149,12 +162,13 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		double pidOut = pidController.calculate(currentPos, targetPos);
 		
 		// Use ProfiledPIDController's current setpoint velocity for feedforward
-		double setpointVelocity = pidController.getSetpoint();
+		double setpointVelocity = shotCalculator.getData().turretVelocity();
 		double ffOut = isAtGoal() ? 0.0 : feedforward.calculate(setpointVelocity);
+		//ffOut = 0.0;
 
 		// Apply voltage clamp
 		double maxVolts = ShooterConstants.turretMaxPercentOutput.get() * 12.0;
-		double totalOut = MathUtil.clamp(pidOut, -maxVolts, maxVolts);
+		double totalOut = MathUtil.clamp(pidOut + ffOut, -maxVolts, maxVolts);
 
 		turretMotor.setVoltage(Volts.of(totalOut));
 

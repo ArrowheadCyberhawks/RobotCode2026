@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.989072753209699,
-        "y": 7.444336661911555
+        "x": 6.162295169337613,
+        "y": 7.48586999118583
       },
       "isLocked": false,
       "linkedName": "LeftTrench"
@@ -20,8 +20,8 @@
         "y": 4.880159090909092
       },
       "prevControl": {
-        "x": 7.858609454026713,
-        "y": 6.5233687913370515
+        "x": 7.408209871523825,
+        "y": 7.232842454057571
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,7 +30,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.09625668449197865,
+      "waypointRelativePos": 0.27807486631016054,
       "rotationDegrees": 0.0
     }
   ],
@@ -38,14 +38,26 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "IntakeOff",
-      "waypointRelativePos": 0.5417737789203027,
+      "name": "ShooterAim",
+      "waypointRelativePos": 0.590664272890484,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
       "name": "IntakeOn",
-      "waypointRelativePos": 0.544344473007703,
+      "waypointRelativePos": 0.6499102333931773,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "HopperOn",
+      "waypointRelativePos": 0.748653500897666,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterOff",
+      "waypointRelativePos": 0.8491921005386003,
       "endWaypointRelativePos": null,
       "command": null
     }
@@ -63,7 +75,7 @@
     "rotation": -110.37643521383643
   },
   "reversed": false,
-  "folder": "Cycles",
+  "folder": "NEW Left",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
