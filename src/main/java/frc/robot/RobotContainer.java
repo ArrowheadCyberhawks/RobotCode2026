@@ -297,8 +297,18 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
+		// driverController.leftBumper()
+		// 		.whileTrue(Commands.runEnd(
+		// 				() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
+		// 				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
 
-		manipulatorController.leftTrigger()
+
+		driverController.leftTrigger().or(manipulatorController.leftTrigger()
+				.whileTrue(Commands.runEnd(
+						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
+						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE))));
+
+		driverController.leftTrigger()
 				.whileTrue(Commands.runEnd(
 						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
 						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
@@ -311,13 +321,12 @@ public class RobotContainer {
 								() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
 
 		// hopper controls
-		driverController.leftBumper().or(manipulatorController.leftBumper()).whileTrue(
+		manipulatorController.leftBumper().whileTrue(
 				hopperSubsystem.runEnd(
-						() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON),
-						() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
+						() -> hopperSubsystem.setHopperState(HopperState.ON),
+						() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 
-		driverController.x().and(driverController.leftBumper())
-				.or(manipulatorController.x().and(manipulatorController.leftBumper()))
+		manipulatorController.x().and(manipulatorController.leftBumper())
 				.whileTrue(
 						hopperSubsystem.runEnd(
 								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),

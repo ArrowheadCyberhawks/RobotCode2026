@@ -196,5 +196,9 @@ public class ShooterSubsystem extends SubsystemBase {
        flywheel);
   }
 
+  public boolean isFlipping() {
+    return turret.isFlipping();
+  }
+
 
 }

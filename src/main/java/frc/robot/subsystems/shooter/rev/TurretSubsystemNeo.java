@@ -177,6 +177,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		Logger.recordOutput("Turret/Target Position", targetRotation);
 		Logger.recordOutput("Turret/Current", turretMotor.getOutputCurrent());
 		Logger.recordOutput("Turret/AtGoal", isAtGoal());
+		Logger.recordOutput("Turret/is Flipping", isFlipping());
 	}
 
 	public Command trackTarget() {
@@ -245,4 +246,11 @@ public class TurretSubsystemNeo extends SubsystemBase {
 							ShooterConstants.kPTurret.get(), ShooterConstants.kITurret.get(), ShooterConstants.kDTurret.get(), ShooterConstants.turretMaxPercentOutput.get()));
 		}
 	}
+
+	public boolean isFlipping() {
+		double currentPos = getTurretRotation().getRadians();
+		double targetPos = targetRotation.getRadians();
+
+    	return Math.abs(currentPos - targetPos) > Math.PI / 4.00;
+  	}
 }

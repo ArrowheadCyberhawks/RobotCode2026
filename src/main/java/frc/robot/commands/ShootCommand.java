@@ -51,10 +51,17 @@ public class ShootCommand extends Command {
             hopper.setHopperState(HopperState.KICKER);
             if (shooter.areAllSubsystemsAtGoal()) {
                 hopperTriggered = true;
+                hopper.setHopperState(HopperState.ON);
             }
+
             if (hopperTriggered) {
                 hopper.setHopperState(HopperState.ON);
             }
+
+            if (shooter.isFlipping()) {
+                hopper.setHopperState(HopperState.IDLE);
+            }
+
         }
     }
 

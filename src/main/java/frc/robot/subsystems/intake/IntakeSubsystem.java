@@ -49,7 +49,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     private double rollerTargetPercent = 0.0;
     /** Current high-level intake state (controls pivot + roller behavior) */
-    private IntakeState intakeState = IntakeState.STOW;
+    private IntakeState intakeState = IntakeState.IDLE;
 
     public IntakeSubsystem() {
         // Create motors
@@ -125,7 +125,7 @@ public class IntakeSubsystem extends SubsystemBase {
         rollerConfig
             .idleMode(IdleMode.kCoast)
             .inverted(false)
-            .smartCurrentLimit(40, 40);
+            .smartCurrentLimit(60, 60);
 
         // Apply configuration
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);

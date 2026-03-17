@@ -109,10 +109,10 @@ public class ShotCalculator {
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
         // Meters
-        hoodAngleMap.put(1.14, Rotation2d.fromDegrees(20)); //Change to 15 once hood can go down that low
+        hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.82, Rotation2d.fromDegrees(20));
         hoodAngleMap.put(3.18, Rotation2d.fromDegrees(20));
-        hoodAngleMap.put(5.2, Rotation2d.fromDegrees(30));
+        hoodAngleMap.put(5.2, Rotation2d.fromDegrees(27));
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
         hoodAngleMap.put(12.95, Rotation2d.fromDegrees(45));
 
@@ -120,7 +120,7 @@ public class ShotCalculator {
         //Distance is in Meters
         flywheelSpeedMap.put(1.14, 21.5); //Change to 15 once hood can go down that low
         flywheelSpeedMap.put(1.82, 21.5);
-        flywheelSpeedMap.put(3.18, 27.0);
+        flywheelSpeedMap.put(3.18, 26.0);
         flywheelSpeedMap.put(5.2, 30.5);
         flywheelSpeedMap.put(9.14, 37.0);
         flywheelSpeedMap.put(12.95, 55.0); 

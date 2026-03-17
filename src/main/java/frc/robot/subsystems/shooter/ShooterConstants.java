@@ -45,14 +45,14 @@ public final class ShooterConstants {
     public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;
     
     // Turret PID (units: volts per radian)
-    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 4.0);
+    public static final LoggedTunableNumber kPTurret = new LoggedTunableNumber("Turret/kP", 5.0);
     public static final LoggedTunableNumber kITurret = new LoggedTunableNumber("Turret/kI", 0.0);
-    public static final LoggedTunableNumber kDTurret = new LoggedTunableNumber("Turret/kD", 0.0);
+    public static final LoggedTunableNumber kDTurret = new LoggedTunableNumber("Turret/kD", 0.1);
     public static final LoggedTunableNumber kSTurret = new LoggedTunableNumber("Turret/kS", 0.0);
     public static final LoggedTunableNumber kVTurret = new LoggedTunableNumber("Turret/kV", 0.0);
     public static final LoggedTunableNumber kATurret = new LoggedTunableNumber("Turret/kA", 0.0);
     public static final LoggedTunableNumber turretTolerance = new LoggedTunableNumber("Turret/Tolerance", 0.05);
-	public static final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.30);
+	public static final LoggedTunableNumber turretMaxPercentOutput = new LoggedTunableNumber("Turret/MaxPercentOutput", 0.60);
 	public static final LoggedTunableNumber turretMaxAngle = new LoggedTunableNumber("Turret/MaxAngle", 7 * Math.PI / 4);
 	public static final LoggedTunableNumber turretMinAngle = new LoggedTunableNumber("Turret/MinAngle", -Math.PI / 4); //TODO: move these into shooterconstants
 
@@ -68,7 +68,7 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.0);
     public static final double kHoodAllowedError = 1.0;
 
-    public static final double kHoodMinDegrees = 20.0;
+    public static final double kHoodMinDegrees = 15.0;
     public static final double kHoodMaxDegrees = 45.0;
 
     /** Common hood presets */

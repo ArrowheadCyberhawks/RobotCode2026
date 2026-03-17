@@ -99,7 +99,7 @@ public class HopperSubsystem extends SubsystemBase {
     //Kicker motor configuration
     private void configureKicker() {
         kickerConfig
-            .idleMode(IdleMode.kCoast)
+            .idleMode(IdleMode.kBrake)
             .inverted(false);
 
         // Configure PID and feedforward for velocity control

@@ -38,20 +38,20 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "IntakeOn",
+      "waypointRelativePos": 0.34640102827763813,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
       "name": "ShooterAim",
       "waypointRelativePos": 0.590664272890484,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
-      "name": "IntakeOn",
-      "waypointRelativePos": 0.6499102333931773,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
       "name": "HopperOn",
-      "waypointRelativePos": 0.748653500897666,
+      "waypointRelativePos": 0.6343187660668443,
       "endWaypointRelativePos": null,
       "command": null
     },

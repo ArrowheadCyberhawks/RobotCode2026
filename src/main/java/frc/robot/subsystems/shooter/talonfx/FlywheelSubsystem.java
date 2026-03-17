@@ -37,7 +37,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0).withEnableFOC(true);
-  private final VelocityTorqueCurrentFOC velocityTorqueCurrentRequest = new VelocityTorqueCurrentFOC(0.0);
+  //private final VelocityTorqueCurrentFOC velocityTorqueCurrentRequest = new VelocityTorqueCurrentFOC(0.0);
 
   // Store setpoint internally in rotations per second to match TalonFX units
   private double velocitySetpointRps = 0.0;
@@ -59,7 +59,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     
     // Configure follower to mirror leader (opposed direction for typical flywheels)
     //leader.setControl(velocityRequest);
-    leader.setControl(velocityTorqueCurrentRequest);
+    leader.setControl(velocityRequest);
     follower.setControl(new Follower(leaderId, MotorAlignmentValue.Opposed));
 
   }
@@ -129,8 +129,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     // Use VelocityVoltage closed-loop control even when the setpoint is zero so the error converges to 0
     velocityRequest.Velocity = velocitySetpointRps;
-    // leader.setControl(velocityRequest);
-    leader.setControl(velocityTorqueCurrentRequest.withVelocity(velocitySetpointRps));
+    leader.setControl(velocityRequest);
+    //leader.setControl(velocityTorqueCurrentRequest.withVelocity(velocitySetpointRps));
   }
 
   // setpoint runner used by commands and direct callers

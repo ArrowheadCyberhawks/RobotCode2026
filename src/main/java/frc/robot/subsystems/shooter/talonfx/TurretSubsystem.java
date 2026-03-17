@@ -158,4 +158,5 @@ public class TurretSubsystem extends SubsystemBase {
     cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kTurretAccelRps2;
     turnMotor.getConfigurator().apply(cfg);
   }
+
 }
