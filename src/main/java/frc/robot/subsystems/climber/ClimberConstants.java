@@ -20,8 +20,8 @@ public class ClimberConstants {
         public static final LoggedTunableNumber climberUpSpeed = new LoggedTunableNumber("climberUpSpeed", 0.1);
 
         // TODO: get these values and then set to doubles
-        public static final LoggedTunableNumber kClimberMaxPosition = new LoggedTunableNumber("Climber/MaxPosition", 10.0);
-        public static final LoggedTunableNumber kClimberMinPosition = new LoggedTunableNumber("Climber/MinPosition", 0.0); 
+        public static final LoggedTunableNumber kClimberMaxPosition = new LoggedTunableNumber("Climber/MaxPosition", 3.50);
+        public static final LoggedTunableNumber kClimberMinPosition = new LoggedTunableNumber("Climber/MinPosition", -2.0); 
     // test befefore adjusting values
     // climberUpSpeed pulls the robot up the tower and is a positive value
         private ClimberConstants() {}

@@ -2,6 +2,8 @@ package frc.robot.subsystems.climber;
 
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -90,7 +92,7 @@ public class ClimberSubsystem extends SubsystemBase {
             climberConfig.CurrentLimits.StatorCurrentLimit = 40.0; // Amps
             climberConfig.CurrentLimits.StatorCurrentLimitEnable = true;
 
-            climberConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; 
+            climberConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; 
            
             /* Positive values will pull the robot up,
             negative values will let the robot down.
@@ -109,7 +111,9 @@ public class ClimberSubsystem extends SubsystemBase {
         ClimberConstants.kDClimb.hasChanged(hashCode()) ||
         ClimberConstants.kVClimb.hasChanged(hashCode()) ||
         ClimberConstants.kAClimb.hasChanged(hashCode()) ||
-        ClimberConstants.kGClimb.hasChanged(hashCode())) {
+        ClimberConstants.kGClimb.hasChanged(hashCode()) ||
+        ClimberConstants.kClimberMaxPosition.hasChanged(hashCode()) ||
+        ClimberConstants.kClimberMinPosition.hasChanged(hashCode())) {
 
       Slot0Configs slot0 = new Slot0Configs();
       // Sets up the PID values for the climber motor
@@ -119,8 +123,10 @@ public class ClimberSubsystem extends SubsystemBase {
       slot0.kV = ClimberConstants.kVClimb.get();
       slot0.kA = ClimberConstants.kAClimb.get();
       slot0.kG = ClimberConstants.kGClimb.get();
+        // Set limits in rotations
       
       climberMotor.getConfigurator().apply(slot0);
-        }
+    }
+    Logger.recordOutput("Climber/Position", getClimberPosition());
     }
 }

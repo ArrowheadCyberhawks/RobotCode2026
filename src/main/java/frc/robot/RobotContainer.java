@@ -52,6 +52,7 @@ import frc.robot.Constants.IOConstants;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
@@ -128,6 +129,7 @@ public class RobotContainer {
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
+	public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -249,13 +251,14 @@ public class RobotContainer {
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
 
-		driverController.povLeft().whileTrue(
-				new DriveToPose(
-						drivetrain,
-						() -> AllianceFlipUtil.apply(new Pose2d(1.140, 3.285, new Rotation2d(Units.degreesToRadians(90)))),
-						driveFacingAngleRequest));
+		driverController.povUp().whileTrue(
+			climberSubsystem.runClimberDown());
+		
+		driverController.povDown().whileTrue(
+			climberSubsystem.runClimberUp());
 
-		driverController.povDown().onTrue(
+		driverController.povLeft().or(manipulatorController.povDown())
+			.onTrue(
 				intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		
 		// I'm a little confused about the purpose of this, especially on the driver controller, but here is the newer version
