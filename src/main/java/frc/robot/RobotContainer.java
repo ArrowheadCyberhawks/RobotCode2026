@@ -232,13 +232,14 @@ public class RobotContainer {
 									* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
+		
+		// Left bumper - Toggle intake
+		driverController.leftBumper().toggleOnTrue(intakeSubsystem.runEnd(
+			() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN),
+			() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)
+		));
 
-		// Right bumper - Toggle shooter
 		driverController.rightBumper().toggleOnTrue(shootMode);
-
-		// TEMP CODE
-		// driverController.rightBumper()
-		// 		.whileTrue(hood.trackTarget().alongWith(flywheel.trackTarget()).alongWith(turret.trackTarget()));
 
 		// Idle while the robot is disabled. This ensures the configured
 		// neutral mode is applied to the drive motors while disabled.
@@ -251,21 +252,12 @@ public class RobotContainer {
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
 
-		driverController.povUp().whileTrue(
-			climberSubsystem.runClimberDown());
-		
-		driverController.povDown().whileTrue(
-			climberSubsystem.runClimberUp());
-
+		driverController.povUp().whileTrue(climberSubsystem.runClimberDown());
+		driverController.povDown().whileTrue(climberSubsystem.runClimberUp());
 		driverController.povLeft().or(manipulatorController.povDown())
-			.onTrue(
-				intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
-		
-		// I'm a little confused about the purpose of this, especially on the driver controller, but here is the newer version
+			.onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		driverController.povRight().onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
 		
-		// driverController.povRight().onTrue(hood.runOnce(() -> hood.moveHoodTo(Rotation2d.fromDegrees(30.0))));
-
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
 		driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -278,38 +270,21 @@ public class RobotContainer {
 				drivetrain.getState().Pose.getRotation()
 		)));
 
-		driverController.start()
-		.whileTrue(limelightSubsystem
-		.startRun(() -> LimelightSubsystem.SetIMUMode(1),
-		() -> limelightSubsystem.updateVisionPoseMT1(true))
-		.finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
+		// driverController.start()
+		// .whileTrue(limelightSubsystem
+		// .startRun(() -> LimelightSubsystem.SetIMUMode(1),
+		// () -> limelightSubsystem.updateVisionPoseMT1(true))
+		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
 
-		driverController.back()
-				.whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
-
-		// Manipulator controller - Shooter state machine controls
-		// A button: Set shooter to IDLE (stop all subsystems)
-		// manipulatorController.a().onTrue(Commands.runOnce(shooterSubsystem::stop));
-
-		// B button: Set shooter to STRAIGHT (turret straight, tracking flywheel/hood)
-		// manipulatorController.b().onTrue(Commands.runOnce(shooterSubsystem::aimStraight));
-
-		// X button: Start AIM sequence (all subsystems track target, auto-transitions
-		// to SHOOT when ready)
-		// manipulatorController.x().onTrue(Commands.runOnce(shooterSubsystem::startAiming));
+		// driverController.back()
+		// 		.whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		// driverController.leftBumper()
-		// 		.whileTrue(Commands.runEnd(
-		// 				() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
-		// 				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
-
-
-		driverController.leftTrigger().or(manipulatorController.leftTrigger()
+		manipulatorController.leftTrigger()
 				.whileTrue(Commands.runEnd(
 						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
-						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE))));
+						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
 
 		driverController.leftTrigger()
 				.whileTrue(Commands.runEnd(

@@ -67,16 +67,42 @@ public final class FieldZones {
                         .difference(TRENCH());
         }
 
+        // public static Zone RIGHTPASS() {
+        //         return PASS().intersection(new Zone.RectangleZone(
+        //                 0.0, FieldConstants.fieldLength,
+        //                 FieldConstants.LinesHorizontal.center, FieldConstants.fieldWidth));
+        // }
+
+        // public static Zone LEFTPASS() {
+        //         return PASS().intersection(new Zone.RectangleZone(
+        //                 0.0, FieldConstants.fieldLength,
+        //                 0.0, FieldConstants.LinesHorizontal.center));
+        // }
+
         public static Zone RIGHTPASS() {
-                return PASS().intersection(new Zone.RectangleZone(
-                        0.0, FieldConstants.fieldLength,
-                        FieldConstants.LinesHorizontal.center, FieldConstants.fieldWidth));
+                double splitY = FieldConstants.LinesHorizontal.center;
+                if (AllianceFlipUtil.shouldFlip()) {
+                        return PASS().intersection(new Zone.RectangleZone(
+                                0.0, FieldConstants.fieldLength,
+                                0.0, splitY));  // Red: low Y half
+                } else {
+                        return PASS().intersection(new Zone.RectangleZone(
+                                0.0, FieldConstants.fieldLength,
+                                splitY, FieldConstants.fieldWidth));  // Blue: high Y half
+                }
         }
 
         public static Zone LEFTPASS() {
-                return PASS().intersection(new Zone.RectangleZone(
-                        0.0, FieldConstants.fieldLength,
-                        0.0, FieldConstants.LinesHorizontal.center));
+                double splitY = FieldConstants.LinesHorizontal.center;
+                if (AllianceFlipUtil.shouldFlip()) {
+                        return PASS().intersection(new Zone.RectangleZone(
+                                0.0, FieldConstants.fieldLength,
+                                splitY, FieldConstants.fieldWidth));  // Red: high Y half
+                } else {
+                        return PASS().intersection(new Zone.RectangleZone(
+                                0.0, FieldConstants.fieldLength,
+                                0.0, splitY));  // Blue: low Y half
+                }
         }
 
         public static void updateTrenchMargin(double newMargin) {
