@@ -39,7 +39,7 @@
   "eventMarkers": [
     {
       "name": "IntakeOn",
-      "waypointRelativePos": 0.34640102827763813,
+      "waypointRelativePos": 0.06362467866323872,
       "endWaypointRelativePos": null,
       "command": null
     },
@@ -63,7 +63,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 1.25,
     "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

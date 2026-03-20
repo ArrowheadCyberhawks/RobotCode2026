@@ -38,12 +38,6 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "IntakeOff",
-      "waypointRelativePos": 0.15439856373429062,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
       "name": "ShooterAim",
       "waypointRelativePos": 0.8168761220825843,
       "endWaypointRelativePos": null,
@@ -63,7 +57,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 1.0,
+    "maxVelocity": 1.25,
     "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

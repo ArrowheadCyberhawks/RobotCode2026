@@ -21,7 +21,7 @@
     "PID",
     "Right"
   ],
-  "defaultMaxVel": 1.0,
+  "defaultMaxVel": 1.25,
   "defaultMaxAccel": 0.5,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,

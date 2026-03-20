@@ -79,7 +79,7 @@ public final class FieldZones {
         //                 0.0, FieldConstants.LinesHorizontal.center));
         // }
 
-        public static Zone RIGHTPASS() {
+        public static Zone LEFTPASS() {
                 double splitY = FieldConstants.LinesHorizontal.center;
                 if (AllianceFlipUtil.shouldFlip()) {
                         return PASS().intersection(new Zone.RectangleZone(
@@ -92,7 +92,7 @@ public final class FieldZones {
                 }
         }
 
-        public static Zone LEFTPASS() {
+        public static Zone RIGHTPASS() {
                 double splitY = FieldConstants.LinesHorizontal.center;
                 if (AllianceFlipUtil.shouldFlip()) {
                         return PASS().intersection(new Zone.RectangleZone(

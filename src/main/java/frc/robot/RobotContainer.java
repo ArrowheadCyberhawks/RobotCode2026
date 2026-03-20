@@ -276,8 +276,15 @@ public class RobotContainer {
 		// () -> limelightSubsystem.updateVisionPoseMT1(true))
 		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
 
-		// driverController.back()
-		// 		.whileTrue(questNavSubsystem.run(() -> questNavSubsystem.resetPose(drivetrain.getPose())));
+		driverController.back()
+				.whileTrue(questNavSubsystem.run(() -> {
+					ChassisSpeeds speeds = drivetrain.getState().Speeds;
+					boolean isSlow = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.25
+							&& Math.abs(speeds.omegaRadiansPerSecond) < 0.1;
+					if (limelightSubsystem.hasTarget() && isSlow) {
+						questNavSubsystem.resetPose(limelightSubsystem.getMegaTag2Pose2dFromLimelight());
+					}
+				}));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 

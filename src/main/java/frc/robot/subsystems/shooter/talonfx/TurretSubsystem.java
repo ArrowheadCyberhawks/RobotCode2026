@@ -103,7 +103,7 @@ public class TurretSubsystem extends SubsystemBase {
       Logger.recordOutput("Turret/ShotData Exists", data != null);
       if (data != null) {
         Logger.recordOutput("Turret/ShotData Valid", data.isValid());
-        Rotation2d desired = data.turretAngle();
+        Rotation2d desired = data.turretAngle().plus(Rotation2d.fromDegrees(1.0)); // 1 degree CCW offset
         Logger.recordOutput("Turret/ShotCalc Angle", desired);
         if (data.isValid()) {
           moveTurretToRadians(desired.getRadians());

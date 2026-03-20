@@ -136,7 +136,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	 * @return true if the turret is within 3 degrees (~0.052 radians) of the target
 	 */
 	public boolean isAtGoal() {
-		return atGoal(Math.toRadians(3.0)); // 3 degree default tolerance
+		return atGoal(Math.toRadians(2.0)); // 3 degree default tolerance
 	}
 
 	// public void resetTurretEncoder() {
