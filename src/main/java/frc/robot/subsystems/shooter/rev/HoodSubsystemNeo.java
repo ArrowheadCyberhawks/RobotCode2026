@@ -58,7 +58,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
     SparkMaxConfig cfg = new SparkMaxConfig();
     // convert motor rotations to hood radians for easier control/monitoring
     cfg.encoder.positionConversionFactor(ShooterConstants.kHoodGearRatio * 2.0 * Math.PI);
-    cfg.idleMode(IdleMode.kBrake).inverted(false);
+    cfg.idleMode(IdleMode.kBrake).inverted(true);
   //   cfg.closedLoop.positionWrappingEnabled(false)//.positionWrappingInputRange(-Math.PI, Math.PI)
   //       .p(ShooterConstants.kPHood.get())
   //       .i(ShooterConstants.kIHood.get())

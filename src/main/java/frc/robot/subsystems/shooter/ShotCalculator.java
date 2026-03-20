@@ -222,16 +222,7 @@ public class ShotCalculator {
         //turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
         turretAngle = Rotation2d.fromRadians(rawTurretAngleRad);
 
-        // Log calculated values for debugging
-        Logger.recordOutput("ShotCalculator/RobotPose", estimatedPose);
-        Logger.recordOutput("ShotCalculator/TargetPos", target);
-        Logger.recordOutput("ShotCalculator/TurretPos", turretPosition.getTranslation());
-        Logger.recordOutput("ShotCalculator/FieldRelativeAngle", fieldRelativeAngleRad);
-        Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
-        Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
-        //Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
-        Logger.recordOutput("ShotCalculator/FlywheelSpeed", flywheelSpeedMap.get(lookaheadTurretToTargetDistance));
-        Logger.recordOutput("ShotCalculator/TargetDistance", turretToTargetDistance);
+        double flywheelSpeed = flywheelSpeedMap.get(lookaheadTurretToTargetDistance) + velocityOffset.get();
 
         //Logger.recordOutput("ShotCalculator/Target", );
 
@@ -261,11 +252,22 @@ public class ShotCalculator {
                 turretVelocity,
                 hoodAngle,
                 hoodVelocity,
-                flywheelSpeedMap.get(lookaheadTurretToTargetDistance)); // + velocityOffset.get()
+                flywheelSpeed);
 
         // Log calculated values
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
-        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
+        Logger.recordOutput("LaunchCalculator/LookaheadTargetDistance", lookaheadTurretToTargetDistance);
+        
+        // Log calculated values for debugging
+        Logger.recordOutput("ShotCalculator/RobotPose", estimatedPose);
+        Logger.recordOutput("ShotCalculator/TargetPos", target);
+        Logger.recordOutput("ShotCalculator/TurretPos", turretPosition.getTranslation());
+        Logger.recordOutput("ShotCalculator/FieldRelativeAngle", fieldRelativeAngleRad);
+        Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
+        Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
+        //Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
+        Logger.recordOutput("ShotCalculator/FlywheelSpeed", flywheelSpeed);
+        Logger.recordOutput("ShotCalculator/TargetDistance", turretToTargetDistance);
 
         return latestData;
     }

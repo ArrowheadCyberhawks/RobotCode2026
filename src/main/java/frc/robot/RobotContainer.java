@@ -254,9 +254,9 @@ public class RobotContainer {
 
 		driverController.povUp().whileTrue(climberSubsystem.runClimberDown());
 		driverController.povDown().whileTrue(climberSubsystem.runClimberUp());
-		driverController.povLeft().or(manipulatorController.povDown())
+		driverController.povLeft().or(manipulatorController.povLeft())
 			.onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
-		driverController.povRight().onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
+		driverController.povRight().or(manipulatorController.povRight()).onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
 		
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -281,12 +281,8 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		manipulatorController.leftTrigger()
-				.whileTrue(Commands.runEnd(
-						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
-						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
-
 		driverController.leftTrigger()
+			.or(manipulatorController.leftTrigger())
 				.whileTrue(Commands.runEnd(
 						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
 						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));

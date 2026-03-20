@@ -37,6 +37,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
   // Velocity closed-loop control request using torque current FOC (reused to avoid object allocation)
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0).withEnableFOC(true);
+  private final TalonFXConfiguration cfg = new TalonFXConfiguration();
   //private final VelocityTorqueCurrentFOC velocityTorqueCurrentRequest = new VelocityTorqueCurrentFOC(0.0);
 
   // Store setpoint internally in rotations per second to match TalonFX units
@@ -68,9 +69,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     this(ShooterConstants.kFlywheelMotorId, ShooterConstants.kFlywheelFollowerMotorId);
   }
 
-  private void configureFlywheel() {
-    TalonFXConfiguration cfg = new TalonFXConfiguration();
-    
+  private void configureFlywheel() {    
     // Set neutral mode to coast for flywheel
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
@@ -86,7 +85,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
     cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     follower.getConfigurator().apply(cfg);
     leader.getConfigurator().apply(cfg);
   }
@@ -99,20 +98,20 @@ public class FlywheelSubsystem extends SubsystemBase {
         || ShooterConstants.kDFlywheel.hasChanged(hashCode())
         || ShooterConstants.kVFlywheel.hasChanged(hashCode())
         || ShooterConstants.kSFlywheel.hasChanged(hashCode())) {
-      TalonFXConfiguration cfg = new TalonFXConfiguration();
       cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
       cfg.Slot0.kP = ShooterConstants.kPFlywheel.get();
       cfg.Slot0.kI = ShooterConstants.kIFlywheel.get();
       cfg.Slot0.kD = ShooterConstants.kDFlywheel.get();
       cfg.Slot0.kV = ShooterConstants.kVFlywheel.get();
       cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
-      cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
       
       // Configure current limits for FOC
       cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
       cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
       cfg.CurrentLimits.StatorCurrentLimit = 40.0;
       cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+
+      cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
       follower.getConfigurator().apply(cfg);
       leader.getConfigurator().apply(cfg);
