@@ -84,8 +84,8 @@ public class ClimberSubsystem extends SubsystemBase {
             climberConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ClimberConstants.kClimberMinPosition.get(); 
 
             // Enable the limits
-            climberConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-            climberConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+            climberConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+            climberConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
             climberConfig.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
             climberConfig.CurrentLimits.SupplyCurrentLimitEnable = true;

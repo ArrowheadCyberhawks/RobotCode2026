@@ -36,6 +36,7 @@ public class ShotCalculator {
     private final LinearFilter hoodAngleFilter = LinearFilter.movingAverage((int) (0.1 / Constants.DriveConstants.kLoopPeriodSeconds));
 
     private final LoggedTunableNumber velocityOffset = new LoggedTunableNumber("ShotCalculator/VelocityOffset", 0.0);
+    private final LoggedTunableNumber hoodAngleOffset = new LoggedTunableNumber("ShotCalculator/hoodAngleOffset", 0.0);
 
     // Last values used for simple derivative computations (angular velocities).
     private Rotation2d lastTurretAngle;
@@ -109,8 +110,8 @@ public class ShotCalculator {
         // values should be tuned on the field; interpolation fills in values
         // between the points defined here.
         // Meters
-        hoodAngleMap.put(1.14, Rotation2d.fromDegrees(18)); //Change to 15 once hood can go down that low
-        hoodAngleMap.put(1.46, Rotation2d.fromDegrees(18)); //Change to 15 once hood can go down that low
+        hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
+        hoodAngleMap.put(1.46, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.82, Rotation2d.fromDegrees(20));
         hoodAngleMap.put(2.82, Rotation2d.fromDegrees(21.5));
         hoodAngleMap.put(3.18, Rotation2d.fromDegrees(22));
@@ -227,7 +228,7 @@ public class ShotCalculator {
         //Logger.recordOutput("ShotCalculator/Target", );
 
 
-        hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance);
+        hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance).plus(Rotation2d.fromDegrees(hoodAngleOffset.get()));
         // Smooth hood angle as well
         hoodAngle = Rotation2d.fromRadians(hoodAngleFilter.calculate(hoodAngle.getRadians()));
         Logger.recordOutput("ShotCalculator/HoodAngle", hoodAngleMap.get(lookaheadTurretToTargetDistance));

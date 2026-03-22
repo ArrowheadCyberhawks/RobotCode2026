@@ -252,8 +252,10 @@ public class RobotContainer {
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
 
-		driverController.povUp().whileTrue(climberSubsystem.runClimberDown());
-		driverController.povDown().whileTrue(climberSubsystem.runClimberUp());
+		driverController.povUp().or(manipulatorController.povUp())
+			.whileTrue(climberSubsystem.runClimberDown());
+		driverController.povDown().or(manipulatorController.povDown())
+			.whileTrue(climberSubsystem.runClimberUp());
 		driverController.povLeft().or(manipulatorController.povLeft())
 			.onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		driverController.povRight().or(manipulatorController.povRight()).onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
@@ -276,15 +278,19 @@ public class RobotContainer {
 		// () -> limelightSubsystem.updateVisionPoseMT1(true))
 		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
 
-		driverController.back()
-				.whileTrue(questNavSubsystem.run(() -> {
-					ChassisSpeeds speeds = drivetrain.getState().Speeds;
-					boolean isSlow = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.25
-							&& Math.abs(speeds.omegaRadiansPerSecond) < 0.1;
-					if (limelightSubsystem.hasTarget() && isSlow) {
-						questNavSubsystem.resetPose(limelightSubsystem.getMegaTag2Pose2dFromLimelight());
-					}
-				}));
+		// driverController.back()
+		// 		.whileTrue(questNavSubsystem.run(() -> {
+		// 			ChassisSpeeds speeds = drivetrain.getState().Speeds;
+		// 			boolean isSlow = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.25
+		// 					&& Math.abs(speeds.omegaRadiansPerSecond) < 0.1;
+		// 			if (limelightSubsystem.hasTarget() && isSlow) {
+		// 				questNavSubsystem.resetPose(limelightSubsystem.getMegaTag2Pose2dFromLimelight());
+		// 			}
+		// 		}));
+
+		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
+			questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2)))))
+			.andThen(() -> drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2))))));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 

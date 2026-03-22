@@ -16,8 +16,8 @@ public class ClimberConstants {
         public static final LoggedTunableNumber kVClimb = new LoggedTunableNumber("Climber/V", 0.0);
         public static final LoggedTunableNumber kAClimb = new LoggedTunableNumber("Climber/A", 0.0);
 
-        public static final LoggedTunableNumber climberDownSpeed = new LoggedTunableNumber("climberDownSpeed", -0.1);
-        public static final LoggedTunableNumber climberUpSpeed = new LoggedTunableNumber("climberUpSpeed", 0.1);
+        public static final LoggedTunableNumber climberDownSpeed = new LoggedTunableNumber("climberDownSpeed", -0.75);
+        public static final LoggedTunableNumber climberUpSpeed = new LoggedTunableNumber("climberUpSpeed", 0.75);
 
         // TODO: get these values and then set to doubles
         public static final LoggedTunableNumber kClimberMaxPosition = new LoggedTunableNumber("Climber/MaxPosition", 3.50);
