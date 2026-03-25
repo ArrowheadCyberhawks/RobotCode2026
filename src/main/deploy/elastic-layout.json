@@ -8,9 +8,9 @@
         "layouts": [
           {
             "title": "Shooter",
-            "x": 864.0,
-            "y": 416.0,
-            "width": 160.0,
+            "x": 960.0,
+            "y": 384.0,
+            "width": 256.0,
             "height": 256.0,
             "type": "List Layout",
             "properties": {
@@ -60,163 +60,6 @@
                 }
               }
             ]
-          },
-          {
-            "title": "Flywheel",
-            "x": 1024.0,
-            "y": 416.0,
-            "width": 192.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "AtGoal",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Boolean Box",
-                "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/Flywheel/AtGoal",
-                  "period": 0.06,
-                  "data_type": "boolean",
-                  "true_color": 4283215696,
-                  "false_color": 4294198070,
-                  "true_icon": "None",
-                  "false_icon": "None"
-                }
-              },
-              {
-                "title": "Current",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/Flywheel/Current",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "Error",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/Flywheel/Error",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "Setpoint",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/Flywheel/Setpoint",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "TorqueCurrent",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/Flywheel/TorqueCurrent",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "Velocity",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/Flywheel/Velocity",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": true
-                }
-              }
-            ]
-          },
-          {
-            "title": "translation",
-            "x": 1216.0,
-            "y": 320.0,
-            "width": 288.0,
-            "height": 224.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "TOP"
-            },
-            "children": [
-              {
-                "title": "x",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/DriveState/Pose",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "struct_meta": {
-                    "path": [
-                      "translation",
-                      "x"
-                    ],
-                    "schema_name": "Pose2d",
-                    "type": "double"
-                  },
-                  "show_submit_button": true
-                }
-              },
-              {
-                "title": "y",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/DriveState/Pose",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "struct_meta": {
-                    "path": [
-                      "translation",
-                      "y"
-                    ],
-                    "schema_name": "Pose2d",
-                    "type": "double"
-                  },
-                  "show_submit_button": true
-                }
-              }
-            ]
           }
         ],
         "containers": [
@@ -225,7 +68,7 @@
             "x": 384.0,
             "y": 0.0,
             "width": 832.0,
-            "height": 416.0,
+            "height": 384.0,
             "type": "Field",
             "properties": {
               "topic": "/DriveState/Pose",
@@ -268,19 +111,6 @@
               "topic": "/SmartDashboard/Auto/Selected",
               "period": 0.06,
               "sort_options": false
-            }
-          },
-          {
-            "title": "limelight",
-            "x": 384.0,
-            "y": 416.0,
-            "width": 480.0,
-            "height": 448.0,
-            "type": "Camera Stream",
-            "properties": {
-              "topic": "/CameraPublisher/limelight",
-              "period": 0.06,
-              "rotation_turns": 0
             }
           },
           {
@@ -372,6 +202,59 @@
               "period": 0.06,
               "data_type": "string",
               "show_submit_button": true
+            }
+          },
+          {
+            "title": "VelocityOffset",
+            "x": 384.0,
+            "y": 384.0,
+            "width": 576.0,
+            "height": 128.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/Tuning/ShotCalculator/VelocityOffset",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -10.0,
+              "max_value": 10.0,
+              "divisions": 5,
+              "update_continuously": false
+            }
+          },
+          {
+            "title": "hoodAngleOffset",
+            "x": 384.0,
+            "y": 512.0,
+            "width": 576.0,
+            "height": 128.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/Tuning/ShotCalculator/hoodAngleOffset",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": -10.0,
+              "max_value": 10.0,
+              "divisions": 5,
+              "update_continuously": false
+            }
+          },
+          {
+            "title": "Passthrough",
+            "x": 1216.0,
+            "y": 320.0,
+            "width": 320.0,
+            "height": 288.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/Passthrough",
+              "period": 0.06,
+              "rotation_turns": 0,
+              "compression": 25,
+              "fps": 20,
+              "resolution": [
+                320.0,
+                240.0
+              ]
             }
           }
         ]

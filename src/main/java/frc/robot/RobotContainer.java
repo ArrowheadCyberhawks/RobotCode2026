@@ -289,8 +289,8 @@ public class RobotContainer {
 		// 		}));
 
 		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
-			questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2)))))
-			.andThen(() -> drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2))))));
+		drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2)))))
+			.andThen(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2))))));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
