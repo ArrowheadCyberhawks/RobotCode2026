@@ -92,8 +92,9 @@ public class RobotContainer {
 
 	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 	private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-
-	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed.in(MetersPerSecond));
+	
+	private Field2d field2d = new Field2d();
+	private final Telemetry logger = new Telemetry(DriveConstants.kMaxSpeed.in(MetersPerSecond), field2d);
 
 	// check if bluetooth controller is connected, if so use it
 	private final CommandXboxController driverControllerBT = new CommandXboxController(
@@ -110,7 +111,6 @@ public class RobotContainer {
 
 	private final LoggedDashboardChooser<Command> autoChooser;
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-	private Field2d field2d = new Field2d();
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
 		// () -> AllianceFlipUtil.apply(drivetrain.getPigeon2().getRotation3d()),
@@ -179,6 +179,7 @@ public class RobotContainer {
 			questNavSubsystem.resetPose(pose);
 		});
 
+		//TODO only add certain autos to the chooser and flip them to have various starting positions
 		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("LeftSwipe"));
 		autoChooser.onChange((Command selected) -> {
 			// reset pose to the starting pose of the selected auto

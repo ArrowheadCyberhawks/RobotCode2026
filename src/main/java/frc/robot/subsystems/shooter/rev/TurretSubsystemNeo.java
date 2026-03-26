@@ -121,31 +121,18 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	 */
 	public boolean atGoal(double toleranceRadians) {
 		double currentRadians = getTurretRotation().getRadians();
-
-		// Handle angle wrapping for shortest distance
-		double error = Math.abs(Rotation2d.fromRadians(currentRadians)
-				.minus(targetRotation)
-				.getRadians());
-
+		double error = Math.abs(targetRotation.getRadians() - currentRadians);
 		return error <= toleranceRadians;
 	}
 
 	/**
 	 * Check if the turret is at its goal position using default tolerance.
 	 * 
-	 * @return true if the turret is within 3 degrees (~0.052 radians) of the target
+	 * @return true if the turret is within 2 degrees of the target
 	 */
 	public boolean isAtGoal() {
-		return atGoal(Math.toRadians(2.0)); // 3 degree default tolerance
+		return atGoal(Math.toRadians(2.0)); // 2 degree default tolerance
 	}
-
-	// public void resetTurretEncoder() {
-	// 	// Get current position in radians
-	// 	double currentRadians = encoder.getPosition();
-	// 	// Wrap to [-π, π] range to match ShotCalculator
-	// 	double wrappedRadians = Math.atan2(Math.sin(currentRadians), Math.cos(currentRadians));
-	// 	encoder.setPosition(wrappedRadians);
-	// }
 
 	public void manualResetTurretEncoder(double rotations) {
 		encoder.setPosition(rotations);
@@ -175,6 +162,9 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		// Log telemetry
 		Logger.recordOutput("Turret/Current Position", getTurretRotation());
 		Logger.recordOutput("Turret/Target Position", targetRotation);
+		Logger.recordOutput("Turret/Target Velocity", setpointVelocity);
+		Logger.recordOutput("Turret/PID Output", pidOut);
+		Logger.recordOutput("Turret/Feedforward Output", ffOut);
 		Logger.recordOutput("Turret/Current", turretMotor.getOutputCurrent());
 		Logger.recordOutput("Turret/AtGoal", isAtGoal());
 		Logger.recordOutput("Turret/is Flipping", isFlipping());

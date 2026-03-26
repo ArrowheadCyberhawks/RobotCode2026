@@ -143,7 +143,7 @@ public class LimelightSubsystem extends SubsystemBase {
 				drivetrain.addVisionMeasurement(
 					limelightMeasurementMT2.pose,
 					Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds),
-					VecBuilder.fill(.7,.7,9999999));
+					VecBuilder.fill(.6,.6,9999999));
 			}
 
 			// horrible inefficient garbage telemetry code

@@ -99,7 +99,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
       case IDLE:
         flywheel.stop();
-        hood.stopHood();
+        hood.setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
         turret.stopTurret();
         break;
 

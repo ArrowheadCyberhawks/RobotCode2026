@@ -21,24 +21,28 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.Constants.FieldObjects;
 import frc.robot.util.HubTracker;
 import frc.robot.util.HubTracker.Shift;
 
 public class Telemetry {
     private final double MaxSpeed;
+    private final Field2d field;
 
     /**
      * Construct a telemetry object, with the specified max speed of the robot
      * 
      * @param maxSpeed Maximum speed in meters per second
      */
-    public Telemetry(double maxSpeed) {
+    public Telemetry(double maxSpeed, Field2d field) {
         MaxSpeed = maxSpeed;
+        this.field = field;
 
         /* Set up the module state Mechanism2d telemetry */
         for (int i = 0; i < 4; ++i) {
@@ -139,5 +143,13 @@ public class Telemetry {
             Logger.recordOutput("Active Shift?", HubTracker.isActive());
             Logger.recordOutput("Next Shift?", HubTracker.isActiveNext());
         }
+        
+        if (field != null) {
+            Logger.recordOutput("Pose/Robot", field.getRobotPose());
+            Logger.recordOutput("Pose/Limelight", field.getObject(FieldObjects.LIMELIGHT).getPose());
+            Logger.recordOutput("Pose/Quest", field.getObject(FieldObjects.QUEST).getPose());
+        }
+        
+
     }
 }
