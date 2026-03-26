@@ -47,7 +47,11 @@ public final class Constants {
     public static final double kLoopPeriodSeconds = 0.02;
 
     public static final double kDriveSlowModifier = 0.25;
+    public static final double kDriveFastModifier = 1.0;
+    public static final double kDriveNormalModifier = 0.5;
     public static final double kTurnSlowModifier = 0.5;
+    public static final double kTurnFastModifier = 1.0;
+    public static final double kTurnNormalModifier = 0.5;
   }
 
   public final class FieldObjects {

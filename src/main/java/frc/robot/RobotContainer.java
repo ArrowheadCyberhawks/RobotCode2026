@@ -109,19 +109,16 @@ public class RobotContainer {
 			: new CommandXboxController(IOConstants.kManipulatorControllerPortUSB);
 
 	private final LoggedDashboardChooser<Command> autoChooser;
-
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
 	private Field2d field2d = new Field2d();
-
-	// public final VisionSubsystem visionSubsystem = new
-	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
-	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-	() -> drivetrain.getPose().getRotation().getDegrees(), // switched to
-	// gyro-based not pose estimator
-	drivetrain,
-	field2d);
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
+	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
+		// () -> AllianceFlipUtil.apply(drivetrain.getPigeon2().getRotation3d()),
+		() -> drivetrain.getPose().getRotation().getDegrees(),
+		() -> questNavSubsystem.useQuest(),
+		drivetrain,
+		field2d
+	);
 
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
 	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
@@ -159,11 +156,12 @@ public class RobotContainer {
 
 		// Register Named Commands for PathPlanner BEFORE creating any autos
 		registerNamedCommands();
-		configureTriggers();
 		registerEventMarkers();
 
 		constructField();
+		configureTriggers();
 		configureBindings();
+
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 		// and the hood/turret won't adjust based on distance!
 
@@ -220,25 +218,38 @@ public class RobotContainer {
 		drivetrain.setDefaultCommand(
 			// Drivetrain will execute this command periodically
 			drivetrain.applyRequest(() -> teleDrive
+				// picks the slower trigger if both are pressed
 				.withVelocityX(
 					xLimiter.calculate(
-						MathUtil.interpolate(1,
-							DriveConstants.kDriveSlowModifier,
-							driverController.getRightTriggerAxis())
+						Math.min(
+							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
+								DriveConstants.kDriveSlowModifier,
+								driverController.getLeftTriggerAxis()),
+							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
+								DriveConstants.kDriveFastModifier,
+								driverController.getRightTriggerAxis()))
 							* MathUtil.applyDeadband(-driverController.getLeftY(), DriveConstants.kDriveDeadband)
 							* DriveConstants.kMaxSpeed.in(MetersPerSecond)))
 				.withVelocityY(
 					yLimiter.calculate(
-						MathUtil.interpolate(1,
-							DriveConstants.kDriveSlowModifier,
-								driverController.getRightTriggerAxis())
+						Math.min(
+							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
+								DriveConstants.kDriveSlowModifier,
+								driverController.getLeftTriggerAxis()),
+							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
+								DriveConstants.kDriveFastModifier,
+								driverController.getRightTriggerAxis()))
 									* MathUtil.applyDeadband(-driverController.getLeftX(), DriveConstants.kDriveDeadband)
 									* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with negative X (left)
 				.withRotationalRate(
 					rotationLimiter.calculate(
-						MathUtil.interpolate(1,
-							DriveConstants.kTurnSlowModifier,
-								driverController.getRightTriggerAxis())
+						Math.max(
+							MathUtil.interpolate(DriveConstants.kTurnNormalModifier,
+								DriveConstants.kTurnSlowModifier,
+								driverController.getLeftTriggerAxis()),
+							MathUtil.interpolate(DriveConstants.kTurnNormalModifier,
+								DriveConstants.kTurnFastModifier,
+								driverController.getRightTriggerAxis()))
 									* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
@@ -284,35 +295,18 @@ public class RobotContainer {
 				drivetrain.getState().Pose.getRotation()
 		)));
 
-		// driverController.start()
-		// .whileTrue(limelightSubsystem
-		// .startRun(() -> LimelightSubsystem.SetIMUMode(1),
-		// () -> limelightSubsystem.updateVisionPoseMT1(true))
-		// .finallyDo(() -> LimelightSubsystem.SetIMUMode(3)));
-
-		// driverController.back()
-		// 		.whileTrue(questNavSubsystem.run(() -> {
-		// 			ChassisSpeeds speeds = drivetrain.getState().Speeds;
-		// 			boolean isSlow = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < 0.25
-		// 					&& Math.abs(speeds.omegaRadiansPerSecond) < 0.1;
-		// 			if (limelightSubsystem.hasTarget() && isSlow) {
-		// 				questNavSubsystem.resetPose(limelightSubsystem.getMegaTag2Pose2dFromLimelight());
-		// 			}
-		// 		}));
-
 		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
 		drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2)))))
 			.andThen(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2))))));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		driverController.leftTrigger()
-			.or(manipulatorController.leftTrigger())
+		manipulatorController.leftTrigger()
 				.whileTrue(Commands.runEnd(
 						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
 						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
 
-		driverController.x().and(driverController.leftTrigger())
+		driverController.x()
 				.or(manipulatorController.x().and(manipulatorController.leftTrigger()))
 				.whileTrue(
 						intakeSubsystem.runEnd(

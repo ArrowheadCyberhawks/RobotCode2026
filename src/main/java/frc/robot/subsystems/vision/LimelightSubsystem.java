@@ -1,6 +1,8 @@
 package frc.robot.subsystems.vision;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
@@ -14,6 +16,7 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -29,17 +32,27 @@ import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 
 
 public class LimelightSubsystem extends SubsystemBase {
-  private ShuffleboardTab tab;
   private double lastDistance;
   private DoubleSupplier rotationSupplier;
+  private Supplier<Rotation3d> rotation3dSupplier;
+  private BooleanSupplier useLimelight;
   private CommandSwerveDrivetrain drivetrain;
   private final Field2d field2d;
+  private final double averageTagAreaMT2 = 0.7;
 
-  private HttpCamera LLFeed;
 
-
-  public LimelightSubsystem(DoubleSupplier rotationSupplier, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
+  public LimelightSubsystem(DoubleSupplier rotationSupplier, BooleanSupplier useLimelight, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
 	this.rotationSupplier = rotationSupplier;
+	this.rotation3dSupplier = () -> new Rotation3d();
+	this.useLimelight = useLimelight;
+	this.drivetrain = drivetrain;
+	this.field2d = field2d;
+  }
+
+    public LimelightSubsystem(Supplier<Rotation3d> rotation3dSupplier, BooleanSupplier useLimelight, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
+	this.rotation3dSupplier = rotation3dSupplier;
+	this.rotationSupplier = () -> rotation3dSupplier.get().getZ();
+	this.useLimelight = useLimelight;
 	this.drivetrain = drivetrain;
 	this.field2d = field2d;
   }
@@ -47,7 +60,10 @@ public class LimelightSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 	updateRobotOrientation();
-	updateVisionPoseMT2(); // megatag2 is broken so just disable it
+	//updateFullRobotOrientation();
+	if (useLimelight.getAsBoolean()) {
+		updateVisionPoseMT2();
+	}
 	//updateVisionPoseMT1(false);
 	updateField(true);
 	// if(DriverStation.isDisabled()) {
@@ -77,6 +93,11 @@ public class LimelightSubsystem extends SubsystemBase {
   public void updateRobotOrientation() {
 	LimelightHelpers.SetRobotOrientation(
 		getLimelightName(), rotationSupplier.getAsDouble(), 0, 0, 0, 0, 0);
+  }
+
+  public void updateFullRobotOrientation() {
+	LimelightHelpers.SetRobotOrientation(
+		getLimelightName(), rotation3dSupplier.get().getZ(), 0.0, rotation3dSupplier.get().getY(), 0.0, rotation3dSupplier.get().getX(), 0.0);
   }
 
   public void updateVisionPoseMT1(boolean rotationOnly) {
@@ -110,7 +131,7 @@ public class LimelightSubsystem extends SubsystemBase {
 				rejectUpdate = false;
 			}
 
-			if (limelightMeasurementMT2.tagCount == 1 && limelightMeasurementMT2.avgTagArea > 0.7) {
+			if (limelightMeasurementMT2.tagCount == 1 && limelightMeasurementMT2.avgTagArea > averageTagAreaMT2) {
 				rejectUpdate = false;
 			}
 
@@ -159,7 +180,7 @@ public class LimelightSubsystem extends SubsystemBase {
 	return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName());
   }
 
-  public double getLatencyCapture() {
+  public double getLatency() {
 	return LimelightHelpers.getLatency_Capture(getLimelightName());
   }
 
@@ -175,9 +196,9 @@ public class LimelightSubsystem extends SubsystemBase {
 	return LimelightHelpers.getFiducialID(getLimelightName());
   }
 
-  // public void setPipeline(String pipeline) {
-  // LimelightHelpers.setPipelineIndex(getLimelightName(), pipeline.ordinal());
-  // }
+  public void setPipeline(int pipeline) {
+  LimelightHelpers.setPipelineIndex(getLimelightName(), pipeline);
+  }
 
   /**
    * Sets the IMU mode of the limelight.

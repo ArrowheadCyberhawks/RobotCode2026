@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
@@ -28,8 +29,7 @@ public class QuestNavSubsystem extends SubsystemBase {
     private final QuestNav questNav;
     private final CommandSwerveDrivetrain drivetrain;
     private final Field2d field2d;
-
-    
+    private boolean useQuest = false;
 
     /** Transform from robot center → Quest mount (tune to your actual mount) */
     private static final Transform3d ROBOT_TO_QUEST = new Transform3d(
@@ -54,6 +54,34 @@ public class QuestNavSubsystem extends SubsystemBase {
         this.questNav = new QuestNav();
         this.drivetrain = drivetrain;
         this.field2d = field2d;
+
+        questNav.onConnected(() -> {
+            System.out.println("Quest connected!");
+            useQuest = true;
+        });
+        questNav.onDisconnected(() -> {
+            DriverStation.reportWarning("Quest disconnected!", false);
+            useQuest = false;
+        });
+        questNav.onTrackingAcquired(() -> {
+            System.out.println("Quest tracking acquired!");
+            //consider adding this in, I think we should keep this in case it jumps poses
+            //resetPose(drivetrain.getPose());
+            useQuest = true;
+        });
+        questNav.onTrackingLost(() -> {
+            DriverStation.reportWarning("Quest tracking lost!", false);
+            useQuest = false;
+        });
+        questNav.onLowBattery(20, level ->
+            DriverStation.reportWarning("Quest battery low: " + level + "%", false)
+        );
+        questNav.onCommandSuccess(response ->
+            System.out.println("Command succeeded: " + response.getCommandId())
+        );
+        questNav.onCommandFailure(response ->
+            DriverStation.reportError("Command failed: " + response.getErrorMessage(), false)
+        );
     }
 
     @Override
@@ -61,7 +89,7 @@ public class QuestNavSubsystem extends SubsystemBase {
         // Required for receiving QuestNav data
         questNav.commandPeriodic();
 
-        if (questNav.isTracking()) {
+        if (useQuest) {
             PoseFrame[] frames = questNav.getAllUnreadPoseFrames();
 
             for (PoseFrame frame : frames) {
@@ -96,6 +124,10 @@ public class QuestNavSubsystem extends SubsystemBase {
     /** Returns whether QuestNav is actively tracking. */
     public boolean isTracking() {
         return questNav.isTracking();
+    }
+
+    public boolean useQuest() {
+        return useQuest;
     }
 
     /** Allows external reset of the QuestNav pose. */
