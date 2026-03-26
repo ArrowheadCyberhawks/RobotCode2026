@@ -242,6 +242,8 @@ public class RobotContainer {
 									* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
+
+		shooterSubsystem.setDefaultCommand(shooterSubsystem.trenchCommand());
 		
 		// Left bumper - Toggle intake
 		driverController.leftBumper().toggleOnTrue(intakeSubsystem.runEnd(
