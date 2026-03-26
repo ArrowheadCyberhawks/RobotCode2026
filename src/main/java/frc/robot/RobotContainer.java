@@ -9,7 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser; //Lebron
 import org.littletonrobotics.junction.LoggedPowerDistribution;
 import org.littletonrobotics.junction.Logger;
 
@@ -117,7 +117,7 @@ public class RobotContainer {
 	// public final VisionSubsystem visionSubsystem = new
 	// VisionSubsystem(drivetrain.getPose().getRotation()::getDegrees);
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-	() -> drivetrain.getPigeon2().getRotation2d().getDegrees(), // switched to
+	() -> drivetrain.getPose().getRotation().getDegrees(), // switched to
 	// gyro-based not pose estimator
 	drivetrain,
 	field2d);
@@ -159,11 +159,11 @@ public class RobotContainer {
 
 		// Register Named Commands for PathPlanner BEFORE creating any autos
 		registerNamedCommands();
+		configureTriggers();
 		registerEventMarkers();
 
 		constructField();
 		configureBindings();
-		configureTriggers();
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
 		// and the hood/turret won't adjust based on distance!
 
@@ -182,6 +182,16 @@ public class RobotContainer {
 		});
 
 		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("LeftSwipe"));
+		autoChooser.onChange((Command selected) -> {
+			// reset pose to the starting pose of the selected auto
+			if (selected instanceof PathPlannerAuto) {
+				PathPlannerAuto auto = (PathPlannerAuto) selected;
+				Pose2d initialPose = auto.getStartingPose();
+				initialPose = AllianceFlipUtil.apply(initialPose);
+				drivetrain.resetPose(initialPose);
+				questNavSubsystem.resetPose(initialPose);
+			}
+		});
 
 		// Warmup PathPlanner to avoid Java pauses
 		CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
