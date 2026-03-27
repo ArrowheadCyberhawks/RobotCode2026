@@ -144,11 +144,11 @@ public class Telemetry {
             Logger.recordOutput("Next Shift?", HubTracker.isActiveNext());
         }
         
-        if (field != null) {
-            Logger.recordOutput("Pose/Robot", field.getRobotPose());
-            Logger.recordOutput("Pose/Limelight", field.getObject(FieldObjects.LIMELIGHT).getPose());
-            Logger.recordOutput("Pose/Quest", field.getObject(FieldObjects.QUEST).getPose());
-        }
+        // if (field != null) {
+        //     Logger.recordOutput("Pose/Robot", field.getRobotPose());
+        //     Logger.recordOutput("Pose/Limelight", field.getObject(FieldObjects.LIMELIGHT).getPose());
+        //     Logger.recordOutput("Pose/Quest", field.getObject(FieldObjects.QUEST).getPose());
+        // }
         
 
     }
