@@ -4,14 +4,14 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.util.Optional;
-import java.util.function.DoubleSupplier;
-
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser; //Lebron
-import org.littletonrobotics.junction.LoggedPowerDistribution;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser; //Lebron
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -22,6 +22,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.events.EventTrigger;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.MathUtil;
@@ -30,52 +31,43 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.WebServer;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.IOConstants;
-import frc.robot.commands.DriveToPose;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.shooter.ShotCalculator;
-import frc.robot.subsystems.shooter.rev.FlywheelSubsystemNeo;
-import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
-import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
-import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
+import frc.robot.subsystems.hopper.HopperSubsystem;
+import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
+import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 // import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 // import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.shooter.ShotCalculator;
+import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
+import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
+import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
-import frc.robot.util.HubTracker;
-import frc.robot.util.HubTracker.Shift;
+import frc.robot.util.LocalADStarAK;
 import frc.robot.util.field.FieldConstants;
 import frc.robot.util.field.FieldZones;
 import frc.robot.util.geometry.AllianceFlipUtil;
-import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
-import frc.robot.subsystems.intake.IntakeConstants;
-import frc.robot.subsystems.hopper.HopperConstants;
-import frc.robot.subsystems.hopper.HopperSubsystem;
-import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -163,7 +155,7 @@ public class RobotContainer {
 		configureBindings();
 
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
-		// and the hood/turret won't adjust based on distance!
+		Pathfinding.setPathfinder(new LocalADStarAK());
 
 		// TODO: simplify the number of suppliers given by just giving robotrelative speeds and pose
 		ShotCalculator.getInstance().setPoseSupplier(drivetrain::getPose);
@@ -177,6 +169,16 @@ public class RobotContainer {
 		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
 			drivetrain.resetPose(pose);
 			questNavSubsystem.resetPose(pose);
+		});
+
+		//Pathfinding.setPathfinder(new LocalADStarAK());
+		PathPlannerLogging.setLogActivePathCallback(
+			(activePath) -> {
+			Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+		});
+    	PathPlannerLogging.setLogTargetPoseCallback(
+			(targetPose) -> {
+			Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
 		});
 
 		//TODO only add certain autos to the chooser and flip them to have various starting positions
