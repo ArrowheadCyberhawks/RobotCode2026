@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftTrenchToNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftNeutralToLeftShoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftShootToNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "NEW_LeftCenterNeutralToDepot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Left",
+  "choreoAuto": false
+}

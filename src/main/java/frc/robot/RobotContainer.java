@@ -247,7 +247,7 @@ public class RobotContainer {
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
 
-		shooterSubsystem.setDefaultCommand(shooterSubsystem.trenchCommand());
+		//shooterSubsystem.setDefaultCommand(shooterSubsystem.trenchCommand());
 		
 		// Left bumper - Toggle intake
 		driverController.leftBumper().toggleOnTrue(intakeSubsystem.runEnd(
@@ -381,6 +381,13 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
 
+		NamedCommands.registerCommand("ShooterOff", 
+			Commands.sequence(
+				shooterSubsystem.idle(),
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+			)
+		);
+
 		NamedCommands.registerCommand("HopperOn",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
 
@@ -405,7 +412,9 @@ public class RobotContainer {
 		new EventTrigger("IntakeTrench").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.TRENCH)));
 
-		new EventTrigger("ShooterAim").onTrue(shooterSubsystem.aimCommand());
+		//new EventTrigger("ShooterAim").onTrue(shooterSubsystem.aimCommand());
+
+		new EventTrigger("ShooterAim").onTrue(shootMode);
 		new EventTrigger("HopperOn").onTrue(
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
 		new EventTrigger("HopperOff").onTrue(
@@ -414,8 +423,10 @@ public class RobotContainer {
 		// Shooter Commands - Stop all shooting motors
 		new EventTrigger("ShooterOff").onTrue(
 			Commands.sequence(
-			Commands.runOnce(() -> shooterSubsystem.stop()),
-			Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))));
+				shooterSubsystem.idle(),
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))));
+
+		
 
 		
 	}

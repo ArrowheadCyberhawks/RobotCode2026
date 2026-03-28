@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.162295169337613,
-        "y": 7.48586999118583
+        "x": 7.830085592011411,
+        "y": 7.586661911554922
       },
       "isLocked": false,
       "linkedName": "LeftTrench"
     },
     {
       "anchor": {
-        "x": 7.651590909090908,
-        "y": 4.880159090909092
+        "x": 8.14061340941512,
+        "y": 4.6495863052781745
       },
       "prevControl": {
-        "x": 7.408209871523825,
-        "y": 7.232842454057571
+        "x": 8.14061340941512,
+        "y": 7.094992867332382
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,8 +30,12 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.27807486631016054,
+      "waypointRelativePos": 0.15940543311122646,
       "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 0.7027165556125039,
+      "rotationDegrees": -119.99999999999999
     }
   ],
   "constraintZones": [],
@@ -42,29 +46,11 @@
       "waypointRelativePos": 0.06362467866323872,
       "endWaypointRelativePos": null,
       "command": null
-    },
-    {
-      "name": "ShooterAim",
-      "waypointRelativePos": 0.590664272890484,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "HopperOn",
-      "waypointRelativePos": 0.6343187660668443,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "ShooterOff",
-      "waypointRelativePos": 0.8491921005386003,
-      "endWaypointRelativePos": null,
-      "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 1.25,
-    "maxAcceleration": 0.5,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -72,7 +58,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -110.37643521383643
+    "rotation": -116.56505117707805
   },
   "reversed": false,
   "folder": "NEW Left",

@@ -8,46 +8,50 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.652667617689016,
-        "y": 7.53490727532097
+        "x": 7.002011412268189,
+        "y": 7.276134094151213
       },
       "isLocked": false,
       "linkedName": "LeftMiddleNeutral"
     },
     {
       "anchor": {
-        "x": 4.142567760342367,
-        "y": 7.405520684736091
+        "x": 3.922610556348074,
+        "y": 7.496091298145506
       },
       "prevControl": {
-        "x": 6.342139800285306,
-        "y": 7.521968616262482
+        "x": 6.613851640513552,
+        "y": 7.573723252496434
       },
       "nextControl": {
-        "x": 3.3890924507379245,
-        "y": 7.365630815404091
+        "x": 1.645435031085185,
+        "y": 7.430403542609077
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.7285306704707555,
-        "y": 7.444336661911555
+        "x": 0.7666363636363633,
+        "y": 6.2715795454545455
       },
       "prevControl": {
-        "x": 4.996519258202567,
-        "y": 8.1430242510699
+        "x": 2.901515108286862,
+        "y": 6.193947591103618
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftShoot"
+      "linkedName": "Depot"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.5,
-      "rotationDegrees": 0.0
+      "waypointRelativePos": 0.7534597642234842,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.5694515633008594,
+      "rotationDegrees": 180.0
     }
   ],
   "constraintZones": [],
@@ -82,7 +86,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "NEW Left",

@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.374261363636363,
-        "y": 7.4465568181818185
+        "x": 3.7285306704707555,
+        "y": 7.444336661911555
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.094154029110424,
-        "y": 7.4627822206862895
+        "x": 6.127108108546231,
+        "y": 7.377423210348852
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
     },
     {
       "anchor": {
-        "x": 6.744590909090908,
-        "y": 5.251204545454545
+        "x": 6.160998573466475,
+        "y": 4.714279600570615
       },
       "prevControl": {
-        "x": 6.693056818181819,
-        "y": 8.075272727272727
+        "x": 6.43271041369472,
+        "y": 7.832496433666192
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,23 +30,33 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.27807486631016054,
+      "waypointRelativePos": 0.3131727319323388,
       "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 0.6965658636596659,
+      "rotationDegrees": -90.0
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "ShooterOff",
+      "waypointRelativePos": 0.07133676092544708,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
       "name": "HopperOff",
-      "waypointRelativePos": 0.2564267352184989,
+      "waypointRelativePos": 0.1458868894601562,
       "endWaypointRelativePos": null,
       "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 1.25,
-    "maxAcceleration": 0.5,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

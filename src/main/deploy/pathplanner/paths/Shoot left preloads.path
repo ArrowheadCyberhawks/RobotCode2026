@@ -16,11 +16,11 @@
     },
     {
       "anchor": {
-        "x": 3.6,
+        "x": 1.0890442225392292,
         "y": 7.302011412268189
       },
       "prevControl": {
-        "x": 3.85,
+        "x": 1.3390442225392292,
         "y": 7.302011412268189
       },
       "nextControl": null,
@@ -31,7 +31,20 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterOff",
+      "waypointRelativePos": 0.6985861182519407,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 0.1,
     "maxAcceleration": 0.1,
