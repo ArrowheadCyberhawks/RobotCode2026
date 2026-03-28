@@ -4,6 +4,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.Utils;
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.DriveRequestType;
 // import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
@@ -60,15 +62,16 @@ public class LimelightSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 	updateRobotOrientation();
-	//updateFullRobotOrientation();
+	// updateFullRobotOrientation();
 	if (useLimelight.getAsBoolean()) {
 		updateVisionPoseMT2();
 	}
-	//updateVisionPoseMT1(false);
+	// updateVisionPoseMT1(true);
 	updateField(true);
 	// if(DriverStation.isDisabled()) {
 	// 	updateVisionPoseMT1(true);
 	// }
+    Logger.recordOutput("Limelight/Enabled?", useLimelight.getAsBoolean());
   }
 
   /**
@@ -158,14 +161,6 @@ public class LimelightSubsystem extends SubsystemBase {
 
   public double getTY() {
 	return LimelightHelpers.getTY(getLimelightName());
-  }
-
-  public Pose2d getPose2dFromLimelight() {
-	return LimelightHelpers.getBotPose2d(getLimelightName());
-  }
-
-  public Pose2d getMegaTag2Pose2dFromLimelight() {
-	return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(getLimelightName()).pose;
   }
 
   public Pose3d getPose3dTargetSpaceFromLimelight() {

@@ -6,6 +6,8 @@ import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 
 import static edu.wpi.first.units.Units.*;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.Utils;
 
 import edu.wpi.first.math.Matrix;
@@ -88,6 +90,10 @@ public class QuestNavSubsystem extends SubsystemBase {
     public void periodic() {
         // Required for receiving QuestNav data
         questNav.commandPeriodic();
+        Logger.recordOutput("QuestNav/Tracking?", isTracking());
+        Logger.recordOutput("QuestNav/Connected?", isConnected());
+        Logger.recordOutput("QuestNav/Enabled?", useQuest);
+        
 
         if (useQuest) {
             PoseFrame[] frames = questNav.getAllUnreadPoseFrames();
@@ -124,6 +130,10 @@ public class QuestNavSubsystem extends SubsystemBase {
     /** Returns whether QuestNav is actively tracking. */
     public boolean isTracking() {
         return questNav.isTracking();
+    }
+
+    public boolean isConnected() {
+        return questNav.isConnected();
     }
 
     public boolean useQuest() {

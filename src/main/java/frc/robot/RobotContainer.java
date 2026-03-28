@@ -32,6 +32,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -105,9 +106,9 @@ public class RobotContainer {
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 	public final QuestNavSubsystem questNavSubsystem = new QuestNavSubsystem(drivetrain, field2d);
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
-		// () -> AllianceFlipUtil.apply(drivetrain.getPigeon2().getRotation3d()),
-		() -> drivetrain.getPose().getRotation().getDegrees(),
-		() -> questNavSubsystem.useQuest(),
+		() -> drivetrain.getPigeon2().getRotation2d().getDegrees() + (AllianceFlipUtil.shouldFlip() ? 180 : 0),
+		// () -> drivetrain.getPose().getRotation().getDegrees(),
+		() -> !(questNavSubsystem.useQuest() || questNavSubsystem.isConnected()),
 		drivetrain,
 		field2d
 	);
@@ -224,35 +225,24 @@ public class RobotContainer {
 				// picks the slower trigger if both are pressed
 				.withVelocityX(
 					xLimiter.calculate(
-						Math.min(
-							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
-								DriveConstants.kDriveSlowModifier,
-								driverController.getLeftTriggerAxis()),
-							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
+						MathUtil.interpolate(DriveConstants.kDriveSlowModifier,
 								DriveConstants.kDriveFastModifier,
-								driverController.getRightTriggerAxis()))
-							* MathUtil.applyDeadband(-driverController.getLeftY(), DriveConstants.kDriveDeadband)
-							* DriveConstants.kMaxSpeed.in(MetersPerSecond)))
+								(driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis() + 1) / 2) // combine triggers into one axis
+									* MathUtil.applyDeadband(-driverController.getLeftY(), DriveConstants.kDriveDeadband)
+									* DriveConstants.kMaxSpeed.in(MetersPerSecond)
+						))//left trigger slow, right trigger fast
 				.withVelocityY(
 					yLimiter.calculate(
-						Math.min(
-							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
-								DriveConstants.kDriveSlowModifier,
-								driverController.getLeftTriggerAxis()),
-							MathUtil.interpolate(DriveConstants.kDriveNormalModifier,
+						MathUtil.interpolate(DriveConstants.kDriveSlowModifier,
 								DriveConstants.kDriveFastModifier,
-								driverController.getRightTriggerAxis()))
+								(driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis() + 1) / 2)
 									* MathUtil.applyDeadband(-driverController.getLeftX(), DriveConstants.kDriveDeadband)
 									* DriveConstants.kMaxSpeed.in(MetersPerSecond))) // Drive left with negative X (left)
 				.withRotationalRate(
 					rotationLimiter.calculate(
-						Math.max(
-							MathUtil.interpolate(DriveConstants.kTurnNormalModifier,
-								DriveConstants.kTurnSlowModifier,
-								driverController.getLeftTriggerAxis()),
-							MathUtil.interpolate(DriveConstants.kTurnNormalModifier,
+						MathUtil.interpolate(DriveConstants.kTurnSlowModifier,
 								DriveConstants.kTurnFastModifier,
-								driverController.getRightTriggerAxis()))
+								(driverController.getRightTriggerAxis() - driverController.getLeftTriggerAxis() + 1) / 2)
 									* MathUtil.applyDeadband(-driverController.getRightX(), DriveConstants.kRotationDeadband)
 									* DriveConstants.kMaxAngularRate.in(RadiansPerSecond))) // Drive
 				));
@@ -301,6 +291,15 @@ public class RobotContainer {
 		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
 		drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2)))))
 			.andThen(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2))))));
+
+		driverController.back().or(manipulatorController.back()).whileTrue(Commands.run(() -> {
+			limelightSubsystem.updateVisionPoseMT1(true);
+			Pose2d limelightPose = limelightSubsystem.getPoseEstimateMT2().pose;
+			if (limelightPose != null) {
+				drivetrain.resetPose(limelightPose);
+				questNavSubsystem.resetPose(limelightPose);
+			}
+		}));
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 

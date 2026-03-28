@@ -60,6 +60,32 @@
                 }
               }
             ]
+          },
+          {
+            "title": "Auto",
+            "x": 1216.0,
+            "y": 0.0,
+            "width": 320.0,
+            "height": 128.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Selected",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "ComboBox Chooser",
+                "properties": {
+                  "topic": "/SmartDashboard/Auto/Selected",
+                  "period": 0.06,
+                  "sort_options": false
+                }
+              }
+            ]
           }
         ],
         "containers": [
@@ -98,19 +124,6 @@
               "time_display_mode": "Minutes and Seconds",
               "red_start_time": 20,
               "yellow_start_time": 30
-            }
-          },
-          {
-            "title": "Selected",
-            "x": 1216.0,
-            "y": 0.0,
-            "width": 288.0,
-            "height": 128.0,
-            "type": "ComboBox Chooser",
-            "properties": {
-              "topic": "/SmartDashboard/Auto/Selected",
-              "period": 0.06,
-              "sort_options": false
             }
           },
           {
