@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.talonfx;
+package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -23,8 +23,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import frc.robot.subsystems.shooter.ShooterConstants;
-import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;

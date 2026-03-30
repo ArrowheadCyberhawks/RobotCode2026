@@ -55,14 +55,14 @@ import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.shooter.FlywheelSubsystem;
+import frc.robot.subsystems.shooter.HoodSubsystemNeo;
 // import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
 // import frc.robot.subsystems.shooter.talonfx.TurretSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShotCalculator;
-import frc.robot.subsystems.shooter.rev.HoodSubsystemNeo;
-import frc.robot.subsystems.shooter.rev.TurretSubsystemNeo;
-import frc.robot.subsystems.shooter.talonfx.FlywheelSubsystem;
+import frc.robot.subsystems.shooter.TurretSubsystemNeo;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
 import frc.robot.util.LocalADStarAK;
@@ -119,7 +119,7 @@ public class RobotContainer {
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
-	public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
+	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
@@ -128,10 +128,12 @@ public class RobotContainer {
 			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
 
 	//create triggers to happen automatically
-	//do not switch these to colons, they have mutiple methods to be recomputed
-	// It will pause the robot if it runs into the trench, which is OK for now
+
 	private final Trigger inTrench =
 			new Trigger(() -> FieldZones.TRENCH().contains(drivetrain.getPose().getTranslation()
+				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
+	private final Trigger inTower =
+			new Trigger(() -> FieldZones.TOWER().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
 	private final Trigger inAim =
 			new Trigger(() -> FieldZones.AIM().contains(drivetrain.getPose().getTranslation()
@@ -143,7 +145,7 @@ public class RobotContainer {
 			new Trigger(() -> FieldZones.RIGHTPASS().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
 
-	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean);
+	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean, inTower::getAsBoolean);
 
 	public RobotContainer() {
 
@@ -268,10 +270,10 @@ public class RobotContainer {
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
 
-		driverController.povUp().or(manipulatorController.povUp())
-			.whileTrue(climberSubsystem.runClimberDown());
-		driverController.povDown().or(manipulatorController.povDown())
-			.whileTrue(climberSubsystem.runClimberUp());
+		// driverController.povUp().or(manipulatorController.povUp())
+		// 	.whileTrue(climberSubsystem.runClimberDown());
+		// driverController.povDown().or(manipulatorController.povDown())
+		// 	.whileTrue(climberSubsystem.runClimberUp());
 		driverController.povLeft().or(manipulatorController.povLeft())
 			.onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		driverController.povRight().or(manipulatorController.povRight()).onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
@@ -381,6 +383,8 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
 
+		NamedCommands.registerCommand("ShooterTrench", shooterSubsystem.trenchCommand());
+
 		NamedCommands.registerCommand("ShooterOff", 
 			Commands.sequence(
 				shooterSubsystem.idle(),
@@ -425,6 +429,8 @@ public class RobotContainer {
 			Commands.sequence(
 				shooterSubsystem.idle(),
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))));
+
+		new EventTrigger("ShooterTrench").onTrue(shooterSubsystem.trenchCommand());
 
 		
 

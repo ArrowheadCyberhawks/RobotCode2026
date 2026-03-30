@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.rev;
+package frc.robot.subsystems.shooter;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
@@ -18,8 +18,6 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.shooter.ShooterConstants;
-import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.util.LoggedTunableNumber;
 
 import static edu.wpi.first.units.Units.Volts;

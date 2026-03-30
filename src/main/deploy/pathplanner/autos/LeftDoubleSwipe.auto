@@ -31,7 +31,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftCenterNeutralToLeftShoot"
+            "pathName": "NEW_LeftCenterInnerNeutralToLeftShoot"
           }
         },
         {
@@ -44,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left",
+  "folder": "NEW_Left",
   "choreoAuto": false
 }

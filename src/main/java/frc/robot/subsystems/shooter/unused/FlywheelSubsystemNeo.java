@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.rev;
+package frc.robot.subsystems.shooter.unused;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;

@@ -310,9 +310,9 @@ public class FieldConstants {
 
     public static class Corners {
         // Blue alliance - right corner (field origin)
-        public static final Translation3d right = new Translation3d(2.0, 1.5, 0.0);
+        public static final Translation3d right = new Translation3d(3.0, 2.0, 0.0);
         // Blue alliance - left corner (same X as origin, Y at far side of field)
-        public static final Translation3d left = new Translation3d(2.0, 6.5, 0.0);
+        public static final Translation3d left = new Translation3d(3.0, 6.0, 0.0);
     }
 
     public enum FieldType {

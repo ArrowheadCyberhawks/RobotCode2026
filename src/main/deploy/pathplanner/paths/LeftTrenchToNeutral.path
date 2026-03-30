@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 8.14061340941512,
-        "y": 4.6495863052781745
+        "x": 7.831914132379248,
+        "y": 5.389821109123434
       },
       "prevControl": {
-        "x": 8.347631954350925,
-        "y": 6.292796005706134
+        "x": 8.038932677315053,
+        "y": 7.033030809551394
       },
       "nextControl": null,
       "isLocked": false,
@@ -39,21 +39,27 @@
   "eventMarkers": [
     {
       "name": "IntakeOn",
-      "waypointRelativePos": 0.544344473007703,
+      "waypointRelativePos": 0.08617594254937143,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 0.16157989228007177,
       "endWaypointRelativePos": null,
       "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": -116.56505117707805
   },
   "reversed": false,

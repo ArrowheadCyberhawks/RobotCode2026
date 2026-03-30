@@ -98,7 +98,7 @@ public final class ShooterConstants {
     public static final double kTurretCruiseRps = 4.0;
     public static final double kTurretAccelRps2 = 8.0;
 
-    // Transform from robot pose to turret pose (default: identity)
+    // Transform from robot pose to turret pose
     public static final Transform3d kRobotToTurretTransform =
         new Transform3d(new Translation3d(-0.1473, 0.0907, 0.0), new Rotation3d());
         

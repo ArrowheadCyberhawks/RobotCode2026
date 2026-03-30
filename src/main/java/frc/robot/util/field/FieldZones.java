@@ -43,6 +43,18 @@ public final class FieldZones {
                         0.0,
                         FieldConstants.fieldWidth);
 
+        public static final Zone BLUETOWER = new Zone.RectangleZone(
+                        0.0,
+                        FieldConstants.Tower.leftUpright.getX(),
+                        FieldConstants.Tower.rightUpright.getY(),
+                        FieldConstants.Tower.leftUpright.getY());
+
+        public static final Zone REDTOWER = new Zone.RectangleZone(
+                        FieldConstants.Tower.oppLeftUpright.getX(),
+                        FieldConstants.fieldWidth,
+                        FieldConstants.Tower.oppRightUpright.getY(),
+                        FieldConstants.Tower.oppLeftUpright.getY());
+
         public static Zone nearAlliance() {
                 return AllianceFlipUtil.shouldFlip() ? redAlliance : blueAlliance;
         }
@@ -57,27 +69,21 @@ public final class FieldZones {
 
         // Maybe move these to robotcontainer to avoid needing to cache the trench zone
         // and have it recalc each time
+
+        public static Zone TOWER() {
+                return BLUETOWER.union(REDTOWER);
+        } 
+
         public static Zone AIM() {
-                return nearAlliance().difference(TRENCH());
+                return nearAlliance().difference(TRENCH()).difference(TOWER());
         }
 
         public static Zone PASS() {
                 return NEUTRAL
                         .union(opposingAlliance())
-                        .difference(TRENCH());
+                        .difference(TRENCH())
+                        .difference(TOWER());
         }
-
-        // public static Zone RIGHTPASS() {
-        //         return PASS().intersection(new Zone.RectangleZone(
-        //                 0.0, FieldConstants.fieldLength,
-        //                 FieldConstants.LinesHorizontal.center, FieldConstants.fieldWidth));
-        // }
-
-        // public static Zone LEFTPASS() {
-        //         return PASS().intersection(new Zone.RectangleZone(
-        //                 0.0, FieldConstants.fieldLength,
-        //                 0.0, FieldConstants.LinesHorizontal.center));
-        // }
 
         public static Zone LEFTPASS() {
                 double splitY = FieldConstants.LinesHorizontal.center;
@@ -140,5 +146,9 @@ public final class FieldZones {
 
         public static boolean inNeutral(Translation2d position) {
                 return NEUTRAL.contains(position);
+        }
+
+        public static boolean inTower(Translation2d position) {
+                return TOWER().contains(position);
         }
 }
