@@ -20,6 +20,7 @@ public class ShooterSubsystem extends SubsystemBase {
     IDLE,
     STRAIGHT,
     AIM,
+    PASS,
     TRENCH,
     MANUAL
   }
@@ -116,6 +117,15 @@ public class ShooterSubsystem extends SubsystemBase {
           flywheel.setSetpoint(RotationsPerSecond.of(aimData.flywheelSpeed()));
           hood.setSetpoint(aimData.hoodAngle());
           turret.setSetpoint(aimData.turretAngle());
+        }
+        break;
+      
+      case PASS:
+        var shotData = ShotCalculator.getInstance().getData();
+        if (shotData != null && shotData.isValid()) {
+          flywheel.setSetpoint(RotationsPerSecond.of(shotData.flywheelSpeed()));
+          hood.setSetpoint(Rotation2d.fromDegrees(40));
+          turret.setSetpoint(shotData.turretAngle());
         }
         break;
 

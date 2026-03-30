@@ -1,10 +1,10 @@
 package frc.robot.subsystems.shooter;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 
@@ -27,7 +27,7 @@ import static frc.robot.subsystems.shooter.ShooterConstants.*;
  * Uses REV onboard PID controller for position control.
  */
 public class TurretSubsystemNeo extends SubsystemBase {
-	private final SparkMax turretMotor;
+	private final SparkFlex turretMotor;
 	private final RelativeEncoder encoder;
 	private final PIDController pidController;
 	private final ProfiledPIDController profiledPIDController;
@@ -35,7 +35,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	
 	private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
-	private SparkMaxConfig turretConfig;	
+	private SparkFlexConfig turretConfig;	
 	private Rotation2d targetRotation = new Rotation2d();
 
 	public TurretSubsystemNeo() {
@@ -43,7 +43,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	}
 
 	public TurretSubsystemNeo(int motorId) {
-		turretMotor = new SparkMax(motorId, MotorType.kBrushless);
+		turretMotor = new SparkFlex(motorId, MotorType.kBrushless);
 		encoder = turretMotor.getEncoder();
 
 		pidController = new PIDController(
@@ -69,7 +69,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 			ShooterConstants.kATurret.get()
 		);
 
-		turretConfig = new SparkMaxConfig();
+		turretConfig = new SparkFlexConfig();
 
 		configureTurret();
 	}

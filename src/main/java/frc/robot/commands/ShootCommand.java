@@ -13,6 +13,7 @@ public class ShootCommand extends Command {
     private final HopperSubsystem hopper;
     private final BooleanSupplier inTrench;
     private final BooleanSupplier inTower;
+    private final BooleanSupplier inPass;
     private boolean hopperTriggered = false;
 
     /**
@@ -22,11 +23,12 @@ public class ShootCommand extends Command {
      *                 This command only pauses the hopper and requests TRENCH state
      *                 on the shooter state machine.
      */
-    public ShootCommand(ShooterSubsystem shooter, HopperSubsystem hopper, BooleanSupplier inTrench, BooleanSupplier inTower) {
+    public ShootCommand(ShooterSubsystem shooter, HopperSubsystem hopper, BooleanSupplier inTrench, BooleanSupplier inTower, BooleanSupplier inPass) {
         this.shooter = shooter;
         this.hopper = hopper;
         this.inTrench = inTrench;
         this.inTower = inTower;
+        this.inPass = inPass;
         addRequirements(shooter, hopper);
         //RETEST THE TRENCH WITH THIS QUICK FIX IF IT  IS USED AT SOME POINT, MIGHT CAUSE ISSUES
         addRequirements(shooter, hopper, shooter.getHoodSubsystem(), shooter.getTurretSubsystem(), shooter.getFlywheelSubsystem());
@@ -50,10 +52,13 @@ public class ShootCommand extends Command {
         } else if (inTower.getAsBoolean()) {
             shooter.requestState(ShooterState.IDLE);
             hopper.setHopperState(HopperState.IDLE);
-        }
-        else {
+        } else {
             // Normal AIM + fire sequence
-            shooter.requestState(ShooterState.AIM);
+            if (inPass.getAsBoolean()) {
+                shooter.requestState(ShooterState.PASS);
+            } else {
+                shooter.requestState(ShooterState.AIM);
+            }
             hopper.setHopperState(HopperState.KICKER);
             if (shooter.areAllSubsystemsAtGoal()) {
                 hopperTriggered = true;

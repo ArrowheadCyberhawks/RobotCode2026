@@ -111,24 +111,21 @@ public class ShotCalculator {
         // between the points defined here.
         // Meters
         hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
-        hoodAngleMap.put(1.46, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
-        hoodAngleMap.put(1.82, Rotation2d.fromDegrees(20));
-        hoodAngleMap.put(2.82, Rotation2d.fromDegrees(21.5));
-        hoodAngleMap.put(3.18, Rotation2d.fromDegrees(22));
+        hoodAngleMap.put(1.34, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
+        hoodAngleMap.put(2.43, Rotation2d.fromDegrees(17));
+        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(21));
         hoodAngleMap.put(4.00, Rotation2d.fromDegrees(24));
-        hoodAngleMap.put(5.2, Rotation2d.fromDegrees(27));
+        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(30));
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
         hoodAngleMap.put(12.95, Rotation2d.fromDegrees(45));
 
         // Populate the flywheel speed calibration map (distance -> RPS). (rotations per second)
         //Distance is in Meters
-        flywheelSpeedMap.put(1.46,21.0);
-        flywheelSpeedMap.put(1.82, 22.5);
-        flywheelSpeedMap.put(1.14, 22.5); //Change to 15 once hood can go down that low
-        flywheelSpeedMap.put(2.82, 24.0); 
-        flywheelSpeedMap.put(3.18, 25.0);
-        flywheelSpeedMap.put(4.00, 27.0);
-        flywheelSpeedMap.put(5.2, 31.5);
+        flywheelSpeedMap.put(1.30,22.02);
+        flywheelSpeedMap.put(2.43, 25.0); 
+        flywheelSpeedMap.put(3.04, 26.5);
+        flywheelSpeedMap.put(4.00, 28.5);
+        flywheelSpeedMap.put(5.5, 32.5);
         flywheelSpeedMap.put(9.14, 38.0);
         flywheelSpeedMap.put(12.95, 55.0); 
 
@@ -136,10 +133,12 @@ public class ShotCalculator {
         // Populate a small time-of-flight lookup table (distance -> seconds)
         // used in the lookahead loop to compensate for turret/robot motion.
 
-        tofMap.put(1.64, 0.66);
-        tofMap.put(2.32, 0.97);
-        tofMap.put(3.68, 1.19);
-        tofMap.put(5.7, 1.43);
+        tofMap.put(1.35, 1.00);
+        tofMap.put(2.43, 1.30);
+        tofMap.put(3.04, 1.32);
+        tofMap.put(3.5, 1.36);
+        tofMap.put(4.00, 1.33);
+        tofMap.put(5.5, 1.54);
         tofMap.put(9.64, 1.67);
         tofMap.put(13.95, 2.00);
     }

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.083846153846154,
-        "y": 7.444336661911555
+        "x": 3.5732667617689007,
+        "y": 7.4702139800285305
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.235849731663685,
-        "y": 7.417996422182468
+        "x": 4.725270339586432,
+        "y": 7.443873740299444
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
@@ -58,21 +58,21 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "ShooterAim",
-      "waypointRelativePos": 0.2298025134649907,
+      "name": "IntakeOn",
+      "waypointRelativePos": 0.2405745062836621,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
-      "name": "IntakeOn",
-      "waypointRelativePos": 0.2405745062836621,
+      "name": "ShooterOff",
+      "waypointRelativePos": 0.353470437018,
       "endWaypointRelativePos": null,
       "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 1.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

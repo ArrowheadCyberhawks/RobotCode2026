@@ -153,8 +153,9 @@ public class RobotContainer {
 	private final Trigger inRightPass =
 			new Trigger(() -> FieldZones.RIGHTPASS().contains(drivetrain.getPose().getTranslation()
 				.plus(ShooterConstants.kRobotToTurretTransform.getTranslation().toTranslation2d())));
+	private final Trigger inPass = inLeftPass.or(inRightPass);
 
-	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean, inTower::getAsBoolean);
+	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean, inTower::getAsBoolean, inPass::getAsBoolean);
 
 	Trigger endOfShift =
         new Trigger(() ->
@@ -170,15 +171,22 @@ public class RobotContainer {
 
 
 	public RobotContainer() {
-
-
+		
 		// Register Named Commands for PathPlanner BEFORE creating any autos
-		registerPathfinding();
 		registerNamedCommands();
 		registerEventMarkers();
 
-		constructField();
+		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
+		// Maybe don't do this if the LL pose is closer to the pose given by autobuilder
+
 		configureTriggers();
+		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
+			drivetrain.resetPose(pose);
+			questNavSubsystem.resetPose(pose);
+		});
+
+		registerPathfinding();
+		constructField();
 		configureBindings();
 
 		WebServer.start(5800, Filesystem.getDeployDirectory().getPath()); // elastic
@@ -190,13 +198,6 @@ public class RobotContainer {
 		ShotCalculator.getInstance().setFieldVelocitySupplier(
 			() -> ChassisSpeeds.fromRobotRelativeSpeeds(drivetrain.getState().Speeds, drivetrain.getPose().getRotation())
 		);
-
-		// Reconfigure AutoBuilder to also reset Quest pose when auto starts
-		// Maybe don't do this if the LL pose is closer to the pose given by autobuilder
-		drivetrain.configureAutoBuilderWithPoseReset((pose) -> {
-			drivetrain.resetPose(pose);
-			questNavSubsystem.resetPose(pose);
-		});
 
 		//Pathfinding.setPathfinder(new LocalADStarAK());
 		PathPlannerLogging.setLogActivePathCallback(
@@ -339,7 +340,7 @@ public class RobotContainer {
 
 		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
 			drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))
-			.andThen(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI))))));
+			.alongWith(new InstantCommand(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))));
 
 		driverController.back().or(manipulatorController.back()).whileTrue(Commands.run(() -> {
 			limelightSubsystem.updateVisionPoseMT1(true);
@@ -349,20 +350,6 @@ public class RobotContainer {
 				questNavSubsystem.resetPose(limelightPose);
 			}
 		}));
-
-		endOfShift.whileTrue(
-			Commands.run(
-					() -> {
-						double intensity = getShiftRumbleIntensity();
-						driverController.setRumble(RumbleType.kBothRumble, intensity);
-						manipulatorController.setRumble(RumbleType.kBothRumble, intensity);
-					})
-				.finallyDo(
-					() -> {
-						driverController.setRumble(RumbleType.kBothRumble, 0.0);
-						manipulatorController.setRumble(RumbleType.kBothRumble, 0.0);
-					})
-		);
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
@@ -397,6 +384,21 @@ public class RobotContainer {
 			shooterSubsystem.manualFlywheelCommand(() -> flywheel.getSetpoint()
 								.plus(RotationsPerSecond.of(
 										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
+
+		
+		endOfShift.whileTrue(
+			Commands.run(
+					() -> {
+						double intensity = getShiftRumbleIntensity();
+						driverController.setRumble(RumbleType.kBothRumble, intensity);
+						manipulatorController.setRumble(RumbleType.kBothRumble, intensity);
+					})
+				.finallyDo(
+					() -> {
+						driverController.setRumble(RumbleType.kBothRumble, 0.0);
+						manipulatorController.setRumble(RumbleType.kBothRumble, 0.0);
+					})
+		);
 	}
 
 	private void configureTriggers() {
@@ -415,6 +417,7 @@ public class RobotContainer {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
+		
 		
 		// inTrench.whileTrue(shooterSubsystem.trenchCommand());
 		// inTrench.whileTrue(Commands.runOnce(() -> shooterSubsystem.requestState(ShooterSubsystem.ShooterState.TRENCH)));
@@ -536,14 +539,7 @@ public class RobotContainer {
 			return 0.0;
 		}
 
-		double secondsRemaining = remainingOpt.get().in(Seconds);
-		// Outside our window: no rumble
-		if (secondsRemaining > 8.0) {
-			return 0.0;
-		}
-		if (secondsRemaining <= 1.0) {
-			return 1.0;
-		}
+		double secondsRemaining = MathUtil.clamp(remainingOpt.get().in(Seconds), 1.0, 8.0);
 
 		double intensity = 1.0 / secondsRemaining;
 		return MathUtil.clamp(intensity, 0.0, 1.0);

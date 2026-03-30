@@ -69,7 +69,7 @@ public final class ShooterConstants {
     public static final double kHoodAllowedError = 1.0;
 
     public static final double kHoodMinDegrees = 15.0;
-    public static final double kHoodMaxDegrees = 45.0;
+    public static final double kHoodMaxDegrees = 40.0;
 
     /** Common hood presets */
     public enum HoodPosition {

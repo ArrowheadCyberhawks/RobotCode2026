@@ -42,17 +42,11 @@
       "waypointRelativePos": 0.08617594254937143,
       "endWaypointRelativePos": null,
       "command": null
-    },
-    {
-      "name": "ShooterAim",
-      "waypointRelativePos": 0.16157989228007177,
-      "endWaypointRelativePos": null,
-      "command": null
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 1.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
