@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser; //Lebron
@@ -22,6 +23,8 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.events.EventTrigger;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
@@ -31,9 +34,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -70,6 +76,7 @@ import frc.robot.util.LocalADStarAK;
 import frc.robot.util.field.FieldConstants;
 import frc.robot.util.field.FieldZones;
 import frc.robot.util.geometry.AllianceFlipUtil;
+import frc.robot.util.HubTracker;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -149,9 +156,24 @@ public class RobotContainer {
 
 	Command shootMode = new ShootCommand(shooterSubsystem, hopperSubsystem, inTrench::getAsBoolean, inTower::getAsBoolean);
 
+	Trigger endOfShift =
+        new Trigger(() ->
+            HubTracker.timeRemainingInCurrentShift()
+                .map(timeRemaining -> {
+                    double seconds = timeRemaining.in(Seconds);
+                    return seconds >= 0.0 && seconds <= 8.0;
+                })
+                .orElse(false)
+        );
+
+	private Command shootLeft;
+
+
 	public RobotContainer() {
 
+
 		// Register Named Commands for PathPlanner BEFORE creating any autos
+		registerPathfinding();
 		registerNamedCommands();
 		registerEventMarkers();
 
@@ -276,9 +298,12 @@ public class RobotContainer {
 		// 	.whileTrue(climberSubsystem.runClimberDown());
 		// driverController.povDown().or(manipulatorController.povDown())
 		// 	.whileTrue(climberSubsystem.runClimberUp());
-		driverController.povLeft().or(manipulatorController.povLeft())
+		
+		
+		manipulatorController.povLeft()
 			.onTrue(intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
-		driverController.povRight().or(manipulatorController.povRight()).onTrue(shooterSubsystem.trenchCommand()); // assuming this is a trench related manual control
+
+		manipulatorController.povRight().onTrue(shooterSubsystem.trenchCommand());
 		
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
@@ -288,13 +313,33 @@ public class RobotContainer {
 		driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
 		// reset the field-centric heading on b button press
-		driverController.b().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
+		driverController.y().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
 				drivetrain.getState().Pose.getRotation()
 		)));
 
+		//Protection/Defense Mode
+		driverController.x().onTrue(
+			intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeState.STOW))
+			.andThen(shooterSubsystem.idleCommand())
+			//.andThen(ledSubsystem)
+		);
+
+		driverController.a().onTrue(
+			intakeSubsystem.runOnce(() -> {
+				IntakeState current = intakeSubsystem.getIntakeState();
+				if (current == IntakeState.REVERSE) {
+					intakeSubsystem.setIntakeState(IntakeState.RUN);
+				} else {
+					intakeSubsystem.setIntakeState(IntakeState.REVERSE);
+				}
+			})
+		);
+
+		driverController.povLeft().whileTrue(shootLeft);
+
 		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
-		drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2)))))
-			.andThen(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI/2))))));
+			drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))
+			.andThen(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI))))));
 
 		driverController.back().or(manipulatorController.back()).whileTrue(Commands.run(() -> {
 			limelightSubsystem.updateVisionPoseMT1(true);
@@ -305,6 +350,20 @@ public class RobotContainer {
 			}
 		}));
 
+		endOfShift.whileTrue(
+			Commands.run(
+					() -> {
+						double intensity = getShiftRumbleIntensity();
+						driverController.setRumble(RumbleType.kBothRumble, intensity);
+						manipulatorController.setRumble(RumbleType.kBothRumble, intensity);
+					})
+				.finallyDo(
+					() -> {
+						driverController.setRumble(RumbleType.kBothRumble, 0.0);
+						manipulatorController.setRumble(RumbleType.kBothRumble, 0.0);
+					})
+		);
+
 		drivetrain.registerTelemetry(logger::telemeterize);
 
 		manipulatorController.leftTrigger()
@@ -312,8 +371,7 @@ public class RobotContainer {
 						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
 						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
 
-		driverController.x()
-				.or(manipulatorController.x().and(manipulatorController.leftTrigger()))
+		manipulatorController.x().and(manipulatorController.leftTrigger())
 				.whileTrue(
 						intakeSubsystem.runEnd(
 								() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
@@ -342,8 +400,7 @@ public class RobotContainer {
 	}
 
 	private void configureTriggers() {
-		// should probably put sc.setTarget before this so I don't have get the instance each time
-
+		// TODO: should probably put sc.setTarget before this so I don't have get the instance each time
 		inAim.onTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
@@ -418,8 +475,6 @@ public class RobotContainer {
 		new EventTrigger("IntakeTrench").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.TRENCH)));
 
-		//new EventTrigger("ShooterAim").onTrue(shooterSubsystem.aimCommand());
-
 		new EventTrigger("ShooterAim").onTrue(shootMode);
 		new EventTrigger("HopperOn").onTrue(
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
@@ -433,10 +488,23 @@ public class RobotContainer {
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))));
 
 		new EventTrigger("ShooterTrench").onTrue(shooterSubsystem.trenchCommand());
-
 		
+	}
 
-		
+	private void registerPathfinding() {
+		// Left Shoot
+		Command leftShootCommand;
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile("LeftShoot");
+			PathConstraints constraints = new PathConstraints(
+					3.0, 4.0,
+					Units.degreesToRadians(540), Units.degreesToRadians(720));
+			leftShootCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to load PathPlanner path 'LeftShoot': " + e.getMessage(), e.getStackTrace());
+			leftShootCommand = Commands.none();
+		}
+		this.shootLeft = leftShootCommand;
 	}
 
 	public Command getAutonomousCommand() {
@@ -455,6 +523,30 @@ public class RobotContainer {
 		Translation2d target = ShotCalculator.getInstance().getTarget();
 		Pose2d targetPose = new Pose2d(target, new Rotation2d());
 		field2d.getObject("ShotTarget").setPose(targetPose);
+	}
+
+	/**
+	 * Compute rumble intensity based on time remaining in the current shift.
+	 * Intensity is 0 outside the last 8 seconds of a shift and follows 1 / t
+	 * (clamped to 1.0) as time t (in seconds) approaches 0.
+	 */
+	private double getShiftRumbleIntensity() {
+		var remainingOpt = HubTracker.timeRemainingInCurrentShift();
+		if (remainingOpt.isEmpty()) {
+			return 0.0;
+		}
+
+		double secondsRemaining = remainingOpt.get().in(Seconds);
+		// Outside our window: no rumble
+		if (secondsRemaining > 8.0) {
+			return 0.0;
+		}
+		if (secondsRemaining <= 1.0) {
+			return 1.0;
+		}
+
+		double intensity = 1.0 / secondsRemaining;
+		return MathUtil.clamp(intensity, 0.0, 1.0);
 	}
 
 }

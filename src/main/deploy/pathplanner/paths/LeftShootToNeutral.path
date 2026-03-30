@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 6.404078711985688,
-        "y": 7.207066189624329
+        "x": 6.837352272727272,
+        "y": 7.250727272727273
       },
       "prevControl": {
-        "x": 5.8905116958974535,
-        "y": 7.573899772544497
+        "x": 6.323785256639037,
+        "y": 7.617560855647441
       },
       "nextControl": {
-        "x": 7.085545617173524,
-        "y": 6.720304114490161
+        "x": 7.518819177915107,
+        "y": 6.763965197593105
       },
       "isLocked": false,
       "linkedName": null
@@ -46,13 +46,23 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.55,
+      "waypointRelativePos": 0.559748427672956,
       "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.213836477987419,
+      "rotationDegrees": -115.0
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 0.2298025134649907,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
     {
       "name": "IntakeOn",
       "waypointRelativePos": 0.2405745062836621,
@@ -70,7 +80,7 @@
   },
   "goalEndState": {
     "velocity": 2.0,
-    "rotation": -113.19859051364809
+    "rotation": -115.0
   },
   "reversed": false,
   "folder": "Cycles",

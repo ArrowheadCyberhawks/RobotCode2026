@@ -8,8 +8,9 @@
     "NEW Left",
     "NEW Middle",
     "NEW Right",
-    "PID",
+    "Automation",
     "Outpost",
+    "PID",
     "Sweepers"
   ],
   "autoFolders": [
