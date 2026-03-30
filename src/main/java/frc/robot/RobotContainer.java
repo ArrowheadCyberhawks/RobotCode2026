@@ -65,6 +65,7 @@ import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.TurretSubsystemNeo;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.field.FieldConstants;
 import frc.robot.util.field.FieldZones;
@@ -119,6 +120,7 @@ public class RobotContainer {
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
+	public final LEDSubsystem ledSubsystem = new LEDSubsystem();
 	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
 	// slew limiter object
