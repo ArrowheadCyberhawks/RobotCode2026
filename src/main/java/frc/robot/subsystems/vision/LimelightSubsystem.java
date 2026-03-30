@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.DriveConstants;
@@ -40,7 +41,7 @@ public class LimelightSubsystem extends SubsystemBase {
   private BooleanSupplier useLimelight;
   private CommandSwerveDrivetrain drivetrain;
   private final Field2d field2d;
-  private final double averageTagAreaMT2 = 0.7;
+  private final double averageTagAreaMT2 = 0.25;
 
 
   public LimelightSubsystem(DoubleSupplier rotationSupplier, BooleanSupplier useLimelight, CommandSwerveDrivetrain drivetrain, Field2d field2d) {
@@ -119,12 +120,20 @@ public class LimelightSubsystem extends SubsystemBase {
 
 	public void updateVisionPoseMT2() {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT2 = getPoseEstimateMT2();
+
+		var driveState = drivetrain.getState();
+		double gyroYawDeg = driveState.Pose.getRotation().getDegrees();
+		double omegaDegPerSec = Math.toDegrees(driveState.Speeds.omegaRadiansPerSecond);
+
+		LimelightHelpers.SetRobotOrientation(getLimelightName(), gyroYawDeg, omegaDegPerSec, 0, 0, 0, 0);
 		
 		if (limelightMeasurementMT2 == null
                 || limelightMeasurementMT2.pose.equals(Pose2d.kZero)
                 || limelightMeasurementMT2.tagCount == 0
                 || limelightMeasurementMT2.rawFiducials == null
-                || limelightMeasurementMT2.rawFiducials.length == 0) {
+                || limelightMeasurementMT2.rawFiducials.length == 0
+				|| limelightMeasurementMT2.timestampSeconds <= 0
+				|| limelightMeasurementMT2.tagCount <= 0) {
             return;
         }
 			// not doing an OR here bc I want to be able to test them individually
@@ -138,21 +147,27 @@ public class LimelightSubsystem extends SubsystemBase {
 				rejectUpdate = false;
 			}
 
-			if (Math.abs(drivetrain.getState().Speeds.omegaRadiansPerSecond) > Units.degreesToRadians(450)) { // replace 1.0 with appropriate threshold
+			if (Math.abs(drivetrain.getState().Speeds.omegaRadiansPerSecond) > Units.degreesToRadians(450)) {
+				rejectUpdate = true;
+			}
+
+			if (driveState.Pose.getTranslation().getDistance(limelightMeasurementMT2.pose.getTranslation()) > 1.0) {
 				rejectUpdate = true;
 			}
 
 			if (!rejectUpdate) {
-				drivetrain.addVisionMeasurement(
-					limelightMeasurementMT2.pose,
-					Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds),
-					VecBuilder.fill(.6,.6,9999999));
+				if (limelightMeasurementMT2.tagCount >= 2) {
+					drivetrain.addVisionMeasurement(
+						limelightMeasurementMT2.pose,
+						Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds),
+						VecBuilder.fill(0.6,0.6,9999999));
+				} else {
+					drivetrain.addVisionMeasurement(
+						limelightMeasurementMT2.pose,
+						Utils.fpgaToCurrentTime(limelightMeasurementMT2.timestampSeconds),
+						VecBuilder.fill(0.4, 0.4, 9999999));
+				}
 			}
-
-			// horrible inefficient garbage telemetry code
-			// SmartDashboard.putNumber("Vision Heading", drivetrain.getPose().getRotation().getDegrees());
-			// SmartDashboard.putNumberArray("Robot Pose", new double[] { limelightMeasurementMT2.pose.getX(),
-			// limelightMeasurementMT2.pose.getY(), limelightMeasurementMT2.pose.getRotation().getDegrees() });
 	}
 
   public double getTX() {
