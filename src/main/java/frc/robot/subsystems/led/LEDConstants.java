@@ -20,11 +20,24 @@ public final class LEDConstants {
     public static final int kCANdleId = 56;
     public static final CANBus kCANBus = CANBus.roboRIO();
 
-    public static final RGBWColor kGreen = new RGBWColor(0, 217, 0, 0);
-    public static final RGBWColor kWhite = new RGBWColor(Color.kWhite).scaleBrightness(0.5);
-    public static final RGBWColor kViolet = RGBWColor.fromHSV(Degrees.of(270), 0.9, 0.8);
-    public static final RGBWColor kRed = RGBWColor.fromHex("#D9000000").orElseThrow();
+    //public static final RGBWColor kGreen = new RGBWColor(0, 217, 0, 0);
+    public static final RGBW Color kGreen = RGBWColor.fromHex("#24f00000").orElseThrow();
+    //public static final RGBWColor kWhite = new RGBWColor(Color.kWhite).scaleBrightness(0.5); //not needed
+    //public static final RGBWColor kViolet = RGBWColor.fromHSV(Degrees.of(270), 0.9, 0.8);
+    public static final RGBW Color kPurple = RGBWColor.fromHex("#D924f000").orElseThrow();
+    public static final RGBWColor kRed = RGBWColor.fromHex("#D9000000").orElseThrow(); 
+    public static final RGBWColor kYellow = RGBWColor.fromHex("#D9D90000").orElseThrow();
+    public static final RGBWColor kWhite = RGBWColor.fromHex("#D9FFFFFF").orElseThrow();
 
+    /* assignments will be: intaking (purple), intaking while shooting (green), 
+    *  herding/reverse intake (yellow), defense/intake up (blue), warning (red flashing)
+    */
+   public enum intakestate {
+    Intaking();
+    IntakingShooting ();
+    ReverseIntaking ();
+
+   }
     /*
      * Start and end index for LED animations.
      * 0-7 are onboard, 8-399 are an external strip.

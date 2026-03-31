@@ -167,3 +167,24 @@ public class LEDSubsystem extends SubsystemBase {
         }
     }
 }
+
+
+/*public intakeStatus (DoubleSupplier IntakeCurrentSupplier, DoubleSupplier ShooterStateSupplier ) {
+    if (intakeCurrentSupplier.getAsDouble() > 0.0) {
+        return "Intaking";
+        else return "Not Intaking"; 
+    }
+    if (ShooterStateSupplier.getAsDouble() > 0.0) {
+        return "Shooting"; 
+        else return "Not Shooting";    
+    }
+    if intakeCurrentSupplier.getAsDouble() > 0.0 && ShooterStateSupplier.getAsDouble() > 0.0 {
+        return "Intaking and Shooting";
+    }
+    if get.intakeStatus == "Intaking"; //needs to be purple*/
+
+
+
+
+}
+  
