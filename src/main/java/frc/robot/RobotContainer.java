@@ -210,7 +210,7 @@ public class RobotContainer {
 
 
 		//TODO only add certain autos to the chooser and flip them to have various starting positions
-		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Do Nothing"));
+		autoChooser = new LoggedDashboardChooser<>("Auto/Selected");
 
 		buildAutonomousCommands();
 
@@ -249,13 +249,15 @@ public class RobotContainer {
 	private void buildAutonomousCommands() {
 		Command leftDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe");
 		Command leftDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe");
+		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("BUMP_LeftDoubleSwipeDepot");
 		Command rightDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe", true);
 		Command rightDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe", true);
 		Command rightRiskPass = new PathPlannerAuto("RISK_RightPassOutpost");
 
-		autoChooser.addOption("Do Nothing", new InstantCommand());
+		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
 		autoChooser.addOption("LeftDoubleSwipe", leftDoubleSwipe);
 		autoChooser.addOption("leftDoubleSwipeBump", leftDoubleSwipeBump);
+		autoChooser.addOption("leftDoubleSwipeDepotBump", leftDoubleSwipeDepotBump);
 		autoChooser.addOption("RightDoubleSwipe", rightDoubleSwipe);
 		autoChooser.addOption("RightDoubleSwipeBump", rightDoubleSwipeBump);
 		autoChooser.addOption("RightRiskPass", rightRiskPass);

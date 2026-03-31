@@ -6,7 +6,7 @@ import frc.robot.util.geometry.AllianceFlipUtil;
 
 public final class FieldZones {
 
-        public static double trenchXMargin = Units.inchesToMeters(25.0);
+        public static double trenchXMargin = Units.inchesToMeters(35.0);
         private static Zone trenchZone = buildTrenchZone();
 
         private static Zone buildTrenchZone() {
