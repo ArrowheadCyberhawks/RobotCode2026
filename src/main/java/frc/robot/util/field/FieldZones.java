@@ -51,7 +51,7 @@ public final class FieldZones {
 
         public static final Zone REDTOWER = new Zone.RectangleZone(
                         FieldConstants.Tower.oppLeftUpright.getX(),
-                        FieldConstants.fieldWidth,
+                        FieldConstants.fieldLength,
                         FieldConstants.Tower.oppRightUpright.getY(),
                         FieldConstants.Tower.oppLeftUpright.getY());
 

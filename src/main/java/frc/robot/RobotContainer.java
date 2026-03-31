@@ -38,7 +38,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -54,13 +53,13 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.IOConstants;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.hopper.HopperSubsystem;
 import frc.robot.subsystems.hopper.HopperSubsystem.HopperState;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.HoodSubsystemNeo;
 // import frc.robot.subsystems.shooter.talonfx.HoodSubsystem;
@@ -71,12 +70,11 @@ import frc.robot.subsystems.shooter.ShotCalculator;
 import frc.robot.subsystems.shooter.TurretSubsystemNeo;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
-import frc.robot.subsystems.led.LEDSubsystem;
+import frc.robot.util.HubTracker;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.field.FieldConstants;
 import frc.robot.util.field.FieldZones;
 import frc.robot.util.geometry.AllianceFlipUtil;
-import frc.robot.util.HubTracker;
 
 public class RobotContainer {
 	/* Setting up bindings for necessary control of the swerve drive platform */
@@ -209,8 +207,13 @@ public class RobotContainer {
 			Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
 		});
 
+
+
 		//TODO only add certain autos to the chooser and flip them to have various starting positions
-		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("LeftSwipe"));
+		autoChooser = new LoggedDashboardChooser<>("Auto/Selected", AutoBuilder.buildAutoChooser("Do Nothing"));
+
+		buildAutonomousCommands();
+
 		autoChooser.onChange((Command selected) -> {
 			// reset pose to the starting pose of the selected auto
 			if (selected instanceof PathPlannerAuto) {
@@ -241,6 +244,21 @@ public class RobotContainer {
 						new Rotation2d(
 								SmartDashboard.getNumber("ResetTheta", 0.0))))));
 
+	}
+
+	private void buildAutonomousCommands() {
+		Command leftDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe");
+		Command leftDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe");
+		Command rightDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe", true);
+		Command rightDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe", true);
+		Command rightRiskPass = new PathPlannerAuto("RISK_RightPassOutpost");
+
+		autoChooser.addOption("Do Nothing", new InstantCommand());
+		autoChooser.addOption("LeftDoubleSwipe", leftDoubleSwipe);
+		autoChooser.addOption("leftDoubleSwipeBump", leftDoubleSwipeBump);
+		autoChooser.addOption("RightDoubleSwipe", rightDoubleSwipe);
+		autoChooser.addOption("RightDoubleSwipeBump", rightDoubleSwipeBump);
+		autoChooser.addOption("RightRiskPass", rightRiskPass);
 	}
 
 	private void configureBindings() {

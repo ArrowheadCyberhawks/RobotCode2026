@@ -84,6 +84,9 @@ public class Robot extends LoggedRobot {
 		if (m_autonomousCommand != null) {
 			m_autonomousCommand.cancel();
 		}
+		
+		// TODO: find better fix for this
+		ShotCalculator.getInstance().resetTargetToHub();
 	}
 
 	@Override

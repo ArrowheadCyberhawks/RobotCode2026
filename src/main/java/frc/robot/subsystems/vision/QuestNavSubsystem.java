@@ -92,7 +92,11 @@ public class QuestNavSubsystem extends SubsystemBase {
         questNav.commandPeriodic();
         Logger.recordOutput("QuestNav/Tracking?", isTracking());
         Logger.recordOutput("QuestNav/Connected?", isConnected());
+
+        useQuest = isTracking() && isConnected();
+        
         Logger.recordOutput("QuestNav/Enabled?", useQuest);
+
         
 
         if (useQuest) {

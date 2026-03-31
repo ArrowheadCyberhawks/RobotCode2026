@@ -50,7 +50,7 @@ public class ShootCommand extends Command {
             hopper.setHopperState(HopperState.IDLE);
             hopperTriggered = false;
         } else if (inTower.getAsBoolean()) {
-            shooter.requestState(ShooterState.IDLE);
+            shooter.requestState(ShooterState.AIM);
             hopper.setHopperState(HopperState.IDLE);
         } else {
             // Normal AIM + fire sequence

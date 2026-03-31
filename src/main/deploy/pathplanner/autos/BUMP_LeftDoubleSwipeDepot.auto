@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "IntakeOn"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftTrenchToNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "BUMP_LeftNeutralToLeftShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftShootToNeutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "NEW_LeftCenterNeutralToDepot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "NEW_Left",
+  "choreoAuto": false
+}
