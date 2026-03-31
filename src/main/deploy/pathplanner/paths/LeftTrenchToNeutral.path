@@ -39,7 +39,7 @@
   "eventMarkers": [
     {
       "name": "IntakeOn",
-      "waypointRelativePos": 0.08617594254937143,
+      "waypointRelativePos": 0.03791773778920293,
       "endWaypointRelativePos": null,
       "command": null
     }

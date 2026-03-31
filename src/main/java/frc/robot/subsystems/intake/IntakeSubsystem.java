@@ -112,7 +112,7 @@ public class IntakeSubsystem extends SubsystemBase {
             .forwardSoftLimitEnabled(true)
             .reverseSoftLimitEnabled(true);
 
-        pivotConfig.smartCurrentLimit(20);
+        pivotConfig.smartCurrentLimit(40);
 
         // Apply configuration
         pivotMotor.configure(pivotConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);

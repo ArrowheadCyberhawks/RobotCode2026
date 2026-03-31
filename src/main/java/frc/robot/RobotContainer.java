@@ -344,7 +344,7 @@ public class RobotContainer {
 
 		driverController.back().or(manipulatorController.back()).whileTrue(Commands.run(() -> {
 			limelightSubsystem.updateVisionPoseMT1(true);
-			Pose2d limelightPose = limelightSubsystem.getPoseEstimateMT2().pose;
+			Pose2d limelightPose = limelightSubsystem.getPoseEstimateMT1().pose;
 			if (limelightPose != null) {
 				drivetrain.resetPose(limelightPose);
 				questNavSubsystem.resetPose(limelightPose);

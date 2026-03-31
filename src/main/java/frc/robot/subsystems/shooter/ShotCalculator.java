@@ -121,11 +121,11 @@ public class ShotCalculator {
 
         // Populate the flywheel speed calibration map (distance -> RPS). (rotations per second)
         //Distance is in Meters
-        flywheelSpeedMap.put(1.30,22.02);
-        flywheelSpeedMap.put(2.43, 25.0); 
-        flywheelSpeedMap.put(3.04, 26.5);
-        flywheelSpeedMap.put(4.00, 28.5);
-        flywheelSpeedMap.put(5.5, 32.5);
+        flywheelSpeedMap.put(1.30,21.02);
+        flywheelSpeedMap.put(2.43, 24.0); 
+        flywheelSpeedMap.put(3.04, 25.5);
+        flywheelSpeedMap.put(4.00, 27.5);
+        flywheelSpeedMap.put(5.5, 31.5);
         flywheelSpeedMap.put(9.14, 38.0);
         flywheelSpeedMap.put(12.95, 55.0); 
 

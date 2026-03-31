@@ -65,10 +65,11 @@ public class LimelightSubsystem extends SubsystemBase {
 	updateRobotOrientation();
 	// updateFullRobotOrientation();
 	if (useLimelight.getAsBoolean()) {
-		updateVisionPoseMT2();
+		updateVisionPoseMT1(false);
+		//updateVisionPoseMT2();
 	}
 	// updateVisionPoseMT1(true);
-	updateField(true);
+	updateField(false);
 	// if(DriverStation.isDisabled()) {
 	// 	updateVisionPoseMT1(true);
 	// }
@@ -108,6 +109,25 @@ public class LimelightSubsystem extends SubsystemBase {
 		LimelightHelpers.PoseEstimate limelightMeasurementMT1 = getPoseEstimateMT1();
 		
 		if (limelightMeasurementMT1 != null && !limelightMeasurementMT1.pose.equals(Pose2d.kZero)) {
+			
+			boolean rejectUpdate = true;
+
+			if (limelightMeasurementMT1.tagCount >= 2) {
+				rejectUpdate = false;
+			}
+
+			if (limelightMeasurementMT1.tagCount == 1 && limelightMeasurementMT1.avgTagArea > averageTagAreaMT2) {
+				rejectUpdate = false;
+			}
+
+			if (Math.abs(drivetrain.getState().Speeds.omegaRadiansPerSecond) > Units.degreesToRadians(450)) {
+				rejectUpdate = true;
+			}
+
+			if (limelightMeasurementMT1.rawFiducials[0].ambiguity > 0.7) {
+				rejectUpdate = true;
+			}
+
 			Vector<N3> measurementStdDevs;
 			if (rotationOnly) {
 				measurementStdDevs = VecBuilder.fill(999999,999999,0.5);
