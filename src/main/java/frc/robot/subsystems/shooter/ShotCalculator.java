@@ -113,9 +113,9 @@ public class ShotCalculator {
         hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.34, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(2.43, Rotation2d.fromDegrees(17));
-        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(21));
-        hoodAngleMap.put(4.00, Rotation2d.fromDegrees(24));
-        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(32));
+        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(22.5));
+        hoodAngleMap.put(4.00, Rotation2d.fromDegrees(25.5));
+        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(33.5));
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
         hoodAngleMap.put(12.95, Rotation2d.fromDegrees(45));
 

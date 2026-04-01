@@ -19,6 +19,7 @@ import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
 import com.ctre.phoenix6.signals.StripTypeValue;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -42,20 +43,7 @@ public class LEDSubsystem extends SubsystemBase {
     private final Supplier<IntakeState> intakeStateSupplier;
     private final Supplier<ShooterState> shooterStateSupplier;
 
-    public LEDState state;
-
-    private enum AnimationType {
-        None,
-        ColorFlow,
-        Fire,
-        Larson,
-        Rainbow,
-        RgbFade,
-        SingleFade,
-        Strobe,
-        Twinkle,
-        TwinkleOff,
-    }
+    public LEDState currentState;
 
     public LEDSubsystem(Supplier<IntakeState> intakeStateSupplier, Supplier<ShooterState> shooterStateSupplier) {
         this.intakeStateSupplier = intakeStateSupplier;
@@ -75,7 +63,7 @@ public class LEDSubsystem extends SubsystemBase {
             candle.setControl(new EmptyAnimation(i));
         }
         // set the onboard LEDs to a solid color
-        candle.setControl(new SolidColor(0, 37).withColor(LEDState.DEFAULT.getColor()));
+        candle.setControl(LEDState.DEFAULT.getRequest());
     }
 
     @Override
@@ -84,7 +72,7 @@ public class LEDSubsystem extends SubsystemBase {
         ShooterState shooterState = shooterStateSupplier.get();
 
         if (shooterState == ShooterState.TRENCH) {
-            setState(state);LEDState.TRENCH.getColor();
+            setState(LEDState.TRENCH);
         } else if (intakeState == IntakeState.RUN) {
             if (shooterState == ShooterState.AIM) {
                 setState(LEDState.SHOOTINTAKE);
@@ -95,14 +83,16 @@ public class LEDSubsystem extends SubsystemBase {
             setState(LEDState.HERD);
         } else if (intakeState == IntakeState.STOW) {
             setState(LEDState.DEFENSE);
+        } else if (DriverStation.isDSAttached() && DriverStation.isDisabled()) {
+            setState(LEDState.DISABLED);
         } else {
             setState(LEDState.DEFAULT);
         }
 
-        candle.setControl(new SolidColor(0, 99).withColor(state.getColor()));
+        candle.setControl(currentState.getRequest());
     }
 
-    public void setState(LEDState state) {
-        this.state = state;
+    public void setState(LEDState newState) {
+        this.currentState = newState;
     }
 }

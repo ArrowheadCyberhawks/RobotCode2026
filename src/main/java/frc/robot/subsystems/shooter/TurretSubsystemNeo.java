@@ -16,6 +16,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.util.LoggedTunableNumber;
@@ -30,6 +31,7 @@ public class TurretSubsystemNeo extends SubsystemBase {
 	private final SparkFlex turretMotor;
 	private final RelativeEncoder encoder;
 	private final PIDController pidController;
+	private final SlewRateLimiter slewRateLimiter; // Limit rate of change to prevent overshooting
 	private final ProfiledPIDController profiledPIDController;
 	private SimpleMotorFeedforward feedforward;
 	
@@ -51,6 +53,8 @@ public class TurretSubsystemNeo extends SubsystemBase {
 			ShooterConstants.kITurret.get(),
 			ShooterConstants.kDTurret.get()
 		);
+
+		slewRateLimiter = new SlewRateLimiter(ShooterConstants.kMaxTurretVelocity.get());
 		
 		//unused
 		profiledPIDController = new ProfiledPIDController(
@@ -143,13 +147,14 @@ public class TurretSubsystemNeo extends SubsystemBase {
 		
 		double currentPos = getTurretRotation().getRadians();
 		double targetPos = targetRotation.getRadians();
+		double filteredTargetPos = slewRateLimiter.calculate(targetPos);
 
-		double pidOut = pidController.calculate(currentPos, targetPos);
+		double pidOut = pidController.calculate(currentPos, filteredTargetPos);
 		
 		// Use ProfiledPIDController's current setpoint velocity for feedforward
 		double setpointVelocity = shotCalculator.getData().turretVelocity();
 		double ffOut = isAtGoal() ? 0.0 : feedforward.calculate(setpointVelocity);
-		//ffOut = 0.0;
+		ffOut = 0.0; // disable feedforward for now
 
 		// Apply voltage clamp
 		double maxVolts = ShooterConstants.turretMaxPercentOutput.get() * 12.0;
