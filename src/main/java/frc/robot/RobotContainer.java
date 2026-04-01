@@ -125,7 +125,10 @@ public class RobotContainer {
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
-	public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+	public final LEDSubsystem ledSubsystem = new LEDSubsystem(
+		() -> intakeSubsystem.getIntakeState(),
+		() -> shooterSubsystem.getState());
+
 	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
 	// slew limiter object
@@ -166,6 +169,11 @@ public class RobotContainer {
         );
 
 	private Command shootLeft;
+	private Command shootRight;
+	private Command farHubClearLeft;
+	private Command farHubClearRight;
+	private Command hubClearLeft;
+	private Command hubClearRight;
 
 
 	public RobotContainer() {
@@ -253,6 +261,7 @@ public class RobotContainer {
 		Command rightDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe", true);
 		Command rightDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe", true);
 		Command rightRiskPass = new PathPlannerAuto("RISK_RightPassOutpost");
+		Command rightSafePass = new PathPlannerAuto("SAFE_RightPassOutpost");
 
 		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
 		autoChooser.addOption("LeftDoubleSwipe", leftDoubleSwipe);
@@ -261,6 +270,7 @@ public class RobotContainer {
 		autoChooser.addOption("RightDoubleSwipe", rightDoubleSwipe);
 		autoChooser.addOption("RightDoubleSwipeBump", rightDoubleSwipeBump);
 		autoChooser.addOption("RightRiskPass", rightRiskPass);
+		autoChooser.addOption("RightSafePass", rightSafePass);
 	}
 
 	private void configureBindings() {
@@ -328,10 +338,10 @@ public class RobotContainer {
 		
 		// Run SysId routines when holding back/start and X/Y.
 		// Note that each routine should be run exactly once in a single log.
-		driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-		driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-		driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-		driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+		// driverController.back().and(driverController.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+		// driverController.back().and(driverController.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+		// driverController.start().and(driverController.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+		// driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
 		// reset the field-centric heading on b button press
 		driverController.y().onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
@@ -356,10 +366,28 @@ public class RobotContainer {
 			})
 		);
 
+		driverController.b().onTrue(shooterSubsystem.trenchCommand());
+
 		driverController.povLeft().whileTrue(shootLeft);
+		driverController.povRight().whileTrue(shootRight);
+
+		// Bind hub clear paths based on driver station location
+		int dsLocation = DriverStation.getLocation().orElse(0);
+		if (dsLocation == 1 || dsLocation == 2 || dsLocation == 0) {
+			// Stations 1 & 2 (and unknown 0) use LEFT variants
+			driverController.povUp().whileTrue(farHubClearLeft);
+			driverController.povDown().whileTrue(hubClearLeft);
+		} else if (dsLocation == 3) {
+			// Station 3 uses RIGHT variants
+			driverController.povUp().whileTrue(farHubClearRight);
+			driverController.povDown().whileTrue(hubClearRight);
+		}
+
 
 		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
 			drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))
+			// .andThen(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
+			// 	drivetrain.getState().Pose.getRotation().plus(new Rotation2d(Math.PI)))))
 			.alongWith(new InstantCommand(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))));
 
 		driverController.back().or(manipulatorController.back()).whileTrue(Commands.run(() -> {
@@ -528,6 +556,77 @@ public class RobotContainer {
 			leftShootCommand = Commands.none();
 		}
 		this.shootLeft = leftShootCommand;
+
+		// Right Shoot
+		Command rightShootCommand;
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile("RightShoot");
+			PathConstraints constraints = new PathConstraints(
+					3.0, 4.0,
+					Units.degreesToRadians(540), Units.degreesToRadians(720));
+			rightShootCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to load PathPlanner path 'RightShoot': " + e.getMessage(), e.getStackTrace());
+			rightShootCommand = Commands.none();
+		}
+		this.shootRight = rightShootCommand;
+
+		// FarHubClearLeft
+		Command farHubClearLeftCommand;
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile("FarHubClearLeft");
+			PathConstraints constraints = new PathConstraints(
+					3.0, 4.0,
+					Units.degreesToRadians(540), Units.degreesToRadians(720));
+			farHubClearLeftCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to load PathPlanner path 'FarHubClearLeft': " + e.getMessage(), e.getStackTrace());
+			farHubClearLeftCommand = Commands.none();
+		}
+		this.farHubClearLeft = farHubClearLeftCommand;
+
+		// FarHubClearRight
+		Command farHubClearRightCommand;
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile("FarHubClearRight");
+			PathConstraints constraints = new PathConstraints(
+					3.0, 4.0,
+					Units.degreesToRadians(540), Units.degreesToRadians(720));
+			farHubClearRightCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to load PathPlanner path 'FarHubClearRight': " + e.getMessage(), e.getStackTrace());
+			farHubClearRightCommand = Commands.none();
+		}
+		this.farHubClearRight = farHubClearRightCommand;
+
+		// HubClearLeft
+		Command hubClearLeftCommand;
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile("HubClearLeft");
+			PathConstraints constraints = new PathConstraints(
+					3.0, 4.0,
+					Units.degreesToRadians(540), Units.degreesToRadians(720));
+			hubClearLeftCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to load PathPlanner path 'HubClearLeft': " + e.getMessage(), e.getStackTrace());
+			hubClearLeftCommand = Commands.none();
+		}
+		this.hubClearLeft = hubClearLeftCommand;
+
+		// HubClearRight
+		Command hubClearRightCommand;
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile("HubClearRight");
+			PathConstraints constraints = new PathConstraints(
+					3.0, 4.0,
+					Units.degreesToRadians(540), Units.degreesToRadians(720));
+			hubClearRightCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to load PathPlanner path 'HubClearRight': " + e.getMessage(), e.getStackTrace());
+			hubClearRightCommand = Commands.none();
+		}
+		this.hubClearRight = hubClearRightCommand;
+
 	}
 
 	public Command getAutonomousCommand() {

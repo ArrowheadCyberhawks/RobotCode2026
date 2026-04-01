@@ -1,5 +1,7 @@
 package frc.robot.subsystems.led;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
 import com.ctre.phoenix6.controls.EmptyAnimation;
@@ -20,6 +22,9 @@ import com.ctre.phoenix6.signals.StripTypeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
+import frc.robot.subsystems.led.LEDConstants.LEDState;
+import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 
 import static frc.robot.subsystems.led.LEDConstants.*;
 
@@ -32,7 +37,12 @@ import static frc.robot.subsystems.led.LEDConstants.*;
  */
 public class LEDSubsystem extends SubsystemBase {
 
-    private final CANdle candle = new CANdle(kCANdleId, kCANBus);
+    private final CANdle candle = new CANdle(kCANdleId);
+
+    private final Supplier<IntakeState> intakeStateSupplier;
+    private final Supplier<ShooterState> shooterStateSupplier;
+
+    public LEDState state;
 
     private enum AnimationType {
         None,
@@ -47,13 +57,9 @@ public class LEDSubsystem extends SubsystemBase {
         TwinkleOff,
     }
 
-    private AnimationType anim0State = AnimationType.None;
-    private AnimationType anim1State = AnimationType.None;
-
-    private final SendableChooser<AnimationType> anim0Chooser = new SendableChooser<>();
-    private final SendableChooser<AnimationType> anim1Chooser = new SendableChooser<>();
-
-    public LEDSubsystem() {
+    public LEDSubsystem(Supplier<IntakeState> intakeStateSupplier, Supplier<ShooterState> shooterStateSupplier) {
+        this.intakeStateSupplier = intakeStateSupplier;
+        this.shooterStateSupplier = shooterStateSupplier;
         // Configure CANdle
         var cfg = new CANdleConfiguration();
         // set the LED strip type and brightness
@@ -69,122 +75,34 @@ public class LEDSubsystem extends SubsystemBase {
             candle.setControl(new EmptyAnimation(i));
         }
         // set the onboard LEDs to a solid color
-        candle.setControl(new SolidColor(0, 3).withColor(kGreen));
-        candle.setControl(new SolidColor(4, 7).withColor(kWhite));
-
-        // add animations to chooser for slot 0
-        anim0Chooser.setDefaultOption("Color Flow", AnimationType.ColorFlow);
-        anim0Chooser.addOption("Rainbow", AnimationType.Rainbow);
-        anim0Chooser.addOption("Twinkle", AnimationType.Twinkle);
-        anim0Chooser.addOption("Twinkle Off", AnimationType.TwinkleOff);
-        anim0Chooser.addOption("Fire", AnimationType.Fire);
-
-        // add animations to chooser for slot 1
-        anim1Chooser.setDefaultOption("Larson", AnimationType.Larson);
-        anim1Chooser.addOption("RGB Fade", AnimationType.RgbFade);
-        anim1Chooser.addOption("Single Fade", AnimationType.SingleFade);
-        anim1Chooser.addOption("Strobe", AnimationType.Strobe);
-        anim1Chooser.addOption("Fire", AnimationType.Fire);
-
-        SmartDashboard.putData("Animation 0", anim0Chooser);
-        SmartDashboard.putData("Animation 1", anim1Chooser);
+        candle.setControl(new SolidColor(0, 37).withColor(LEDState.DEFAULT.getColor()));
     }
 
     @Override
     public void periodic() {
-        // Slot 0 animation selection
-        final var anim0Selection = anim0Chooser.getSelected();
-        if (anim0State != anim0Selection) {
-            anim0State = anim0Selection;
+        IntakeState intakeState = intakeStateSupplier.get();
+        ShooterState shooterState = shooterStateSupplier.get();
 
-            switch (anim0State) {
-                default:
-                case ColorFlow:
-                    candle.setControl(
-                            new ColorFlowAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0)
-                                    .withColor(kViolet));
-                    break;
-                case Rainbow:
-                    candle.setControl(
-                            new RainbowAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0));
-                    break;
-                case Twinkle:
-                    candle.setControl(
-                            new TwinkleAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0)
-                                    .withColor(kViolet));
-                    break;
-                case TwinkleOff:
-                    candle.setControl(
-                            new TwinkleOffAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0)
-                                    .withColor(kViolet));
-                    break;
-                case Fire:
-                    candle.setControl(
-                            new FireAnimation(kSlot0StartIdx, kSlot0EndIdx).withSlot(0));
-                    break;
-                case None:
-                    candle.setControl(new EmptyAnimation(0));
-                    break;
+        if (shooterState == ShooterState.TRENCH) {
+            setState(state);LEDState.TRENCH.getColor();
+        } else if (intakeState == IntakeState.RUN) {
+            if (shooterState == ShooterState.AIM) {
+                setState(LEDState.SHOOTINTAKE);
+            } else {
+                setState(LEDState.INTAKE);
             }
+        } else if (intakeState == IntakeState.REVERSE) {
+            setState(LEDState.HERD);
+        } else if (intakeState == IntakeState.STOW) {
+            setState(LEDState.DEFENSE);
+        } else {
+            setState(LEDState.DEFAULT);
         }
 
-        final var anim1Selection = anim1Chooser.getSelected();
-        if (anim1State != anim1Selection) {
-            anim1State = anim1Selection;
+        candle.setControl(new SolidColor(0, 99).withColor(state.getColor()));
+    }
 
-            switch (anim1State) {
-                default:
-                case Larson:
-                    candle.setControl(
-                            new LarsonAnimation(kSlot1StartIdx, kSlot1EndIdx).withSlot(1)
-                                    .withColor(kRed));
-                    break;
-                case RgbFade:
-                    candle.setControl(
-                            new RgbFadeAnimation(kSlot1StartIdx, kSlot1EndIdx).withSlot(1));
-                    break;
-                case SingleFade:
-                    candle.setControl(
-                            new SingleFadeAnimation(kSlot1StartIdx, kSlot1EndIdx).withSlot(1)
-                                    .withColor(kRed));
-                    break;
-                case Strobe:
-                    candle.setControl(
-                            new StrobeAnimation(kSlot1StartIdx, kSlot1EndIdx).withSlot(1)
-                                    .withColor(kRed));
-                    break;
-                case Fire:
-                    candle.setControl(
-                            new FireAnimation(kSlot1StartIdx, kSlot1EndIdx).withSlot(1)
-                                    .withDirection(AnimationDirectionValue.Backward)
-                                    .withCooling(0.4)
-                                    .withSparking(0.5));
-                    break;
-                case None:
-                    candle.setControl(new EmptyAnimation(1));
-                    break;
-            }
-        }
+    public void setState(LEDState state) {
+        this.state = state;
     }
 }
-
-
-/*public intakeStatus (DoubleSupplier IntakeCurrentSupplier, DoubleSupplier ShooterStateSupplier ) {
-    if (intakeCurrentSupplier.getAsDouble() > 0.0) {
-        return "Intaking";
-        else return "Not Intaking"; 
-    }
-    if (ShooterStateSupplier.getAsDouble() > 0.0) {
-        return "Shooting"; 
-        else return "Not Shooting";    
-    }
-    if intakeCurrentSupplier.getAsDouble() > 0.0 && ShooterStateSupplier.getAsDouble() > 0.0 {
-        return "Intaking and Shooting";
-    }
-    if get.intakeStatus == "Intaking"; //needs to be purple*/
-
-
-
-
-}
-  

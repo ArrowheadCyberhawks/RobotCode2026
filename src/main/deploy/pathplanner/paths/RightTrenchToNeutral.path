@@ -47,18 +47,31 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeOn",
+      "waypointRelativePos": 0.09335727109515271,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 0.34111310592459576,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 101.88865803962823
+    "velocity": 1.0,
+    "rotation": 115.0
   },
   "reversed": false,
   "folder": null,

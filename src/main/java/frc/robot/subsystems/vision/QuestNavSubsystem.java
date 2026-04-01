@@ -67,8 +67,7 @@ public class QuestNavSubsystem extends SubsystemBase {
         });
         questNav.onTrackingAcquired(() -> {
             System.out.println("Quest tracking acquired!");
-            //consider adding this in, I think we should keep this in case it jumps poses
-            //resetPose(drivetrain.getPose());
+            resetPose(drivetrain.getPose());
             useQuest = true;
         });
         questNav.onTrackingLost(() -> {

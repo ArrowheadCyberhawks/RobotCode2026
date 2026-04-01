@@ -3,6 +3,7 @@ package frc.robot.subsystems.led;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.signals.RGBWColor;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.util.Color;
 
 import static edu.wpi.first.units.Units.*;
@@ -20,25 +21,39 @@ public final class LEDConstants {
     public static final int kCANdleId = 56;
     public static final CANBus kCANBus = CANBus.roboRIO();
 
-    //public static final RGBWColor kGreen = new RGBWColor(0, 217, 0, 0);
-    public static final RGBW Color kGreen = RGBWColor.fromHex("#24f00000").orElseThrow();
-    //public static final RGBWColor kWhite = new RGBWColor(Color.kWhite).scaleBrightness(0.5); //not needed
-    //public static final RGBWColor kViolet = RGBWColor.fromHSV(Degrees.of(270), 0.9, 0.8);
-    public static final RGBW Color kPurple = RGBWColor.fromHex("#D924f000").orElseThrow();
-    public static final RGBWColor kRed = RGBWColor.fromHex("#D9000000").orElseThrow(); 
-    public static final RGBWColor kYellow = RGBWColor.fromHex("#D9D90000").orElseThrow();
-    public static final RGBWColor kWhite = RGBWColor.fromHex("#D9FFFFFF").orElseThrow();
+    public static final RGBWColor kGreen = RGBWColor.fromHex("rgba(38, 255, 0, 1)").orElseThrow();
+    public static final RGBWColor kPurple = RGBWColor.fromHex("rgba(153, 0, 255, 1)").orElseThrow();
+    public static final RGBWColor kRed = RGBWColor.fromHex("rgba(255, 0, 0, 1)").orElseThrow();
+    public static final RGBWColor kBlue = RGBWColor.fromHex("rgba(0, 102, 255, 1)").orElseThrow();
+    public static final RGBWColor kYellow = RGBWColor.fromHex("rgba(217, 217, 0, 1)").orElseThrow();
+    public static final RGBWColor kWhite = RGBWColor.fromHex("rgba(217, 217, 217, 1)").orElseThrow();
+    public static final RGBWColor kPink = RGBWColor.fromHex("rgba(236, 16, 139, 1)").orElseThrow();
+
 
     /* assignments will be: intaking (purple), intaking while shooting (green), 
     *  herding/reverse intake (yellow), defense/intake up (blue), warning (red flashing)
     */
-   public enum intakestate {
-    Intaking();
-    IntakingShooting ();
-    ReverseIntaking ();
+    public enum LEDState {
+        DEFAULT(kPink),
+        DEFENSE(kBlue),
+        TRENCH(kWhite),
+        SHOOTINTAKE(kPink),
+        INTAKE(kGreen),
+        HERD(kYellow),
+        WARNING(kRed);
 
-   }
-    /*
+        public final RGBWColor color;
+
+        LEDState(RGBWColor color) {
+            this.color = color;
+        }
+
+        public RGBWColor getColor() {
+            return color;
+        }
+    }
+
+    /* 
      * Start and end index for LED animations.
      * 0-7 are onboard, 8-399 are an external strip.
      * CANdle supports 8 animation slots (0-7).

@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.146079559463126,
+        "x": 2.0346323972618325,
         "y": 7.570238636363637
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.896079559463126,
+        "x": 1.7846323972618325,
         "y": 7.570238636363637
       },
       "isLocked": false,
@@ -16,63 +16,63 @@
     },
     {
       "anchor": {
-        "x": 0.9907266782186175,
-        "y": 7.570238636363637
+        "x": 0.6225554743519417,
+        "y": 7.445541857612155
       },
       "prevControl": {
-        "x": 1.6117162442565454,
-        "y": 7.595259839936378
+        "x": 0.8922559906303628,
+        "y": 7.532342023770727
       },
       "nextControl": {
-        "x": 0.7409293668499638,
-        "y": 7.560173685643843
+        "x": 0.2893651889899119,
+        "y": 7.338308202553112
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.457431818181818,
-        "y": 6.074258469225969
+        "x": 1.3644318181811408,
+        "y": 6.075750000002797
       },
       "prevControl": {
-        "x": 0.5844701151281952,
-        "y": 7.185805903527492
+        "x": 1.3281929990414254,
+        "y": 6.842805005126775
       },
       "nextControl": {
-        "x": 0.41732932234171305,
-        "y": 5.723373520107266
+        "x": 1.4262727272720495,
+        "y": 4.766784090911889
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.457431818181818,
-        "y": 4.447272727272727
+        "x": 0.5,
+        "y": 4.406045454545688
       },
       "prevControl": {
-        "x": 0.4693441078824646,
-        "y": 4.696988760706882
+        "x": 0.519041844100488,
+        "y": 4.935153953626971
       },
       "nextControl": {
-        "x": 0.4455195284811714,
-        "y": 4.197556693838573
+        "x": 0.4910086849689488,
+        "y": 4.1562071943571945
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.457431818181818,
+        "x": 0.5,
         "y": 2.6435795454545463
       },
       "prevControl": {
-        "x": 0.45743181818181805,
+        "x": 0.5,
         "y": 3.1435795454545463
       },
       "nextControl": {
-        "x": 0.45743181818181805,
+        "x": 0.5,
         "y": 2.1435795454545463
       },
       "isLocked": false,
@@ -80,33 +80,41 @@
     },
     {
       "anchor": {
-        "x": 0.457431818181818,
-        "y": 0.7883522727272725
+        "x": 0.5,
+        "y": 0.7471250000002341
       },
       "prevControl": {
-        "x": 0.4574318181818179,
-        "y": 1.440619975926961
+        "x": 0.5,
+        "y": 1.3993927031999227
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftShoot1"
+      "linkedName": null
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.0220125786163523,
+      "waypointRelativePos": 0.6367924528301887,
       "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 1.5801886792452828,
-      "rotationDegrees": -89.57559151815997
+      "waypointRelativePos": 1.470125786163522,
+      "rotationDegrees": -45.0
     },
     {
-      "waypointRelativePos": 2.25,
-      "rotationDegrees": -89.17454342950383
+      "waypointRelativePos": 1.94182389937107,
+      "rotationDegrees": -90.0
     },
     {
-      "waypointRelativePos": 3.2286007175806963,
+      "waypointRelativePos": 2.161949685534591,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 2.4999999999999996,
+      "rotationDegrees": -141.8184130293355
+    },
+    {
+      "waypointRelativePos": 3.160377358490579,
       "rotationDegrees": -90.0
     }
   ],
@@ -116,8 +124,8 @@
   "globalConstraints": {
     "maxVelocity": 0.5,
     "maxAcceleration": 0.5,
-    "maxAngularVelocity": 360.0,
-    "maxAngularAcceleration": 540.0,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
