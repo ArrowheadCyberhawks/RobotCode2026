@@ -125,7 +125,10 @@ public class RobotContainer {
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
-	public final LEDSubsystem ledSubsystem = new LEDSubsystem();
+	public final LEDSubsystem ledSubsystem = new LEDSubsystem(
+		() -> intakeSubsystem.getIntakeState(),
+		() -> shooterSubsystem.getState());
+		
 	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
 	// slew limiter object
@@ -166,7 +169,6 @@ public class RobotContainer {
         );
 
 	private Command shootLeft;
-
 
 	public RobotContainer() {
 		
