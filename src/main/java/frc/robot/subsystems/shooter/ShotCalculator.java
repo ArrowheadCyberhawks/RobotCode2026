@@ -112,8 +112,8 @@ public class ShotCalculator {
         // Meters
         hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.34, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
-        hoodAngleMap.put(2.43, Rotation2d.fromDegrees(17));
-        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(22.5));
+        hoodAngleMap.put(2.43, Rotation2d.fromDegrees(20));
+        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(25.0));
         hoodAngleMap.put(4.00, Rotation2d.fromDegrees(25.5));
         hoodAngleMap.put(5.5, Rotation2d.fromDegrees(33.5));
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
@@ -123,7 +123,7 @@ public class ShotCalculator {
         //Distance is in Meters
         flywheelSpeedMap.put(1.30,21.02);
         flywheelSpeedMap.put(2.43, 24.0); 
-        flywheelSpeedMap.put(3.04, 25.5);
+        flywheelSpeedMap.put(3.04, 26.0);
         flywheelSpeedMap.put(4.00, 27.5);
         flywheelSpeedMap.put(5.5, 31.5);
         flywheelSpeedMap.put(9.14, 38.0);
@@ -134,13 +134,14 @@ public class ShotCalculator {
         // used in the lookahead loop to compensate for turret/robot motion.
 
         tofMap.put(1.35, 1.00);
-        tofMap.put(2.43, 1.30);
-        tofMap.put(3.04, 1.32);
+        tofMap.put(2.43, 1.22);
+        tofMap.put(3.04, 1.28);
         tofMap.put(3.5, 1.36);
         tofMap.put(4.00, 1.33);
         tofMap.put(5.5, 1.54);
         tofMap.put(9.64, 1.67);
-        tofMap.put(13.95, 2.00);
+        
+        tofMap.put(13.95, 2.20);
     }
 
     public ShotData getData() {

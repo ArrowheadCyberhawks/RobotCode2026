@@ -93,35 +93,35 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   private void executeState() {
+    var shotData = ShotCalculator.getInstance().getData();
+
     switch (currentState) {
 
       case IDLE:
-        flywheel.stop();
+        if (shotData != null && shotData.isValid()) {
+          flywheel.setSetpoint(RotationsPerSecond.of(shotData.flywheelSpeed()));
+        }
         hood.setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
         turret.stopTurret();
         break;
 
       case STRAIGHT:
         turret.setSetpoint(new Rotation2d());
-
-        var straightData = ShotCalculator.getInstance().getData();
-        if (straightData != null && straightData.isValid()) {
-          flywheel.setSetpoint(RadiansPerSecond.of(straightData.flywheelSpeed()));
-          hood.setSetpoint(straightData.hoodAngle());
+        if (shotData != null && shotData.isValid()) {
+          flywheel.setSetpoint(RadiansPerSecond.of(shotData.flywheelSpeed()));
+          hood.setSetpoint(shotData.hoodAngle());
         }
         break;
 
       case AIM:
-        var aimData = ShotCalculator.getInstance().getData();
-        if (aimData != null && aimData.isValid()) {
-          flywheel.setSetpoint(RotationsPerSecond.of(aimData.flywheelSpeed()));
-          hood.setSetpoint(aimData.hoodAngle());
-          turret.setSetpoint(aimData.turretAngle());
+        if (shotData != null && shotData.isValid()) {
+          flywheel.setSetpoint(RotationsPerSecond.of(shotData.flywheelSpeed()));
+          hood.setSetpoint(shotData.hoodAngle());
+          turret.setSetpoint(shotData.turretAngle());
         }
         break;
       
       case PASS:
-        var shotData = ShotCalculator.getInstance().getData();
         if (shotData != null && shotData.isValid()) {
           flywheel.setSetpoint(RotationsPerSecond.of(shotData.flywheelSpeed()));
           hood.setSetpoint(Rotation2d.fromDegrees(40));
@@ -131,6 +131,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
       case TRENCH:
         hood.setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
+        if (shotData != null && shotData.isValid()) {
+          flywheel.setSetpoint(RotationsPerSecond.of(shotData.flywheelSpeed()));
+        }
         break;
 
       case MANUAL:

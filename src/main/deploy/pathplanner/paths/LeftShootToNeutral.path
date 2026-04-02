@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5732667617689007,
-        "y": 7.4702139800285305
+        "x": 3.392125534950071,
+        "y": 7.444336661911555
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.725270339586432,
-        "y": 7.443873740299444
+        "x": 4.544129112767602,
+        "y": 7.417996422182468
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
@@ -64,7 +64,13 @@
       "command": null
     },
     {
-      "name": "ShooterOff",
+      "name": "ShooterOn",
+      "waypointRelativePos": 0.2969151670951403,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "HopperOff",
       "waypointRelativePos": 0.353470437018,
       "endWaypointRelativePos": null,
       "command": null

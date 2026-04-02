@@ -8,6 +8,7 @@ public final class FieldZones {
 
         public static double trenchXMargin = Units.inchesToMeters(35.0);
         private static Zone trenchZone = buildTrenchZone();
+        private static double towerYMargin = Units.inchesToMeters(12.0);
 
         private static Zone buildTrenchZone() {
                 double blueXNear = FieldConstants.LinesVertical.hubCenter - trenchXMargin;
@@ -46,14 +47,14 @@ public final class FieldZones {
         public static final Zone BLUETOWER = new Zone.RectangleZone(
                         0.0,
                         FieldConstants.Tower.leftUpright.getX(),
-                        FieldConstants.Tower.rightUpright.getY(),
-                        FieldConstants.Tower.leftUpright.getY());
+                        FieldConstants.Tower.rightUpright.getY() - towerYMargin,
+                        FieldConstants.Tower.leftUpright.getY() + towerYMargin);
 
         public static final Zone REDTOWER = new Zone.RectangleZone(
                         FieldConstants.Tower.oppLeftUpright.getX(),
                         FieldConstants.fieldLength,
-                        FieldConstants.Tower.oppRightUpright.getY(),
-                        FieldConstants.Tower.oppLeftUpright.getY());
+                        FieldConstants.Tower.oppRightUpright.getY() - towerYMargin,
+                        FieldConstants.Tower.oppLeftUpright.getY() + towerYMargin);
 
         public static Zone nearAlliance() {
                 return AllianceFlipUtil.shouldFlip() ? redAlliance : blueAlliance;

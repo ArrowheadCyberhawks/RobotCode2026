@@ -3,57 +3,48 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5732667617689007,
-        "y": 7.4702139800285305
+        "x": 3.392125534950071,
+        "y": 7.444336661911555
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.3232667617689007,
-        "y": 7.4702139800285305
+        "x": 3.142125534950071,
+        "y": 7.444336661911555
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
     },
     {
       "anchor": {
-        "x": 3.0,
-        "y": 7.47
+        "x": 2.421180389451178,
+        "y": 7.444336661911555
       },
       "prevControl": {
-        "x": 2.75,
-        "y": 7.47
+        "x": 2.441539904122969,
+        "y": 7.1951670607112295
       },
       "nextControl": {
-        "x": 3.25,
-        "y": 7.47
+        "x": 2.4008208747793875,
+        "y": 7.693506263111876
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.5732667617689007,
-        "y": 7.47
+        "x": 3.392125534950071,
+        "y": 7.444336661911555
       },
       "prevControl": {
-        "x": 3.8232667617689007,
-        "y": 7.47
+        "x": 3.642125534950071,
+        "y": 7.444336661911555
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "LeftShoot"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.4746283956945204,
-      "rotationDegrees": 170.0
-    },
-    {
-      "waypointRelativePos": 1.2619169656586309,
-      "rotationDegrees": -160.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

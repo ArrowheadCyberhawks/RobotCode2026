@@ -25,13 +25,13 @@ public final class LEDConstants {
     public static final int kCANdleId = 56;
     public static final CANBus kCANBus = CANBus.roboRIO();
 
-    public static final RGBWColor kGreen = RGBWColor.fromHex("rgba(38, 255, 0, 1)").orElseThrow();
-    public static final RGBWColor kPurple = RGBWColor.fromHex("rgba(153, 0, 255, 1)").orElseThrow();
-    public static final RGBWColor kRed = RGBWColor.fromHex("rgba(255, 0, 0, 1)").orElseThrow();
-    public static final RGBWColor kBlue = RGBWColor.fromHex("rgba(0, 102, 255, 1)").orElseThrow();
-    public static final RGBWColor kYellow = RGBWColor.fromHex("rgba(217, 217, 0, 1)").orElseThrow();
-    public static final RGBWColor kWhite = RGBWColor.fromHex("rgba(217, 217, 217, 1)").orElseThrow();
-    public static final RGBWColor kPink = RGBWColor.fromHex("rgba(236, 16, 139, 1)").orElseThrow();
+    public static final RGBWColor kGreen = RGBWColor.fromHex("#26ff00ff").orElseThrow();
+    public static final RGBWColor kPurple = RGBWColor.fromHex("#9900ffff").orElseThrow();
+    public static final RGBWColor kRed = RGBWColor.fromHex("#ff0000ff").orElseThrow();
+    public static final RGBWColor kBlue = RGBWColor.fromHex("#0066ffff").orElseThrow();
+    public static final RGBWColor kYellow = RGBWColor.fromHex("#d9d900ff").orElseThrow();
+    public static final RGBWColor kWhite = RGBWColor.fromHex("#d9d9d9ff").orElseThrow();
+    public static final RGBWColor kPink = RGBWColor.fromHex("#ec108bff").orElseThrow();
 
     private enum AnimationType {
         None,
@@ -50,14 +50,14 @@ public final class LEDConstants {
     *  herding/reverse intake (yellow), defense/intake up (blue), warning (red flashing)
     */
     public enum LEDState {
-        DEFAULT(new SingleFadeAnimation(0, 37).withColor(kPink).withFrameRate(1)),
-        DISABLED(new SolidColor(0, 37).withColor(kPink)),
-        DEFENSE(new SolidColor(0, 37).withColor(kBlue)),
-        TRENCH(new SolidColor(0, 37).withColor(kWhite)),
-        SHOOTINTAKE(new StrobeAnimation(0, 37).withColor(kPink).withFrameRate(10)),
-        INTAKE(new StrobeAnimation(0, 37).withColor(kGreen).withFrameRate(10)),
-        HERD(new SolidColor(0, 37).withColor(kYellow)),
-        WARNING(new StrobeAnimation(0, 37).withColor(kRed).withFrameRate(5));
+        DEFAULT(new SingleFadeAnimation(0, kSlot0StartIdx).withColor(kPink).withFrameRate(1)),
+        DISABLED(new SolidColor(0, kSlot0EndIdx).withColor(kPink)),
+        DEFENSE(new SolidColor(0, kSlot0EndIdx).withColor(kBlue)),
+        TRENCH(new SolidColor(0, kSlot0EndIdx).withColor(kWhite)),
+        SHOOTINTAKE(new SolidColor(0, kSlot0EndIdx).withColor(kPink)),
+        INTAKE(new SolidColor(0, kSlot0EndIdx).withColor(kGreen)),
+        HERD(new SolidColor(0, kSlot0EndIdx).withColor(kYellow)),
+        WARNING(new StrobeAnimation(0, kSlot0EndIdx).withColor(kRed).withFrameRate(1));
 
         public final ControlRequest request;
 

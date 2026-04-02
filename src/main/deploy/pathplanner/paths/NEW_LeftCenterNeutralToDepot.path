@@ -52,24 +52,24 @@
         "y": 7.496091298145506
       },
       "prevControl": {
-        "x": 5.6417613636363635,
-        "y": 7.570238636363637
+        "x": 5.643354816692899,
+        "y": 7.525759302634208
       },
       "nextControl": {
-        "x": 1.6313096531960731,
-        "y": 7.397267005183388
+        "x": 3.6726477062108245,
+        "y": 7.491781593832796
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.6750071326676175,
-        "y": 5.814065620542083
+        "x": 0.675,
+        "y": 5.917574893009986
       },
       "prevControl": {
-        "x": 2.4044178805210326,
-        "y": 6.610923645632445
+        "x": 0.9249134798382118,
+        "y": 5.910998222487928
       },
       "nextControl": null,
       "isLocked": false,
@@ -86,7 +86,7 @@
       "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 3.569451563300859,
+      "waypointRelativePos": 3.6,
       "rotationDegrees": 180.0
     }
   ],
@@ -121,14 +121,20 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "ShooterAim",
-      "waypointRelativePos": 2.8366247755834872,
+      "name": "ShooterOn",
+      "waypointRelativePos": 0.9537275064267271,
       "endWaypointRelativePos": null,
       "command": null
     },
     {
       "name": "IntakeOn",
-      "waypointRelativePos": 3.6409335727109617,
+      "waypointRelativePos": 2.403598971722331,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 2.8366247755834872,
       "endWaypointRelativePos": null,
       "command": null
     }

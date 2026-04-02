@@ -48,12 +48,12 @@
     },
     {
       "anchor": {
-        "x": 3.5732667617689007,
-        "y": 7.4702139800285305
+        "x": 3.392125534950071,
+        "y": 7.444336661911555
       },
       "prevControl": {
-        "x": 4.561372942818718,
-        "y": 7.476324545308389
+        "x": 4.380231715999887,
+        "y": 7.450447227191413
       },
       "nextControl": null,
       "isLocked": false,
@@ -74,7 +74,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "ShooterOff",
+      "name": "ShooterOn",
       "waypointRelativePos": 0.30161579892280066,
       "endWaypointRelativePos": null,
       "command": null

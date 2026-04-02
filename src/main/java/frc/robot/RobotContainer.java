@@ -125,9 +125,9 @@ public class RobotContainer {
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 	public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
-	// public final LEDSubsystem ledSubsystem = new LEDSubsystem(
-	// 	intakeSubsystem::getIntakeState,
-	// 	shooterSubsystem::getState);
+	public final LEDSubsystem ledSubsystem = new LEDSubsystem(
+		intakeSubsystem::getIntakeState,
+		shooterSubsystem::getState);
 
 	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
@@ -351,7 +351,6 @@ public class RobotContainer {
 		//Protection/Defense Mode
 		driverController.x().onTrue(
 			intakeSubsystem.runOnce(() -> intakeSubsystem.setIntakeState(IntakeState.STOW))
-			.andThen(shooterSubsystem.idleCommand())
 			//.andThen(ledSubsystem)
 		);
 
@@ -451,17 +450,17 @@ public class RobotContainer {
 
 	private void configureTriggers() {
 		// TODO: should probably put sc.setTarget before this so I don't have get the instance each time
-		inAim.onTrue(Commands.runOnce(() -> {
+		inAim.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Hub.topCenterPoint.toTranslation2d());
 		}));
 
-		inLeftPass.onTrue(Commands.runOnce(() -> {
+		inLeftPass.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
 		}));
 
-		inRightPass.onTrue(Commands.runOnce(() -> {
+		inRightPass.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
 			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
@@ -502,6 +501,8 @@ public class RobotContainer {
 			)
 		);
 
+		NamedCommands.registerCommand("ShooterOn", shooterSubsystem.aimCommand());
+
 		NamedCommands.registerCommand("HopperOn",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
 
@@ -531,6 +532,9 @@ public class RobotContainer {
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
 		new EventTrigger("HopperOff").onTrue(
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
+
+		new EventTrigger("ShooterOn").onTrue(
+			shooterSubsystem.aimCommand());
 
 		// Shooter Commands - Stop all shooting motors
 		new EventTrigger("ShooterOff").onTrue(

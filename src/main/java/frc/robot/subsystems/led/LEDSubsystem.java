@@ -76,7 +76,7 @@ public class LEDSubsystem extends SubsystemBase {
         } else if (intakeState == IntakeState.RUN) {
             if (shooterState == ShooterState.AIM) {
                 setState(LEDState.SHOOTINTAKE);
-            } else {
+            } else if (shooterState != ShooterState.AIM) {
                 setState(LEDState.INTAKE);
             }
         } else if (intakeState == IntakeState.REVERSE) {
