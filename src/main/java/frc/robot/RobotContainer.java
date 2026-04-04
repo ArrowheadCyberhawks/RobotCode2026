@@ -262,6 +262,8 @@ public class RobotContainer {
 		Command rightDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe", true);
 		Command rightRiskPass = new PathPlannerAuto("RISK_RightPassOutpost");
 		Command rightSafePass = new PathPlannerAuto("SAFE_RightPassOutpost");
+		Command middleDepot = new PathPlannerAuto("DepotAuto");
+
 
 		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
 		autoChooser.addOption("LeftDoubleSwipe", leftDoubleSwipe);
@@ -271,6 +273,7 @@ public class RobotContainer {
 		autoChooser.addOption("RightDoubleSwipeBump", rightDoubleSwipeBump);
 		autoChooser.addOption("RightRiskPass", rightRiskPass);
 		autoChooser.addOption("RightSafePass", rightSafePass);
+		autoChooser.addOption("MiddleDepot", middleDepot);
 	}
 
 	private void configureBindings() {

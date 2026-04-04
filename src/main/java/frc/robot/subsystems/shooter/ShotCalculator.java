@@ -115,7 +115,7 @@ public class ShotCalculator {
         hoodAngleMap.put(2.43, Rotation2d.fromDegrees(20));
         hoodAngleMap.put(3.04, Rotation2d.fromDegrees(25.0));
         hoodAngleMap.put(4.00, Rotation2d.fromDegrees(25.5));
-        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(33.5));
+        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(33.0)); //adjusted from 33.5 for WILAX playoff 11
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
         hoodAngleMap.put(12.95, Rotation2d.fromDegrees(45));
 
@@ -140,7 +140,6 @@ public class ShotCalculator {
         tofMap.put(4.00, 1.33);
         tofMap.put(5.5, 1.54);
         tofMap.put(9.64, 1.67);
-        
         tofMap.put(13.95, 2.20);
     }
 

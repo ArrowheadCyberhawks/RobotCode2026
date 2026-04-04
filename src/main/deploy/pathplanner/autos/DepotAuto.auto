@@ -5,6 +5,18 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "IntakeOn"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShooterAim"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "CenterToDepot"
@@ -13,13 +25,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotToLeftClimbOut"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "ClimbLeft"
+            "pathName": "DepotAuto"
           }
         }
       ]
