@@ -58,6 +58,13 @@ public class ShotCalculator {
     private Supplier<Pose2d> poseSupplier = () -> new Pose2d();
     private Supplier<ChassisSpeeds> robotRelativeVelocitySupplier = () -> new ChassisSpeeds(0.0, 0.0, 0.0);
 
+    private double previousTOF = -1.0;
+
+    //perhaps move to the constants file?
+    private static final double toleranceTOF = 0.01;
+    private static final int maxIterations = 20;
+    private static final double dragFactor = 0.9;
+
     /**
      * Singleton accessor. Lightweight and thread-unsafe (intended for robot
      * code where single-threaded access is the norm). Callers should retrieve
@@ -144,6 +151,9 @@ public class ShotCalculator {
     }
 
     public ShotData getData() {
+
+
+
         // Calculate estimated pose while accounting for time between calculation
         Pose2d estimatedPose = poseSupplier.get();
         ChassisSpeeds robotRelativeVelocity = robotRelativeVelocitySupplier.get();
@@ -169,48 +179,61 @@ public class ShotCalculator {
         ChassisSpeeds robotVelocity = fieldVelocitySupplier.get();
         double robotAngle = estimatedPose.getRotation().getRadians();
 
-        // v_robot + w x r
-        // double turretVelocityX = robotVelocity.vxMetersPerSecond
-        //     - robotVelocity.omegaRadiansPerSecond //maybe need to be +
-        //         * (robotToTurretTrans.getX() * Math.sin(robotAngle)
-        //         + robotToTurretTrans.getY() * Math.cos(robotAngle));
+        double cos = Math.cos(robotAngle);
+        double sin = Math.sin(robotAngle);
 
-        // double turretVelocityY = robotVelocity.vyMetersPerSecond
-        //     + robotVelocity.omegaRadiansPerSecond
-        //         * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-        //         - robotToTurretTrans.getY() * Math.sin(robotAngle));
+        double rX = robotToTurretTrans.getX() * cos - robotToTurretTrans.getY() * sin;
+        double rY = robotToTurretTrans.getX() * sin + robotToTurretTrans.getY() * cos;
 
-        double turretVelocityX = robotVelocity.vxMetersPerSecond
-            + robotVelocity.omegaRadiansPerSecond
-                * (robotToTurretTrans.getY() * Math.cos(robotAngle)
-                    - robotToTurretTrans.getX() * Math.sin(robotAngle));
-        double turretVelocityY =
-        robotVelocity.vyMetersPerSecond
-            + robotVelocity.omegaRadiansPerSecond
-                * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-                    - robotToTurretTrans.getY() * Math.sin(robotAngle));
+        double turretVelocityX = robotVelocity.vxMetersPerSecond - robotVelocity.omegaRadiansPerSecond * rY;
+        double turretVelocityY =  robotVelocity.vyMetersPerSecond + robotVelocity.omegaRadiansPerSecond * rX;
 
         // Account for imparted velocity by robot (turret) to offset
         double timeOfFlight;
         Pose2d lookaheadPose = turretPosition;
         double lookaheadTurretToTargetDistance = turretToTargetDistance;
 
-        for (int i = 0; i < 20; i++) {
-            timeOfFlight = tofMap.get(lookaheadTurretToTargetDistance);
-            double offsetX = turretVelocityX * timeOfFlight;
-            double offsetY = turretVelocityY * timeOfFlight;
-            lookaheadPose = new Pose2d(
-                //CHANGE THIS IF LOOKAHEAD IS OPPOSITE
-                turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
-                turretPosition.getRotation());
-            lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
+        double tof = previousTOF > 0 ? previousTOF : tofMap.get(turretToTargetDistance);
+        double prevTOF;
+
+        Translation2d turretPos = turretPosition.getTranslation();
+
+        for (int i = 0; i < maxIterations; i++) {
+            prevTOF = tof;
+            double effectiveT = tof * dragFactor;
+
+            // Move TARGET backwards instead of robot forwards
+            Translation2d compensatedTarget = new Translation2d(
+                target.getX() - turretVelocityX * effectiveT,
+                target.getY() - turretVelocityY * effectiveT
+            );
+
+            double newDistance = compensatedTarget.getDistance(turretPos);
+            tof = tofMap.get(newDistance);
+
+            if (Math.abs(tof - prevTOF) < toleranceTOF) {
+                break;
+            }
         }
+
+        // Save for next loop?
+        // TODO: see how effective this is
+        previousTOF = tof;
+
+        // Final compensated target (use converged TOF)
+        double effectiveT = tof * dragFactor;
+
+        Translation2d compensatedTarget = new Translation2d(
+            target.getX() - turretVelocityX * effectiveT,
+            target.getY() - turretVelocityY * effectiveT
+        );
+
+        lookaheadTurretToTargetDistance = compensatedTarget.getDistance(turretPos);
 
         // Calculate parameters accounted for imparted velocity
         // Get field-relative angle from turret to target
         // CHANGE THIS IF MOVING IN OPPOSITE DIRECTION
-        double fieldRelativeAngleRad = target.minus(lookaheadPose.getTranslation()).getAngle().getRadians();
-        // Convert to robot-relative by subtracting robot heading
+        double fieldRelativeAngleRad = compensatedTarget.minus(turretPos).getAngle().getRadians();
         double robotRelativeAngleRad = fieldRelativeAngleRad - estimatedPose.getRotation().getRadians();
         // Normalize to [0, 2π]
         double rawTurretAngleRad = Math.atan2(Math.sin(robotRelativeAngleRad), Math.cos(robotRelativeAngleRad));
@@ -226,7 +249,6 @@ public class ShotCalculator {
 
         //Logger.recordOutput("ShotCalculator/Target", );
 
-
         hoodAngle = hoodAngleMap.get(lookaheadTurretToTargetDistance).plus(Rotation2d.fromDegrees(hoodAngleOffset.get()));
         // Smooth hood angle as well
         hoodAngle = Rotation2d.fromRadians(hoodAngleFilter.calculate(hoodAngle.getRadians()));
@@ -239,11 +261,27 @@ public class ShotCalculator {
             lastHoodAngle = hoodAngle;
 
         // Compute angular velocities (simple derivative on filtered angle)
-        turretVelocity = (turretAngle.getRadians() - lastTurretAngle.getRadians()) / Constants.DriveConstants.kLoopPeriodSeconds;
+        double dx = compensatedTarget.getX() - turretPos.getX();
+        double dy = compensatedTarget.getY() - turretPos.getY();
+        double distSq = dx * dx + dy * dy;
+
+        if (distSq > 0.001) {
+            turretVelocity = (dx * turretVelocityY - dy * turretVelocityX) / distSq;
+        } else {
+            turretVelocity = 0.0;
+        }
+
         hoodVelocity = (hoodAngle.getRadians() - lastHoodAngle.getRadians()) / Constants.DriveConstants.kLoopPeriodSeconds;
 
         lastTurretAngle = turretAngle;
         lastHoodAngle = hoodAngle;
+
+        if (lastTurretAngle == null) lastTurretAngle = turretAngle;
+        
+        turretVelocity =
+            turretAngleFilter.calculate(
+                turretAngle.minus(lastTurretAngle).getRadians() /Constants.DriveConstants.kLoopPeriodSeconds);
+                
         // Valid only when distance in range AND turret angle is within +/- 3/4*pi
         latestData = new ShotData(
                 true, //lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
