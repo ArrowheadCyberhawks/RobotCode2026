@@ -13,7 +13,7 @@ import com.ctre.phoenix6.controls.SingleFadeAnimation;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.controls.StrobeAnimation;
 import com.ctre.phoenix6.controls.TwinkleAnimation;
-import com.ctre.phoenix6.controls.TwinkleOffAnimation;
+import com.ctre.phoenix6.controls.TwinkleOffAnimation;//lebron
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
@@ -70,7 +70,7 @@ public class LEDSubsystem extends SubsystemBase {
     public void periodic() {
         IntakeState intakeState = intakeStateSupplier.get();
         ShooterState shooterState = shooterStateSupplier.get();
-
+/* original before brett cause idk how to use git  
         if (shooterState == ShooterState.TRENCH) {
             setState(LEDState.TRENCH);
         } else if (intakeState == IntakeState.RUN) {
@@ -79,6 +79,25 @@ public class LEDSubsystem extends SubsystemBase {
             } else if (shooterState != ShooterState.AIM) {
                 setState(LEDState.INTAKE);
             }
+        } else if (intakeState == IntakeState.REVERSE) {
+            setState(LEDState.HERD);
+        } else if (intakeState == IntakeState.STOW) {
+            setState(LEDState.DEFENSE);
+        } else if (DriverStation.isDSAttached() && DriverStation.isDisabled()) {
+            setState(LEDState.DISABLED);
+        } else {
+            setState(LEDState.DEFAULT);
+        }
+
+        */
+
+
+        if (shooterState == ShooterState.TRENCH) {
+            setState(LEDState.TRENCH);
+        } else if ((intakeState == IntakeState.RUN)  && (shooterState == ShooterState.AIM)) {
+                setState(LEDState.SHOOTINTAKE);
+        } else if ((intakeState == IntakeState.RUN)  && (shooterState != ShooterState.AIM)) {
+            setState(LEDState.INTAKE);
         } else if (intakeState == IntakeState.REVERSE) {
             setState(LEDState.HERD);
         } else if (intakeState == IntakeState.STOW) {
