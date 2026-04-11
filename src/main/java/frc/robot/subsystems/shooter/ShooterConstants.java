@@ -39,7 +39,7 @@ public final class ShooterConstants {
     public static final LoggedTunableNumber kVFlywheel = new LoggedTunableNumber("Flywheel/kV", 0.1125);
     public static final LoggedTunableNumber kSFlywheel = new LoggedTunableNumber("Flywheel/kS", 0.25);
 
-    public static final AngularVelocity kFlywheelMaxVel = RotationsPerSecond.of(55.0);
+    public static final AngularVelocity kFlywheelMaxVel = RotationsPerSecond.of(95.0);
     public static final AngularVelocity kFlywheelMinVel = RotationsPerSecond.of(10.0);
     // Turret gear ratio (turret motor rotations per turret rotation)
     public static final double kTurretGearRatio = 1/5.0 * 20.0/100.0;

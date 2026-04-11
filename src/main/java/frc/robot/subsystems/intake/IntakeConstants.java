@@ -62,12 +62,24 @@ public final class IntakeConstants {
     public static final LoggedTunableNumber kIntakeRpm = 
         new LoggedTunableNumber("Intake/Roller/IntakeRpm", 2400.0);
 
+    // Roller jam detection and unjam behavior
+    // If roller current stays above this threshold for longer than the
+    // configured duration while running, the roller will briefly reverse
+    // to clear the jam and then resume normal operation.
+    public static final LoggedTunableNumber kRollerJamCurrentThreshold =
+        new LoggedTunableNumber("Intake/Roller/JamCurrentThreshold", 50.0);
+    public static final LoggedTunableNumber kRollerJamDurationSeconds =
+        new LoggedTunableNumber("Intake/Roller/JamDurationSeconds", 2.0);
+    public static final LoggedTunableNumber kRollerUnjamDurationSeconds =
+        new LoggedTunableNumber("Intake/Roller/UnjamDurationSeconds", 0.5);
+
     /** High-level intake states that control pivot and roller behavior */
     public enum IntakeState {
         STOW(Degrees.of(125.0), 0.0), // pivot up and rollers stopped
         TRENCH(Degrees.of(50.0), 0.0), // pivot down (ready) but rollers not running
         IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
         RUN(Degrees.of(-3.0), 1.0),   // pivot down and rollers running to intake
+        UNJAM(Degrees.of(-3.0), -1.0), // pivot down, rollers reverse briefly to clear jams
         REVERSE(Degrees.of(0.0), -1.00);
 
         public final Angle pivotTarget;

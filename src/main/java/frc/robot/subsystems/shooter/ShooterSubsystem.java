@@ -27,15 +27,26 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private final FlywheelSubsystem flywheel;
   private final HoodSubsystemNeo hood;
-  private final TurretSubsystemNeo turret;
+  private final TurretSubsystem turret;
+  //private final TurretSubsystemNeo turret;
 
   private ShooterState currentState = ShooterState.IDLE;
   private ShooterState desiredState = ShooterState.IDLE;
 
-  public ShooterSubsystem(
+  // public ShooterSubsystem(
+  //     FlywheelSubsystem flywheel,
+  //     HoodSubsystemNeo hood,
+  //     TurretSubsystemNeo turret) {
+  //   this.flywheel = flywheel;
+  //   this.hood = hood;
+  //   this.turret = turret;
+    
+  // }
+
+    public ShooterSubsystem(
       FlywheelSubsystem flywheel,
       HoodSubsystemNeo hood,
-      TurretSubsystemNeo turret) {
+      TurretSubsystem turret) {
     this.flywheel = flywheel;
     this.hood = hood;
     this.turret = turret;
@@ -71,7 +82,11 @@ public class ShooterSubsystem extends SubsystemBase {
     return hood;
   }
 
-  public TurretSubsystemNeo getTurretSubsystem() {
+  // public TurretSubsystemNeo getTurretSubsystem() {
+  //     return turret;
+  // }
+
+  public TurretSubsystem getTurretSubsystem() {
       return turret;
   }
 

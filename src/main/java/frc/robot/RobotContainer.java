@@ -67,6 +67,7 @@ import frc.robot.subsystems.shooter.HoodSubsystemNeo;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShotCalculator;
+import frc.robot.subsystems.shooter.TurretSubsystem;
 import frc.robot.subsystems.shooter.TurretSubsystemNeo;
 import frc.robot.subsystems.vision.LimelightSubsystem;
 import frc.robot.subsystems.vision.QuestNavSubsystem;
@@ -120,7 +121,7 @@ public class RobotContainer {
 	);
 
 	public final HoodSubsystemNeo hood = new HoodSubsystemNeo();
-	public final TurretSubsystemNeo turret = new TurretSubsystemNeo();
+	public final TurretSubsystem turret = new TurretSubsystem();
 	public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
 	public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(flywheel, hood, turret);
 	public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();

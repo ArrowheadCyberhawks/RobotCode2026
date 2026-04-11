@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RiskyPassing1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RiskyPassing2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RiskyPassing3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RiskyPassing4"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RiskyPassing5"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RiskyPassing6"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

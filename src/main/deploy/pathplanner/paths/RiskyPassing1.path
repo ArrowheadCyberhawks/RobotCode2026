@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.440156918687589,
+        "y": 7.509029957203994
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.902225392296718,
+        "y": 7.496091298145506
+      },
+      "isLocked": true,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.671098430813123,
+        "y": 6.784465049928674
+      },
+      "prevControl": {
+        "x": 8.785485517123961,
+        "y": 7.433186452922375
+      },
+      "nextControl": null,
+      "isLocked": true,
+      "linkedName": "FarRiskHerd"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.40953357252690564,
+      "rotationDegrees": 0.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 2.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 3.0,
+    "rotation": -118.30075576600626
+  },
+  "reversed": false,
+  "folder": "Risky Passing",
+  "idealStartingState": {
+    "velocity": 4.0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

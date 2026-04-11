@@ -180,17 +180,6 @@ public class ShotCalculator {
 
         lastFieldVelocity = robotVelocity;
 
-        // v_robot + w x r
-        // double turretVelocityX = robotVelocity.vxMetersPerSecond
-        //     - robotVelocity.omegaRadiansPerSecond //maybe need to be +
-        //         * (robotToTurretTrans.getX() * Math.sin(robotAngle)
-        //         + robotToTurretTrans.getY() * Math.cos(robotAngle));
-
-        // double turretVelocityY = robotVelocity.vyMetersPerSecond
-        //     + robotVelocity.omegaRadiansPerSecond
-        //         * (robotToTurretTrans.getX() * Math.cos(robotAngle)
-        //         - robotToTurretTrans.getY() * Math.sin(robotAngle));
-
         double turretVelocityX = robotVelocity.vxMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
                 * (robotToTurretTrans.getY() * Math.cos(robotAngle)
@@ -232,10 +221,10 @@ public class ShotCalculator {
         rawTurretAngleRad += rawTurretAngleRad < ShooterConstants.turretMinAngle.get() ? 2 * Math.PI : 0;
 
         // Filter the turret angle to smooth noisy measurements
-        //double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
+        double filteredTurretAngleRad = turretAngleFilter.calculate(rawTurretAngleRad);
 
-        //turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
-        turretAngle = Rotation2d.fromRadians(rawTurretAngleRad);
+        turretAngle = Rotation2d.fromRadians(filteredTurretAngleRad);
+        // turretAngle = Rotation2d.fromRadians(rawTurretAngleRad);
 
         double flywheelSpeed = flywheelSpeedMap.get(lookaheadTurretToTargetDistance) + velocityOffset.get();
 
@@ -280,9 +269,12 @@ public class ShotCalculator {
         Logger.recordOutput("ShotCalculator/FieldRelativeAngle", fieldRelativeAngleRad);
         Logger.recordOutput("ShotCalculator/RobotRelativeAngle", robotRelativeAngleRad);
         Logger.recordOutput("ShotCalculator/RawTurretAngle", rawTurretAngleRad);
-        //Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
+        Logger.recordOutput("ShotCalculator/FilteredTurretAngle", filteredTurretAngleRad);
         Logger.recordOutput("ShotCalculator/FlywheelSpeed", flywheelSpeed);
         Logger.recordOutput("ShotCalculator/TargetDistance", turretToTargetDistance);
+        Logger.recordOutput("ShotCalculator/AccelerationX", ax);
+        Logger.recordOutput("ShotCalculator/AccelerationY", ay);
+
 
         return latestData;
     }

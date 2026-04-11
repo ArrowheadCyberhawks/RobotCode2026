@@ -70,27 +70,8 @@ public class LEDSubsystem extends SubsystemBase {
     public void periodic() {
         IntakeState intakeState = intakeStateSupplier.get();
         ShooterState shooterState = shooterStateSupplier.get();
-/* original before brett cause idk how to use git  
-        if (shooterState == ShooterState.TRENCH) {
-            setState(LEDState.TRENCH);
-        } else if (intakeState == IntakeState.RUN) {
-            if (shooterState == ShooterState.AIM) {
-                setState(LEDState.SHOOTINTAKE);
-            } else if (shooterState != ShooterState.AIM) {
-                setState(LEDState.INTAKE);
-            }
-        } else if (intakeState == IntakeState.REVERSE) {
-            setState(LEDState.HERD);
-        } else if (intakeState == IntakeState.STOW) {
-            setState(LEDState.DEFENSE);
-        } else if (DriverStation.isDSAttached() && DriverStation.isDisabled()) {
-            setState(LEDState.DISABLED);
-        } else {
-            setState(LEDState.DEFAULT);
-        }
 
-        */
-
+        setState(LEDState.DEFAULT);
 
         if (shooterState == ShooterState.TRENCH) {
             setState(LEDState.TRENCH);
@@ -102,8 +83,8 @@ public class LEDSubsystem extends SubsystemBase {
             setState(LEDState.HERD);
         } else if (intakeState == IntakeState.STOW) {
             setState(LEDState.DEFENSE);
-        } else if (DriverStation.isDSAttached() && DriverStation.isDisabled()) {
-            setState(LEDState.DISABLED);
+        // } else if (DriverStation. isDSAttached() && DriverStation.isDisabled()) {
+        //     setState(LEDState.DISABLED);
         } else {
             setState(LEDState.DEFAULT);
         }

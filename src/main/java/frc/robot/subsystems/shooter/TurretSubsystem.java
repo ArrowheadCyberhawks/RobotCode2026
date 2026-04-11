@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.unused;
+package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -9,9 +9,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.shooter.ShooterConstants;
-import frc.robot.subsystems.shooter.ShotCalculator;
-import frc.robot.subsystems.shooter.ShotCalculator.ShotData;
 import edu.wpi.first.math.geometry.Rotation2d;
 import static edu.wpi.first.units.Units.Rotations;
 import org.littletonrobotics.junction.Logger;
@@ -25,9 +22,8 @@ public class TurretSubsystem extends SubsystemBase {
   private final TalonFX turnMotor = new TalonFX(ShooterConstants.kTurretMotorId);
   private final MotionMagicVoltage turretRequest = new MotionMagicVoltage(0);
   private final VoltageOut neutralOut = new VoltageOut(0);
-
-  // When enabled, the turret will use ShotCalculator.getInstance() to compute
-  // the desired turret azimuth and drive there each periodic loop.
+  private Rotation2d targetRotation = new Rotation2d();
+  private final ShotCalculator shotCalculator = ShotCalculator.getInstance();
   private boolean trackingEnabled = true;
 
   public TurretSubsystem() {
@@ -36,10 +32,8 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public void moveTurretToRadians(double radians) {
-    // With SensorToMechanismRatio configured, positions are in mechanism rotations
-    // Convert radians to rotations for the command
-    double turretRotations = radians / (2.0 * Math.PI);
-    turnMotor.setControl(turretRequest.withPosition(turretRotations));
+    // Convenience wrapper for setSetpoint using radians
+    setSetpoint(Rotation2d.fromRadians(radians));
   }
 
   public void moveTurretToDegrees(double degrees) {
@@ -51,12 +45,12 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public void stopTurret() {
+    // Hold the current position as the new target and stop applying motion
+    targetRotation = getTurretRotation();
     turnMotor.setControl(neutralOut);
   }
 
   public void resetTurretEncoder() {
-    // With SensorToMechanismRatio configured, position is in mechanism rotations
-    // Wrap to one rotation
     double mechanismRotations = turnMotor.getPosition().getValue().in(Rotations);
     double wrappedRot = mechanismRotations % 1.0;
     turnMotor.setPosition(wrappedRot);
@@ -67,24 +61,56 @@ public class TurretSubsystem extends SubsystemBase {
     turnMotor.setPosition(rotations);
   }
 
+  /**
+   * Set the turret target angle. This matches the TurretSubsystemNeo API but
+   * uses TalonFX Motion Magic as the underlying controller.
+   *
+   * @param targetTurretAngle Desired turret angle. Zero is forward, CCW
+   *     positive, CW negative.
+   */
+  public void setSetpoint(Rotation2d targetTurretAngle) {
+    // Clamp to soft-limit range from ShooterConstants
+    targetRotation = Rotation2d.fromRadians(
+        Math.max(ShooterConstants.turretMinAngle.get(),
+        Math.min(ShooterConstants.turretMaxAngle.get(),
+        targetTurretAngle.getRadians())));
+
+    // With SensorToMechanismRatio configured, positions are in mechanism
+    // rotations. Convert radians to rotations for Motion Magic.
+    double mechanismRotations = targetRotation.getRadians() / (2.0 * Math.PI);
+    turnMotor.setControl(turretRequest.withPosition(mechanismRotations));
+  }
+
+  /** Returns the last requested turret angle. */
+  public Rotation2d getSetpoint() {
+    return targetRotation;
+  }
+
   @Override
   public void periodic() {
     // Update PID values from LoggedTunableNumbers
     if (ShooterConstants.kPTurret.hasChanged(hashCode()) || 
         ShooterConstants.kITurret.hasChanged(hashCode()) || 
         ShooterConstants.kDTurret.hasChanged(hashCode()) ||
+        ShooterConstants.kVTurret.hasChanged(hashCode()) ||
+        ShooterConstants.kATurret.hasChanged(hashCode()) ||
         ShooterConstants.kSTurret.hasChanged(hashCode())) {
       // Reconfigure PID on the motor controller
       Slot0Configs slot0 = new Slot0Configs();
       slot0.kP = ShooterConstants.kPTurret.get();
       slot0.kI = ShooterConstants.kITurret.get();
       slot0.kD = ShooterConstants.kDTurret.get();
+      slot0.kV = ShooterConstants.kVTurret.get();
+      slot0.kA = ShooterConstants.kATurret.get();
       slot0.kS = ShooterConstants.kSTurret.get();
       turnMotor.getConfigurator().apply(slot0);
     }
     
     // Log telemetry
     Logger.recordOutput("Turret/Current Position", getTurretRotation());
+    Logger.recordOutput("Turret/Target Position", targetRotation);
+    Logger.recordOutput("Turret/AtGoal", isAtGoal());
+    Logger.recordOutput("Turret/is Flipping", isFlipping());
   }
 
   /**
@@ -99,14 +125,14 @@ public class TurretSubsystem extends SubsystemBase {
    */
   public Command trackTarget() {
     return run(() -> {
-      var data = ShotCalculator.getInstance().getData();
+      var data = shotCalculator.getData();
       Logger.recordOutput("Turret/ShotData Exists", data != null);
       if (data != null) {
         Logger.recordOutput("Turret/ShotData Valid", data.isValid());
-        Rotation2d desired = data.turretAngle().plus(Rotation2d.fromDegrees(1.0)); // 1 degree CCW offset
+        Rotation2d desired = data.turretAngle();
         Logger.recordOutput("Turret/ShotCalc Angle", desired);
         if (data.isValid()) {
-          moveTurretToRadians(desired.getRadians());
+          setSetpoint(desired);
           Logger.recordOutput("Turret/ShotCalc Angle Goal", desired);
         }
       }
@@ -131,15 +157,19 @@ public class TurretSubsystem extends SubsystemBase {
    */
   public boolean atGoal(double toleranceRadians) {
     double currentRadians = getTurretRotation().getRadians();
-    double targetRotations = turretRequest.Position;
-    double targetRadians = targetRotations * 2.0 * Math.PI;
-    
+    double targetRadians = targetRotation.getRadians();
+
     // Handle angle wrapping for shortest distance
     double error = Math.abs(Rotation2d.fromRadians(currentRadians)
         .minus(Rotation2d.fromRadians(targetRadians))
         .getRadians());
-    
+
     return error <= toleranceRadians;
+  }
+
+  /** Default goal check: within ~2 degrees of target. */
+  public boolean isAtGoal() {
+    return atGoal(Math.toRadians(2.0));
   }
 
   private void configureTurret() {
@@ -153,10 +183,23 @@ public class TurretSubsystem extends SubsystemBase {
     cfg.Slot0.kP = ShooterConstants.kPTurret.get();
     cfg.Slot0.kI = ShooterConstants.kITurret.get();
     cfg.Slot0.kD = ShooterConstants.kDTurret.get();
+    cfg.Slot0.kV = ShooterConstants.kVTurret.get();
+    cfg.Slot0.kA = ShooterConstants.kATurret.get();
     cfg.Slot0.kS = ShooterConstants.kSTurret.get();
     cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kTurretCruiseRps;
     cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kTurretAccelRps2;
     turnMotor.getConfigurator().apply(cfg);
+  }
+
+  /**
+   * Returns true when the turret is making a large move ("flipping" across the
+   * robot), mirroring the behavior of TurretSubsystemNeo.
+   */
+
+  public boolean isFlipping() {
+    double currentPos = getTurretRotation().getRadians();
+    double targetPos = targetRotation.getRadians();
+    return Math.abs(currentPos - targetPos) > Math.PI / 4.0;
   }
 
 }

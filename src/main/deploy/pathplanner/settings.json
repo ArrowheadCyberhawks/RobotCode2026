@@ -3,12 +3,13 @@
   "robotLength": 0.88,
   "holonomicMode": true,
   "pathFolders": [
+    "Automation",
     "Cycles",
     "Depot",
     "NEW Left",
     "NEW Middle",
     "NEW Right",
-    "Automation",
+    "Risky Passing",
     "Outpost",
     "PID",
     "Sweepers"

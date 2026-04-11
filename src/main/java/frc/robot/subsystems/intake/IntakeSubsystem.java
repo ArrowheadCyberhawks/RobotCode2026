@@ -4,11 +4,15 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -20,7 +24,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -33,35 +37,35 @@ import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 public class IntakeSubsystem extends SubsystemBase {
 
     private final SparkFlex pivotMotor;
-    private final SparkFlex rollerMotor;
+    private final TalonFX rollerMotor;
 
     private final RelativeEncoder pivotEncoder;
-    private final RelativeEncoder rollerEncoder;
 
     private final CANcoder pivotAbsoluteEncoder;
 
     private SparkFlexConfig pivotConfig;
-    private SparkFlexConfig rollerConfig;
 
     // Controllers - WPILib ProfiledPIDController only
     private final ProfiledPIDController pivotController;
     private final SimpleMotorFeedforward pivotFeedforward;
     
     private double rollerTargetPercent = 0.0;
+
+    // Timing for jam detection / unjam behavior
+    private double jamOverCurrentStartTime = Double.NaN;
+    private double unjamStartTime = Double.NaN;
     /** Current high-level intake state (controls pivot + roller behavior) */
     private IntakeState intakeState = IntakeState.IDLE;
 
     public IntakeSubsystem() {
         // Create motors
         pivotMotor = new SparkFlex(IntakeConstants.kPivotMotorId, MotorType.kBrushless);
-        rollerMotor = new SparkFlex(IntakeConstants.kRollerMotorId, MotorType.kBrushless);
+        rollerMotor = new TalonFX(IntakeConstants.kRollerMotorId);
 
         pivotEncoder = pivotMotor.getEncoder();
-        rollerEncoder = rollerMotor.getEncoder();
 
-        // Create configs
-        pivotConfig = new SparkFlexConfig();
-        rollerConfig = new SparkFlexConfig();
+    // Create configs
+    pivotConfig = new SparkFlexConfig();
 
         // Create absolute encoder
         pivotAbsoluteEncoder = new CANcoder(IntakeConstants.kIntakePivotEncoderId);
@@ -119,16 +123,14 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private void configureRoller() {
-        // no encoder conversion, we're just using raw motor RPM
-
-        // Motor output settings - simple voltage control (no PID on motor controller)
-        rollerConfig
-            .idleMode(IdleMode.kCoast)
-            .inverted(false)
-            .smartCurrentLimit(60, 60);
-
-        // Apply configuration
-        rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        // Configure TalonFX for simple percent output control
+        TalonFXConfiguration cfg = new TalonFXConfiguration();
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
+        cfg.CurrentLimits.StatorCurrentLimitEnable = true;
+        cfg.CurrentLimits.StatorCurrentLimit = 40.0;
+        rollerMotor.getConfigurator().apply(cfg);
     }
 
     /** Request the intake to move into a high-level state. */
@@ -203,14 +205,18 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public void stopRoller() {
         rollerTargetPercent = 0.0;
-        rollerMotor.stopMotor();
+        rollerMotor.set(0.0);
+        jamOverCurrentStartTime = Double.NaN;
+        unjamStartTime = Double.NaN;
     }
 
     /**
      * Get the current roller motor velocity in RPM.
      */
     public AngularVelocity getRollerVelocity() {
-        return RPM.of(rollerEncoder.getVelocity());
+        // TalonFX velocity is in rotations per second by default
+        double rps = rollerMotor.getVelocity().getValue().in(RotationsPerSecond);
+        return RPM.of(rps * 60.0);
     }
 
 
@@ -221,6 +227,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         Logger.recordOutput("Intake/State", intakeState.toString());
 
+        //checkRollerJam();
         updatePivotControl();
         updateRollerControl();
         updatePivotPID();
@@ -266,7 +273,58 @@ public class IntakeSubsystem extends SubsystemBase {
         Logger.recordOutput("Intake/Pivot/Gravity Output", gravityCompensation);
         Logger.recordOutput("Intake/Pivot/Total Output", totalOutput);
         Logger.recordOutput("Intake/Pivot Current", pivotMotor.getOutputCurrent());
-        Logger.recordOutput("Intake/Roller Current", rollerMotor.getOutputCurrent());
+        Logger.recordOutput("Intake/Roller Current", rollerMotor.getSupplyCurrent().getValueAsDouble());
+    }
+
+    /**
+     * Detects roller jams based on current draw and runs an automatic unjam cycle.
+     * If the roller current stays above the configured threshold for longer than
+     * the configured duration while running forward in RUN state, the roller
+     * reverses briefly to clear the jam and then returns to normal operation.
+     */
+    private void checkRollerJam() {
+        double now = Timer.getFPGATimestamp();
+        double rollerCurrent = rollerMotor.getSupplyCurrent().getValueAsDouble();
+        boolean rollerForwardDemand = intakeState == IntakeState.RUN && rollerTargetPercent > 0.1;
+
+        if (intakeState == IntakeState.RUN) {
+            if (rollerForwardDemand) {
+                if (rollerCurrent > IntakeConstants.kRollerJamCurrentThreshold.get()) {
+                    if (Double.isNaN(jamOverCurrentStartTime)) {
+                        jamOverCurrentStartTime = now;
+                    } else if (now - jamOverCurrentStartTime >=
+                            IntakeConstants.kRollerJamDurationSeconds.get()) {
+                        // Start unjamming by switching to UNJAM state
+                        intakeState = IntakeState.UNJAM;
+                        rollerTargetPercent = IntakeState.UNJAM.getRollerTarget();
+                        unjamStartTime = now;
+                    }
+                } else {
+                    jamOverCurrentStartTime = Double.NaN;
+                }
+            } else {
+                jamOverCurrentStartTime = Double.NaN;
+            }
+        } else if (intakeState == IntakeState.UNJAM) {
+            // During UNJAM, keep timers and switch back to RUN after unjam time
+            if (Double.isNaN(unjamStartTime)) {
+                unjamStartTime = now;
+            }
+
+            if (now - unjamStartTime >= IntakeConstants.kRollerUnjamDurationSeconds.get()) {
+                intakeState = IntakeState.RUN;
+                rollerTargetPercent = IntakeState.RUN.getRollerTarget();
+                jamOverCurrentStartTime = Double.NaN;
+                unjamStartTime = Double.NaN;
+            }
+
+        } else {
+            // Other states: clear timers
+            jamOverCurrentStartTime = Double.NaN;
+            unjamStartTime = Double.NaN;
+        }
+
+        Logger.recordOutput("Intake/Roller/Current", rollerCurrent);
     }
 
     /**
@@ -277,7 +335,7 @@ public class IntakeSubsystem extends SubsystemBase {
         if (Math.abs(rollerTargetPercent) > 0.0) {
             rollerMotor.set(rollerTargetPercent);
         } else {
-            rollerMotor.stopMotor();
+            rollerMotor.set(0.0);
         }
     }
 
@@ -301,6 +359,7 @@ public class IntakeSubsystem extends SubsystemBase {
                     IntakeConstants.kPivotMaxAccelRps2.get()
                 )
             );
+
             pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
         }
     }
