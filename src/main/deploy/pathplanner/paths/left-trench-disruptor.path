@@ -1,0 +1,98 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.9215921288014313,
+        "y": 7.434221824686941
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.63550983899821,
+        "y": 7.417996422182468
+      },
+      "isLocked": false,
+      "linkedName": "LeftTrench"
+    },
+    {
+      "anchor": {
+        "x": 5.41432915921288,
+        "y": 7.434221824686941
+      },
+      "prevControl": {
+        "x": 4.8626654740608215,
+        "y": 7.434221824686941
+      },
+      "nextControl": {
+        "x": 6.225761522239379,
+        "y": 7.434221824686941
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.182898032201913,
+        "y": 6.5255992844392905
+      },
+      "prevControl": {
+        "x": 6.725345748280805,
+        "y": 6.890499220759893
+      },
+      "nextControl": {
+        "x": 7.734045454545454,
+        "y": 6.086056818181819
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.239079545454544,
+        "y": 5.014147727272728
+      },
+      "prevControl": {
+        "x": 8.228772727272727,
+        "y": 5.632556818181818
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LeftDisruptor"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 2.422459893048128,
+      "rotationDegrees": -48.102414589752726
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "IntakeOn",
+      "waypointRelativePos": 0.39317773788150767,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 2.0,
+    "rotation": -45.0
+  },
+  "reversed": false,
+  "folder": "trench",
+  "idealStartingState": {
+    "velocity": 0.0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

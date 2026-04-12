@@ -5,27 +5,33 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "NEW_RightTrenchToNearNeutral"
+            "name": "IntakeOn"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "SafeFarRightNeutralSweep"
+            "pathName": "left-trench-disruptor"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_RightBackHubToOutpost"
+            "pathName": "disruptor-middleneutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "middleneutral-oppHub-corner"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Right",
+  "folder": "Testing",
   "choreoAuto": false
 }

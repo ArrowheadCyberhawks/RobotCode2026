@@ -13,37 +13,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTrenchToNeutral"
+            "pathName": "right-trench-farneutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BUMP_LeftNeutralToLeftShoot"
+            "pathName": "farneutral-pass-trench"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftShootToNeutral"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "NEW_LeftCenterNeutralToDepot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 5.0
+            "pathName": "NEW_RightBackHubToOutpost"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Left",
+  "folder": "Competition Autos",
   "choreoAuto": false
 }

@@ -62,8 +62,8 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -74,7 +74,7 @@
     "rotation": 115.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "trench",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

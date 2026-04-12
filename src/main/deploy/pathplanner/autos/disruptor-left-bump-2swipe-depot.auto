@@ -5,27 +5,39 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "NEW_RightTrenchToFarNeutral"
+            "name": "IntakeOn"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_FarRightNeutralSweep"
+            "pathName": "left-trench-disruptor"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_RightBackHubToOutpost"
+            "pathName": "disruptor-leftShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left-shoot-neutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "neutral-trench-depot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Right",
+  "folder": "Testing",
   "choreoAuto": false
 }

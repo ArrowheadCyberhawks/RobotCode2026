@@ -6,23 +6,21 @@
     "Automation",
     "Cycles",
     "Depot",
-    "NEW Left",
-    "NEW Middle",
     "NEW Right",
-    "Risky Passing",
     "Outpost",
     "PID",
-    "Sweepers"
+    "Risky Passing",
+    "neutral",
+    "bump",
+    "trench"
   ],
   "autoFolders": [
-    "Center",
-    "NEW_Left",
-    "NEW_Middle",
-    "NEW_Right",
-    "PID"
+    "Competition Autos",
+    "PID",
+    "Testing"
   ],
-  "defaultMaxVel": 3.0,
-  "defaultMaxAccel": 2.0,
+  "defaultMaxVel": 4.5,
+  "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,

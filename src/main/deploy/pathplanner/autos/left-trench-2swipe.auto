@@ -7,25 +7,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTrenchToNeutral"
+            "pathName": "left-trench-neutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BUMP_LeftNeutralToLeftShoot"
+            "pathName": "LeftNeutralToLeftShoot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "LeftShootToNeutral"
+            "pathName": "LeftJiggle"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_LeftCenterInnerNeutralToLeftShoot"
+            "pathName": "left-shoot-neutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "closeneutral-trench-shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftJiggle"
           }
         },
         {
@@ -38,6 +56,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Left",
+  "folder": "Competition Autos",
   "choreoAuto": false
 }

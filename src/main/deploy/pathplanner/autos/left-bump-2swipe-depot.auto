@@ -5,39 +5,45 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "NEW_LeftTrenchToNeutral"
+            "name": "IntakeOn"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_LeftNeutralToLeftShoot"
+            "pathName": "left-trench-neutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "bump-neutral-shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "left-shoot-neutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "neutral-trench-depot"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "NEW_LeftShootToNeutral"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "NEW_LeftCenterNeutralToLeftShoot"
+            "waitTime": 5.0
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Left",
+  "folder": "Competition Autos",
   "choreoAuto": false
 }

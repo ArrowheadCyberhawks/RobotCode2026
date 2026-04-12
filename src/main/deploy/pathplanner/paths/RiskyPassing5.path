@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4383880171184016,
-        "y": 7.560784593437945
+        "x": 2.14775,
+        "y": 7.487784090909092
       },
       "isLocked": false,
       "linkedName": "TrenchFacingAlliance"
     },
     {
       "anchor": {
-        "x": 0.7655777460770326,
-        "y": 5.244764621968616
+        "x": 0.8593977272727269,
+        "y": 7.41845934379458
       },
       "prevControl": {
-        "x": 3.7026533523537797,
-        "y": 4.054407988587732
+        "x": 2.034375,
+        "y": 7.467170454545454
       },
       "nextControl": null,
       "isLocked": false,
@@ -60,8 +60,8 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -69,7 +69,7 @@
   },
   "goalEndState": {
     "velocity": 2.0,
-    "rotation": 114.34108993669253
+    "rotation": 157.1178170635055
   },
   "reversed": false,
   "folder": "Risky Passing",

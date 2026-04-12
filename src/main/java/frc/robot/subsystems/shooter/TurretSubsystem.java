@@ -174,10 +174,8 @@ public class TurretSubsystem extends SubsystemBase {
 
   private void configureTurret() {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
-    cfg.ClosedLoopGeneral.ContinuousWrap = true;
+    cfg.ClosedLoopGeneral.ContinuousWrap = false;
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    
-    // Configure ratio so ContinuousWrap works for the turret
     cfg.Feedback.SensorToMechanismRatio = 1.0 / ShooterConstants.kTurretGearRatio;
     
     cfg.Slot0.kP = ShooterConstants.kPTurret.get();
@@ -188,6 +186,14 @@ public class TurretSubsystem extends SubsystemBase {
     cfg.Slot0.kS = ShooterConstants.kSTurret.get();
     cfg.MotionMagic.MotionMagicCruiseVelocity = ShooterConstants.kTurretCruiseRps;
     cfg.MotionMagic.MotionMagicAcceleration = ShooterConstants.kTurretAccelRps2;
+
+  	// Convert min/max radians to rotations of the turret mechanism
+  	double maxMechanismRotations = ShooterConstants.turretMaxAngle.get() / (2.0 * Math.PI);
+  	double minMechanismRotations = ShooterConstants.turretMinAngle.get() / (2.0 * Math.PI);
+  	cfg.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    cfg.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+  	cfg.SoftwareLimitSwitch.ForwardSoftLimitThreshold = maxMechanismRotations;
+  	cfg.SoftwareLimitSwitch.ReverseSoftLimitThreshold = minMechanismRotations;
     turnMotor.getConfigurator().apply(cfg);
   }
 

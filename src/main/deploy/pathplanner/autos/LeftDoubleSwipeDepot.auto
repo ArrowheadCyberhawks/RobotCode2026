@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTrenchToNeutral"
+            "pathName": "left-trench-neutral"
           }
         },
         {
@@ -25,13 +25,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftShootToNeutral"
+            "pathName": "left-shoot-neutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_LeftCenterNeutralToDepot"
+            "pathName": "neutral-trench-depot"
           }
         },
         {
@@ -44,6 +44,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Left",
+  "folder": null,
   "choreoAuto": false
 }

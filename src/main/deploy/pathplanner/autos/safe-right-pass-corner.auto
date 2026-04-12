@@ -7,19 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_LeftTrenchToNeutral"
+            "pathName": "NEW_RightTrenchToNearNeutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "NEW_LeftNeutralToLeftShoot"
+            "pathName": "SafeFarRightNeutralSweep"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "NEW_RightBackHubToOutpost"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "NEW_Left",
+  "folder": null,
   "choreoAuto": false
 }
