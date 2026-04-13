@@ -21,6 +21,7 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -47,7 +48,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     // Controllers - WPILib ProfiledPIDController only
     private final ProfiledPIDController pivotController;
-    private final SimpleMotorFeedforward pivotFeedforward;
+    private final ArmFeedforward pivotFeedforward;
     
     private double rollerTargetPercent = 0.0;
 
@@ -84,8 +85,9 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
 
         // Create feedforward for gravity and velocity compensation
-        pivotFeedforward = new SimpleMotorFeedforward(
-            0.0,  // kS - static friction, we aren't doing this but we should convrt it to it
+        pivotFeedforward = new ArmFeedforward(
+            IntakeConstants.kSPivot.get(),
+            IntakeConstants.kGPivot.get(),
             IntakeConstants.kVPivot.get(),
             IntakeConstants.kAPivot.get()
         );
@@ -254,7 +256,7 @@ public class IntakeSubsystem extends SubsystemBase {
         
         // Calculate feedforward (gravity compensation based on position)
         double setpointVelocity = pivotController.getSetpoint().velocity;
-        double feedforward = pivotFeedforward.calculate(setpointVelocity);
+        double feedforward = pivotFeedforward.calculate(pivotController.getSetpoint().position, setpointVelocity);
         
         // Add gravity compensation (kG * cos(angle))
         double gravityCompensation = IntakeConstants.kGPivot.get() * Math.cos(currentPosition);

@@ -90,20 +90,20 @@ public class TurretSubsystem extends SubsystemBase {
   public void periodic() {
     // Update PID values from LoggedTunableNumbers
     if (ShooterConstants.kPTurret.hasChanged(hashCode()) || 
-        ShooterConstants.kITurret.hasChanged(hashCode()) || 
-        ShooterConstants.kDTurret.hasChanged(hashCode()) ||
-        ShooterConstants.kVTurret.hasChanged(hashCode()) ||
-        ShooterConstants.kATurret.hasChanged(hashCode()) ||
-        ShooterConstants.kSTurret.hasChanged(hashCode())) {
+      ShooterConstants.kITurret.hasChanged(hashCode()) || 
+      ShooterConstants.kDTurret.hasChanged(hashCode()) ||
+      ShooterConstants.kVTurret.hasChanged(hashCode()) ||
+      ShooterConstants.kATurret.hasChanged(hashCode()) ||
+      ShooterConstants.kSTurret.hasChanged(hashCode())) {
       // Reconfigure PID on the motor controller
-      Slot0Configs slot0 = new Slot0Configs();
-      slot0.kP = ShooterConstants.kPTurret.get();
-      slot0.kI = ShooterConstants.kITurret.get();
-      slot0.kD = ShooterConstants.kDTurret.get();
-      slot0.kV = ShooterConstants.kVTurret.get();
-      slot0.kA = ShooterConstants.kATurret.get();
-      slot0.kS = ShooterConstants.kSTurret.get();
-      turnMotor.getConfigurator().apply(slot0);
+        Slot0Configs slot0 = new Slot0Configs();
+        slot0.kP = ShooterConstants.kPTurret.get();
+        slot0.kI = ShooterConstants.kITurret.get();
+        slot0.kD = ShooterConstants.kDTurret.get();
+        slot0.kV = ShooterConstants.kVTurret.get();
+        slot0.kA = ShooterConstants.kATurret.get();
+        slot0.kS = ShooterConstants.kSTurret.get();
+        turnMotor.getConfigurator().apply(slot0);
     }
     
     // Log telemetry

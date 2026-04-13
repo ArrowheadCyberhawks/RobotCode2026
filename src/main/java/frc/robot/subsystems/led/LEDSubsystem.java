@@ -1,7 +1,6 @@
 package frc.robot.subsystems.led;
 
 import java.util.function.Supplier;
-
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
 import com.ctre.phoenix6.controls.EmptyAnimation;
@@ -13,7 +12,7 @@ import com.ctre.phoenix6.controls.SingleFadeAnimation;
 import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.controls.StrobeAnimation;
 import com.ctre.phoenix6.controls.TwinkleAnimation;
-import com.ctre.phoenix6.controls.TwinkleOffAnimation;//lebron
+import com.ctre.phoenix6.controls.TwinkleOffAnimation;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
@@ -26,6 +25,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.intake.IntakeConstants.IntakeState;
 import frc.robot.subsystems.led.LEDConstants.LEDState;
 import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
+
+import frc.robot.util.LoggedTunableNumber;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.led.LEDConstants.*;
 
@@ -71,8 +74,6 @@ public class LEDSubsystem extends SubsystemBase {
         IntakeState intakeState = intakeStateSupplier.get();
         ShooterState shooterState = shooterStateSupplier.get();
 
-        setState(LEDState.DEFAULT);
-
         if (shooterState == ShooterState.TRENCH) {
             setState(LEDState.TRENCH);
         } else if ((intakeState == IntakeState.RUN)  && (shooterState == ShooterState.AIM)) {
@@ -83,13 +84,14 @@ public class LEDSubsystem extends SubsystemBase {
             setState(LEDState.HERD);
         } else if (intakeState == IntakeState.STOW) {
             setState(LEDState.DEFENSE);
-        // } else if (DriverStation. isDSAttached() && DriverStation.isDisabled()) {
-        //     setState(LEDState.DISABLED);
+        } else if (DriverStation. isDSAttached() && DriverStation.isDisabled()) {
+            setState(LEDState.DISABLED);
         } else {
             setState(LEDState.DEFAULT);
         }
 
         candle.setControl(currentState.getRequest());
+        Logger.recordOutput("LED/LEDState", currentState.name());
     }
 
     public void setState(LEDState newState) {

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.util.Color;
 
 import static edu.wpi.first.units.Units.*;
 
+
 /**
  * Constants for the CANdle LED subsystem.
  *
@@ -50,7 +51,7 @@ public final class LEDConstants {
     *  herding/reverse intake (yellow), defense/intake up (blue), warning (red flashing)
     */
     public enum LEDState {
-        DEFAULT(new SingleFadeAnimation(0, kSlot0StartIdx).withColor(kPink).withFrameRate(1)),
+        DEFAULT(new SingleFadeAnimation(0, kSlot0EndIdx).withColor(kPink).withFrameRate(1)),
         DISABLED(new SolidColor(0, kSlot0EndIdx).withColor(kPink)),
         DEFENSE(new SolidColor(0, kSlot0EndIdx).withColor(kBlue)),
         TRENCH(new SolidColor(0, kSlot0EndIdx).withColor(kWhite)),

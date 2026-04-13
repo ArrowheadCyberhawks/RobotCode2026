@@ -39,6 +39,8 @@ public final class IntakeConstants {
         new LoggedTunableNumber("Intake/Pivot/kV", 0.0);
     public static final LoggedTunableNumber kAPivot = 
         new LoggedTunableNumber("Intake/Pivot/kA", 0.0);
+    public static final LoggedTunableNumber kSPivot = 
+        new LoggedTunableNumber("Intake/Pivot/kS", 0.0);
 
     // Pivot position tolerance (radians)
     public static final LoggedTunableNumber kPivotToleranceRadians = 
