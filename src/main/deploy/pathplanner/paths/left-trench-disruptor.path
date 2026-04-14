@@ -32,16 +32,16 @@
     },
     {
       "anchor": {
-        "x": 7.182898032201913,
-        "y": 6.5255992844392905
+        "x": 6.999361800752958,
+        "y": 6.44609124944651
       },
       "prevControl": {
-        "x": 6.725345748280805,
-        "y": 6.890499220759893
+        "x": 6.590521098346669,
+        "y": 6.8648457552182505
       },
       "nextControl": {
-        "x": 7.734045454545454,
-        "y": 6.086056818181819
+        "x": 7.500926519383339,
+        "y": 5.932364302431615
       },
       "isLocked": false,
       "linkedName": null
@@ -52,8 +52,8 @@
         "y": 5.014147727272728
       },
       "prevControl": {
-        "x": 8.228772727272727,
-        "y": 5.632556818181818
+        "x": 8.221831623527656,
+        "y": 5.263552035954843
       },
       "nextControl": null,
       "isLocked": false,
@@ -72,6 +72,12 @@
     {
       "name": "IntakeOn",
       "waypointRelativePos": 0.39317773788150767,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "ShooterAim",
+      "waypointRelativePos": 1.385550303848743,
       "endWaypointRelativePos": null,
       "command": null
     }

@@ -115,6 +115,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case IDLE:
         if (shotData != null && shotData.isValid()) {
           flywheel.setSetpoint(RotationsPerSecond.of(shotData.flywheelSpeed()));
+          //flywheel.stop();
         }
         hood.setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
         turret.stopTurret();

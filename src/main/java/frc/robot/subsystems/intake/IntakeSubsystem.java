@@ -362,6 +362,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 )
             );
 
+            pivotFeedforward.setKg(IntakeConstants.kGPivot.get());
             pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
         }
     }

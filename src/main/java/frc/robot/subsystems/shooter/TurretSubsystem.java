@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -176,6 +177,8 @@ public class TurretSubsystem extends SubsystemBase {
     TalonFXConfiguration cfg = new TalonFXConfiguration();
     cfg.ClosedLoopGeneral.ContinuousWrap = false;
     cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    //cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    cfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     cfg.Feedback.SensorToMechanismRatio = 1.0 / ShooterConstants.kTurretGearRatio;
     
     cfg.Slot0.kP = ShooterConstants.kPTurret.get();

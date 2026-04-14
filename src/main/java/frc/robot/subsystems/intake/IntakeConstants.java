@@ -28,19 +28,19 @@ public final class IntakeConstants {
 
     // PID + FF for pivot (position control)
     public static final LoggedTunableNumber kPPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kP", 16.0);
+        new LoggedTunableNumber("Intake/Pivot/kP", 4.0);
     public static final LoggedTunableNumber kIPivot = 
         new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
     public static final LoggedTunableNumber kDPivot = 
         new LoggedTunableNumber("Intake/Pivot/kD", 0.0);
     public static final LoggedTunableNumber kGPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kG", 0.3);
+        new LoggedTunableNumber("Intake/Pivot/kG", 0.1);
     public static final LoggedTunableNumber kVPivot = 
         new LoggedTunableNumber("Intake/Pivot/kV", 0.0);
     public static final LoggedTunableNumber kAPivot = 
         new LoggedTunableNumber("Intake/Pivot/kA", 0.0);
     public static final LoggedTunableNumber kSPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kS", 0.0);
+        new LoggedTunableNumber("Intake/Pivot/kS", 0.1);
 
     // Pivot position tolerance (radians)
     public static final LoggedTunableNumber kPivotToleranceRadians = 

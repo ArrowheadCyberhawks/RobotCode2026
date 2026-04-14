@@ -15,12 +15,6 @@
           "data": {
             "pathName": "CenterToDepot"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DepotAuto"
-          }
         }
       ]
     }
