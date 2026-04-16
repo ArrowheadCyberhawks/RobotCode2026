@@ -15,8 +15,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
+// Using REV closed-loop controller (SparkClosedLoopController) instead of WPILib profiled PID
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -29,7 +28,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class HoodSubsystemNeo extends SubsystemBase {
   private final SparkMax hoodMotor;
   private final RelativeEncoder encoder;
-  private final ProfiledPIDController pid;
+  private final SparkClosedLoopController hoodController;
+  private SparkMaxConfig hoodConfig;
   private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
   private Rotation2d targetAngle = Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
@@ -41,20 +41,19 @@ public class HoodSubsystemNeo extends SubsystemBase {
   public HoodSubsystemNeo(int motorId) {
     hoodMotor = new SparkMax(motorId, MotorType.kBrushless);
     encoder = hoodMotor.getEncoder();
-    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(
-      ShooterConstants.kVHood.get(), ShooterConstants.kAHood.get());
-    pid = new ProfiledPIDController(
-      ShooterConstants.kPHood.get(),
-      ShooterConstants.kIHood.get(),
-      ShooterConstants.kDHood.get(),
-      constraints);
+      // Configure the Spark motor and closed-loop controller
+      configureHood();
+      resetHoodEncoder(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()));
 
-    configureHood();
-    resetHoodEncoder(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()));
-    pid.setGoal(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()).getRadians());
-  
+      // Obtain the Spark closed-loop controller after configuration
+      hoodController = hoodMotor.getClosedLoopController();
+      // Set initial target
+      targetAngle = Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
+      hoodController.setReference(targetAngle.getRadians(), SparkMax.ControlType.kPosition, ClosedLoopSlot.kSlot0);
 
-    Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
+      Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
+
+    
   }
 
   private void configureHood() {
@@ -85,8 +84,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
     double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
     targetAngle = Rotation2d.fromDegrees(clipped);
-    // PID setpoint in radians (encoder conversion factor uses radians)
-    pid.setGoal(targetAngle.getRadians());
+  // Command Spark closed-loop controller; encoder units are radians
+  hoodController.setSetpoint(targetAngle.getRadians(), SparkMax.ControlType.kPosition, ClosedLoopSlot.kSlot0);
     Logger.recordOutput("Shooter/Hood Target", clipped);
   }
 
@@ -120,8 +119,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
   }
 
   public Rotation2d getSetpoint() {
-    // ProfiledPIDController.getSetpoint() returns a TrapezoidProfile.State
-    return Rotation2d.fromRadians(pid.getSetpoint().position);
+    return targetAngle;
   }
 
   public void resetHoodEncoder(Rotation2d angle) {
@@ -131,25 +129,25 @@ public class HoodSubsystemNeo extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Update PID values from LoggedTunableNumbers
-    boolean changed = false;
-    if (ShooterConstants.kPHood.hasChanged(hashCode()) || 
-        ShooterConstants.kIHood.hasChanged(hashCode()) || 
-        ShooterConstants.kDHood.hasChanged(hashCode())) {
-      pid.setP(ShooterConstants.kPHood.get());
-      pid.setI(ShooterConstants.kIHood.get());
-      pid.setD(ShooterConstants.kDHood.get());
-      changed = true;
-    }
-    if (ShooterConstants.kVHood.hasChanged(hashCode()) || ShooterConstants.kAHood.hasChanged(hashCode())) {
-      pid.setConstraints(new TrapezoidProfile.Constraints(ShooterConstants.kVHood.get(), ShooterConstants.kAHood.get()));
-      changed = true;
+    // Update Spark closed-loop PID constants if they've changed. Rebuild the closedLoop
+    // config and re-apply with no-persist to avoid writing to flash on every change
+    // while tuning.
+    int id = hashCode();
+    if (ShooterConstants.kPHood.hasChanged(id) || ShooterConstants.kIHood.hasChanged(id) || ShooterConstants.kDHood.hasChanged(id) ||
+        ShooterConstants.kVHood.hasChanged(id) || ShooterConstants.kAHood.hasChanged(id) || ShooterConstants.kGHood.hasChanged(id)) {
+      if (hoodConfig == null) {
+        hoodConfig = new SparkMaxConfig();
+      }
+      hoodConfig.closedLoop
+          .pid(ShooterConstants.kPHood.get(), ShooterConstants.kIHood.get(), ShooterConstants.kDHood.get())
+          .feedForward
+            .kV(ShooterConstants.kVHood.get());
+      hoodConfig.closedLoop.allowedClosedLoopError(Math.toRadians(ShooterConstants.kHoodAllowedError), ClosedLoopSlot.kSlot0);
+      hoodMotor.configure(hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
-    // Calculate PID output using current hood angle (radians). The ProfiledPIDController
-    // internally respects the motion profile constraints when calculating the setpoint.
-    double pidOut = pid.calculate(getHoodAngle().getRadians());
-    hoodMotor.setVoltage(Volts.of(pidOut));
+    hoodController.setSetpoint(targetAngle.getRadians(), SparkMax.ControlType.kPosition, ClosedLoopSlot.kSlot0);
+
     Logger.recordOutput("Shooter/Hood Angle", getHoodAngle().getDegrees());
     Logger.recordOutput("Shooter/Hood Current", hoodMotor.getOutputCurrent());
     Logger.recordOutput("Shooter/Hood AtGoal", isAtGoal());
