@@ -227,8 +227,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public AngularVelocity getRollerVelocity() {
         // TalonFX velocity is in rotations per second by default
-        double rps = rollerMotor.getVelocity().getValue().in(RotationsPerSecond);
-        return RPM.of(rps * 60.0);
+        return rollerMotor.getVelocity().getValue();
     }
 
 

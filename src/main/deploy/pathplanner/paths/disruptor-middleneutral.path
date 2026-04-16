@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.239079545454544,
-        "y": 5.014147727272728
+        "x": 8.140008871579559,
+        "y": 4.993481322396963
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.265945792884352,
-        "y": 4.697542742331965
+        "x": 8.166875119009367,
+        "y": 4.676876337456201
       },
       "isLocked": false,
       "linkedName": "LeftDisruptor"
@@ -71,8 +71,8 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 3.5,
+    "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

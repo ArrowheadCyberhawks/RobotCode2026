@@ -4,8 +4,8 @@ import frc.robot.util.LoggedTunableNumber;
 
 public final class HopperConstants {
     public final class hopperMotor {
-        public static final int hopperMotor = 12; 
-        public static final int kickerMotor = 11;
+        public static final int hopperMotorId = 12; 
+        public static final int kickerMotorId = 11;
     } 
 
         public static final LoggedTunableNumber kPHopper = 
@@ -24,28 +24,24 @@ public final class HopperConstants {
             new LoggedTunableNumber("Hopper/PIDConstants/kHopperMaxAccelRps2", 10.0); // Example value
 
         public static final LoggedTunableNumber kPKicker = 
-            new LoggedTunableNumber("Hopper/PIDConstants/kPKicker", 0.0);
+            new LoggedTunableNumber("Hopper/PIDConstants/kPKicker", 0.0002);
         public static final LoggedTunableNumber kIKicker = 
             new LoggedTunableNumber("Hopper/PIDConstants/kIKicker", 0.0);
         public static final LoggedTunableNumber kDKicker = 
             new LoggedTunableNumber("Hopper/PIDConstants/kDKicker", 0.0);
         public static final LoggedTunableNumber kVKicker = 
-            new LoggedTunableNumber("Hopper/PIDConstants/kVKicker", 0.1125);
+            new LoggedTunableNumber("Hopper/PIDConstants/kVKicker", 0.00195);
         public static final LoggedTunableNumber kSKicker = 
             new LoggedTunableNumber("Hopper/PIDConstants/kSKicker", 0.0);
-        public static final LoggedTunableNumber kKickerMaxVelocityRps = 
-            new LoggedTunableNumber("Hopper/PIDConstants/kKickerMaxVelocityRps", 5.0); // Example value
-        public static final LoggedTunableNumber kKickerMaxAccelRps2 = 
-            new LoggedTunableNumber("Hopper/PIDConstants/kKickerMaxAccelRps2", 10.0); // Example value
 
         public static final LoggedTunableNumber kHopperRpm = 
-            new LoggedTunableNumber("Hopper/HopperRpm", 4000.0); // Example value
+            new LoggedTunableNumber("Hopper/HopperRpm", 5000.0);
         public static final LoggedTunableNumber kKickerRpm = 
-            new LoggedTunableNumber("Hopper/KickerRpm", 2000.0); // Example value
+            new LoggedTunableNumber("Hopper/KickerRpm", 3000.0); 
         public static final LoggedTunableNumber KickerReverseRpm = 
-            new LoggedTunableNumber("Hopper/KickerReverse", -2000.0); // Example value
+            new LoggedTunableNumber("Hopper/KickerReverse", -2000.0);
         public static final LoggedTunableNumber kHopperReversedRpm = 
-            new LoggedTunableNumber("Hopper/HopperReversedRpm", -2000.0); // Example value
+            new LoggedTunableNumber("Hopper/HopperReversedRpm", -2000.0);
         private HopperConstants() {}
     }
     

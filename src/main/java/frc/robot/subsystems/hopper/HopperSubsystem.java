@@ -41,8 +41,8 @@ public class HopperSubsystem extends SubsystemBase {
 
         public HopperSubsystem()    {
             //create motors
-            hopperMotor = new SparkFlex(HopperConstants.hopperMotor.hopperMotor, MotorType.kBrushless);
-            kickerMotor = new SparkFlex(HopperConstants.hopperMotor.kickerMotor, MotorType.kBrushless);
+            hopperMotor = new SparkFlex(HopperConstants.hopperMotor.hopperMotorId, MotorType.kBrushless);
+            kickerMotor = new SparkFlex(HopperConstants.hopperMotor.kickerMotorId, MotorType.kBrushless);
 
             //Get encoders
             hopperEncoder = hopperMotor.getEncoder();
@@ -184,9 +184,9 @@ public class HopperSubsystem extends SubsystemBase {
     /**updates the hopper motor control using REV closed-loop velocity PID*/
     private void updateHopperControl() {
         if (Math.abs(hopperTargetRpm) > 10) {
-            // Convert RPM to rotations per second for the PID controller
-            double targetRps = hopperTargetRpm / 60.0;
-            hopperPIDController.setReference(targetRps, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+            // Spark closed-loop velocity controller expects RPM (native units),
+            // so pass the commanded RPM directly.
+            hopperPIDController.setReference(hopperTargetRpm, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
         } else {
             hopperMotor.stopMotor();
         }
@@ -199,15 +199,16 @@ public class HopperSubsystem extends SubsystemBase {
     /**updates the kicker motor control using REV closed-loop velocity PID*/
     private void updateKickerControl() {
         if (Math.abs(kickerTargetRpm) > 10) {
-            // Convert RPM to rotations per second for the PID controller
-            double targetRps = kickerTargetRpm / 60.0;
-            kickerPIDController.setReference(targetRps, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+            // Spark closed-loop velocity controller expects RPM (native units),
+            // so pass the commanded RPM directly.
+            kickerPIDController.setReference(kickerTargetRpm, SparkMax.ControlType.kVelocity, ClosedLoopSlot.kSlot0);
         } else {
             kickerMotor.stopMotor();
         }
 
         // Log telemetry
         Logger.recordOutput("Kicker/TargetRPM", kickerTargetRpm);
+        Logger.recordOutput("Kicker/Setpoint", kickerPIDController.getSetpoint());
         Logger.recordOutput("Kicker/ActualRPM", kickerEncoder.getVelocity());
     }
     

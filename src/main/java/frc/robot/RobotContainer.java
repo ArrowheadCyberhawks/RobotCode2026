@@ -115,7 +115,7 @@ public class RobotContainer {
 	public final LimelightSubsystem limelightSubsystem = new LimelightSubsystem(
 		() -> drivetrain.getPigeon2().getRotation2d().getDegrees() + (AllianceFlipUtil.shouldFlip() ? 180 : 0),
 		// () -> drivetrain.getPose().getRotation().getDegrees(),
-		() -> !(questNavSubsystem.useQuest() || questNavSubsystem.isConnected()),
+		() -> !questNavSubsystem.useQuest(),
 		drivetrain,
 		field2d
 	);
@@ -318,10 +318,11 @@ public class RobotContainer {
 
 		//shooterSubsystem.setDefaultCommand(shooterSubsystem.trenchCommand());
 		
-		// Left bumper - Toggle intake
-		driverController.leftBumper().toggleOnTrue(intakeSubsystem.runEnd(
+		// Left bumper - Toggle intake (use start/end so we don't re-assert state every scheduler cycle)
+		driverController.leftBumper().toggleOnTrue(Commands.startEnd(
 			() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN),
-			() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)
+			() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE),
+			intakeSubsystem
 		));
 
 		driverController.rightBumper().toggleOnTrue(shootMode);
@@ -413,16 +414,18 @@ public class RobotContainer {
 
 		drivetrain.registerTelemetry(logger::telemeterize);
 
-		manipulatorController.leftTrigger()
-				.whileTrue(Commands.runEnd(
-						() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
-						() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
+	manipulatorController.leftTrigger()
+		.whileTrue(Commands.startEnd(
+			() -> intakeSubsystem.setIntakeState(IntakeState.RUN),
+			() -> intakeSubsystem.setIntakeState(IntakeState.IDLE),
+			intakeSubsystem));
 
-		manipulatorController.x().and(manipulatorController.leftTrigger())
-				.whileTrue(
-						intakeSubsystem.runEnd(
-								() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
-								() -> intakeSubsystem.setIntakeState(IntakeState.IDLE)));
+	manipulatorController.x().and(manipulatorController.leftTrigger())
+		.whileTrue(
+			Commands.startEnd(
+				() -> intakeSubsystem.setIntakeState(IntakeState.REVERSE),
+				() -> intakeSubsystem.setIntakeState(IntakeState.IDLE),
+				intakeSubsystem));
 
 		// hopper controls
 		manipulatorController.leftBumper().whileTrue(

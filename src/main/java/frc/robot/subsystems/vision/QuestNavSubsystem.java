@@ -59,20 +59,16 @@ public class QuestNavSubsystem extends SubsystemBase {
 
         questNav.onConnected(() -> {
             System.out.println("Quest connected!");
-            useQuest = true;
         });
         questNav.onDisconnected(() -> {
             DriverStation.reportWarning("Quest disconnected!", false);
-            useQuest = false;
         });
         questNav.onTrackingAcquired(() -> {
             System.out.println("Quest tracking acquired!");
             resetPose(drivetrain.getPose());
-            useQuest = true;
         });
         questNav.onTrackingLost(() -> {
             DriverStation.reportWarning("Quest tracking lost!", false);
-            useQuest = false;
         });
         questNav.onLowBattery(20, level ->
             DriverStation.reportWarning("Quest battery low: " + level + "%", false)
@@ -140,6 +136,7 @@ public class QuestNavSubsystem extends SubsystemBase {
         return questNav.isConnected();
     }
 
+    /** Returns whether the quest is actively being used to update the robot pose. Only true when the quest is both connected and tracking. */
     public boolean useQuest() {
         return useQuest;
     }
