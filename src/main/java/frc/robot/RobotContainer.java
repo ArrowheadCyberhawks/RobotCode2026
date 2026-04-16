@@ -133,10 +133,18 @@ public class RobotContainer {
 	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
 
 	// slew limiter object
-	SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
-	SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond));
+	SlewRateLimiter xLimiter = new SlewRateLimiter(
+		DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond),
+		-DriveConstants.kMaxDeceleration.in(MetersPerSecondPerSecond),
+		0.0);
+	SlewRateLimiter yLimiter = new SlewRateLimiter(
+		DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond),
+		-DriveConstants.kMaxDeceleration.in(MetersPerSecondPerSecond),
+		0.0);
 	SlewRateLimiter rotationLimiter = new SlewRateLimiter(
-			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond));
+			DriveConstants.kMaxAngularAcceleration.in(RadiansPerSecondPerSecond),
+			-DriveConstants.kMaxAngularDeceleration.in(RadiansPerSecondPerSecond),
+			0.0);
 
 	//create triggers to happen automatically
 
@@ -256,14 +264,14 @@ public class RobotContainer {
 	}
 
 	private void buildAutonomousCommands() {
-		Command leftDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe");
-		Command leftDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe");
-		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("BUMP_LeftDoubleSwipeDepot");
-		Command rightDoubleSwipe = new PathPlannerAuto("LeftDoubleSwipe", true);
-		Command rightDoubleSwipeBump = new PathPlannerAuto("BUMP_LeftDoubleSwipe", true);
-		Command rightRiskPass = new PathPlannerAuto("RISK_RightPassOutpost");
-		Command rightSafePass = new PathPlannerAuto("SAFE_RightPassOutpost");
-		Command middleDepot = new PathPlannerAuto("DepotAuto");
+		Command leftDoubleSwipe = new PathPlannerAuto("left-trench-2swipe");
+		Command leftDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe");
+		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("left-bump-2swipe-depot");
+		Command rightDoubleSwipe = new PathPlannerAuto("left-trench-2swipe", true);
+		Command rightDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe", true);
+		Command rightRiskPass = new PathPlannerAuto("right-pass-corner");
+		Command leftbumpdisruptor = new PathPlannerAuto("disruptor-left-bump-2swipe-depot");
+		Command middleDepot = new PathPlannerAuto("depot-auto");
 
 
 		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
@@ -273,7 +281,7 @@ public class RobotContainer {
 		autoChooser.addOption("RightDoubleSwipe", rightDoubleSwipe);
 		autoChooser.addOption("RightDoubleSwipeBump", rightDoubleSwipeBump);
 		autoChooser.addOption("RightRiskPass", rightRiskPass);
-		autoChooser.addOption("RightSafePass", rightSafePass);
+		autoChooser.addOption("LeftBumpDisruptor", leftbumpdisruptor);
 		autoChooser.addOption("MiddleDepot", middleDepot);
 	}
 
@@ -387,13 +395,14 @@ public class RobotContainer {
 		}
 
 
-		driverController.start().or(manipulatorController.start()).whileTrue(Commands.run(()-> 
+		driverController.start()
+		.whileTrue(Commands.run(()-> 
 			drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))
 			// .andThen(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
 			// 	drivetrain.getState().Pose.getRotation().plus(new Rotation2d(Math.PI)))))
 			.alongWith(new InstantCommand(() -> questNavSubsystem.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))));
 
-		driverController.back().or(manipulatorController.back()).whileTrue(Commands.run(() -> {
+		driverController.back().whileTrue(Commands.run(() -> {
 			limelightSubsystem.updateVisionPoseMT1(true);
 			Pose2d limelightPose = limelightSubsystem.getPoseEstimateMT1().pose;
 			if (limelightPose != null) {
@@ -435,6 +444,13 @@ public class RobotContainer {
 			shooterSubsystem.manualFlywheelCommand(() -> flywheel.getSetpoint()
 								.plus(RotationsPerSecond.of(
 										MathUtil.applyDeadband(-manipulatorController.getLeftY(), 0.05)))));
+
+		manipulatorController.b().whileTrue(
+			intakeSubsystem.manualPivotCommand(() -> MathUtil.applyDeadband(manipulatorController.getLeftX(), 0.05))
+		);
+		manipulatorController.y().whileTrue(
+			Commands.run(intakeSubsystem::resetPivotEncoder, intakeSubsystem)
+		);
 
 		
 		endOfShift.whileTrue(
@@ -528,8 +544,6 @@ public class RobotContainer {
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		new EventTrigger("IntakeOff").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)));
-		new EventTrigger("IntakeTrench").onTrue(
-			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.TRENCH)));
 
 		new EventTrigger("ShooterAim").onTrue(shootMode);
 		new EventTrigger("HopperOn").onTrue(

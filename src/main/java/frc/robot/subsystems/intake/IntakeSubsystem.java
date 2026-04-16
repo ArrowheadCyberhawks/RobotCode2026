@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -26,6 +28,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -56,7 +59,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private double jamOverCurrentStartTime = Double.NaN;
     private double unjamStartTime = Double.NaN;
     /** Current high-level intake state (controls pivot + roller behavior) */
-    private IntakeState intakeState = IntakeState.IDLE;
+    private IntakeState intakeState = IntakeState.STOW;
 
     public IntakeSubsystem() {
         // Create motors
@@ -65,8 +68,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
         pivotEncoder = pivotMotor.getEncoder();
 
-    // Create configs
-    pivotConfig = new SparkFlexConfig();
+        // Create configs
+        pivotConfig = new SparkFlexConfig();
 
         // Create absolute encoder
         pivotAbsoluteEncoder = new CANcoder(IntakeConstants.kIntakePivotEncoderId);
@@ -82,6 +85,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 IntakeConstants.kPivotMaxAccelRps2.get()
             )
         );
+
         pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
 
         // Create feedforward for gravity and velocity compensation
@@ -129,9 +133,9 @@ public class IntakeSubsystem extends SubsystemBase {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-        cfg.CurrentLimits.SupplyCurrentLimit = 50.0;
+        cfg.CurrentLimits.SupplyCurrentLimit = 60.0;
         cfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        cfg.CurrentLimits.StatorCurrentLimit = 40.0;
+        cfg.CurrentLimits.StatorCurrentLimit = 55.0;
         rollerMotor.getConfigurator().apply(cfg);
     }
 
@@ -185,6 +189,12 @@ public class IntakeSubsystem extends SubsystemBase {
         return Rotations.of(pivotAbsoluteEncoder.getAbsolutePosition().getValueAsDouble() * IntakeConstants.kPivotEncoderGearRatio);
     }
 
+    public void resetPivotEncoder() {
+        pivotAbsoluteEncoder.setPosition(0.0);
+        pivotEncoder.setPosition(0.0);
+        pivotController.reset(0.0);
+    }
+
     /**
      * Sync the controller to match the current absolute encoder position.
      * This is useful on startup or after a reset.
@@ -224,6 +234,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (intakeState == IntakeState.MANUAL)
+            return; // skip everything in manual mode - manual control methods will handle motor outputs directly
+
         setPivotTarget(intakeState.getPivotTarget());
         rollerTargetPercent = intakeState.getRollerTarget();
 
@@ -348,6 +361,8 @@ public class IntakeSubsystem extends SubsystemBase {
         int id = this.hashCode();
         if (IntakeConstants.kPPivot.hasChanged(id) || IntakeConstants.kIPivot.hasChanged(id) || 
             IntakeConstants.kDPivot.hasChanged(id) || IntakeConstants.kGPivot.hasChanged(id) || 
+            IntakeConstants.kVPivot.hasChanged(id) || IntakeConstants.kAPivot.hasChanged(id) ||
+            IntakeConstants.kSPivot.hasChanged(id) ||
             IntakeConstants.kPivotToleranceRadians.hasChanged(id) ||
             IntakeConstants.kPivotMaxVelocityRps.hasChanged(id) || IntakeConstants.kPivotMaxAccelRps2.hasChanged(id)) {
             
@@ -363,7 +378,22 @@ public class IntakeSubsystem extends SubsystemBase {
             );
 
             pivotFeedforward.setKg(IntakeConstants.kGPivot.get());
+            pivotFeedforward.setKv(IntakeConstants.kVPivot.get());
+            pivotFeedforward.setKa(IntakeConstants.kAPivot.get());
+            pivotFeedforward.setKs(IntakeConstants.kSPivot.get());
             pivotController.setTolerance(IntakeConstants.kPivotToleranceRadians.get());
         }
+    }
+
+    public Command manualPivotCommand(DoubleSupplier pivotPercent) {
+        IntakeState previousState = intakeState;
+        this.intakeState = IntakeState.MANUAL; // Set to manual mode to bypass automatic control in periodic()
+        return this.runEnd(() -> {
+            double pivotSpeed = pivotPercent.getAsDouble();
+            pivotMotor.set(pivotSpeed);
+        }, () -> {
+            pivotMotor.stopMotor();
+            this.intakeState = previousState; // Restore previous state when command ends
+        });
     }
 }

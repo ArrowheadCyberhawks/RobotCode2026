@@ -39,7 +39,9 @@ public final class Constants {
     public static final LinearVelocity kMaxSpeed = TunerConstants.kSpeedAt12Volts;
     public static final AngularVelocity kMaxAngularRate = RotationsPerSecond.of(1);
     public static final LinearAcceleration kMaxAcceleration = kMaxSpeed.times(2.0).per(Second);
+    public static final LinearAcceleration kMaxDeceleration = kMaxSpeed.times(4.0).per(Second);
     public static final AngularAcceleration kMaxAngularAcceleration = kMaxAngularRate.times(8.0).per(Second);
+    public static final AngularAcceleration kMaxAngularDeceleration = kMaxAngularRate.times(16.0).per(Second);
 
     public static final double kDriveDeadband = 0.05;
     public static final double kRotationDeadband = 0.05;

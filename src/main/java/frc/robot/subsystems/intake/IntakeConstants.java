@@ -22,25 +22,25 @@ public final class IntakeConstants {
 
     // Smart Motion constraints (rotations/sec)
     public static final LoggedTunableNumber kPivotMaxVelocityRps = 
-        new LoggedTunableNumber("Intake/Pivot/MaxVelocityRps", 4.0);
+        new LoggedTunableNumber("Intake/Pivot/MaxVelocityRps", 50.0);
     public static final LoggedTunableNumber kPivotMaxAccelRps2 = 
-        new LoggedTunableNumber("Intake/Pivot/MaxAccelRps2", 8.0);
+        new LoggedTunableNumber("Intake/Pivot/MaxAccelRps2", 50.0);
 
     // PID + FF for pivot (position control)
     public static final LoggedTunableNumber kPPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kP", 4.0);
+        new LoggedTunableNumber("Intake/Pivot/kP", 12.5);
     public static final LoggedTunableNumber kIPivot = 
         new LoggedTunableNumber("Intake/Pivot/kI", 0.0);
     public static final LoggedTunableNumber kDPivot = 
         new LoggedTunableNumber("Intake/Pivot/kD", 0.0);
     public static final LoggedTunableNumber kGPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kG", 0.1);
+        new LoggedTunableNumber("Intake/Pivot/kG", 0.0);
     public static final LoggedTunableNumber kVPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kV", 0.0);
+        new LoggedTunableNumber("Intake/Pivot/kV", 0.1);
     public static final LoggedTunableNumber kAPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kA", 0.0);
+        new LoggedTunableNumber("Intake/Pivot/kA", 0.008);
     public static final LoggedTunableNumber kSPivot = 
-        new LoggedTunableNumber("Intake/Pivot/kS", 0.1);
+        new LoggedTunableNumber("Intake/Pivot/kS", 0.0);
 
     // Pivot position tolerance (radians)
     public static final LoggedTunableNumber kPivotToleranceRadians = 
@@ -77,12 +77,13 @@ public final class IntakeConstants {
 
     /** High-level intake states that control pivot and roller behavior */
     public enum IntakeState {
-        STOW(Degrees.of(125.0), 0.0), // pivot up and rollers stopped
-        TRENCH(Degrees.of(50.0), 0.0), // pivot down (ready) but rollers not running
+        STOW(Degrees.of(120.0), 0.0), // pivot up and rollers stopped
         IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
-        RUN(Degrees.of(-3.0), 1.0),   // pivot down and rollers running to intake
-        UNJAM(Degrees.of(-3.0), -1.0), // pivot down, rollers reverse briefly to clear jams
-        REVERSE(Degrees.of(0.0), -1.00);
+        RUN(Degrees.of(-1.0), 1.0),   // pivot down and rollers running to intake
+        UNJAM(Degrees.of(-1.0), -1.0), // pivot down, rollers reverse briefly to clear jams
+        REVERSE(Degrees.of(0.0), -1.00),
+        MANUAL(Degrees.of(0.0), 0.0); // Placeholder values; actual targets determined by joystick input
+
 
         public final Angle pivotTarget;
         public final double rollerTarget;

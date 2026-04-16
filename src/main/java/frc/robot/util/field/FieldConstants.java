@@ -309,8 +309,8 @@ public class FieldConstants {
   }
 
     public static class Corners {
-        public static final Translation3d right = new Translation3d(1.0, 3.0, 0.0);
-        public static final Translation3d left = new Translation3d(1.0, 7.0, 0.0);
+        public static final Translation3d right = new Translation3d(2, 3.0, 0.0);
+        public static final Translation3d left = new Translation3d(2, 6.0, 0.0);
     }
 
     public enum FieldType {
