@@ -15,7 +15,8 @@ import static edu.wpi.first.units.Units.Volts;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -28,7 +29,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class HoodSubsystemNeo extends SubsystemBase {
   private final SparkMax hoodMotor;
   private final RelativeEncoder encoder;
-  private final PIDController pid;
+  private final ProfiledPIDController pid;
   private ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
   private Rotation2d targetAngle = Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees());
@@ -40,12 +41,17 @@ public class HoodSubsystemNeo extends SubsystemBase {
   public HoodSubsystemNeo(int motorId) {
     hoodMotor = new SparkMax(motorId, MotorType.kBrushless);
     encoder = hoodMotor.getEncoder();
-    pid = new PIDController(ShooterConstants.kPHood.get(), ShooterConstants.kIHood.get(), ShooterConstants.kDHood.get());
-    pid.setTolerance(ShooterConstants.kHoodAllowedError);
+    TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(
+      ShooterConstants.kVHood.get(), ShooterConstants.kAHood.get());
+    pid = new ProfiledPIDController(
+      ShooterConstants.kPHood.get(),
+      ShooterConstants.kIHood.get(),
+      ShooterConstants.kDHood.get(),
+      constraints);
 
     configureHood();
     resetHoodEncoder(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()));
-    pid.setSetpoint(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()).getRadians());
+    pid.setGoal(Rotation2d.fromDegrees(ShooterConstants.HoodPosition.STOW.getDegrees()).getRadians());
   
 
     Logger.recordOutput("Shooter/Hood Target", ShooterConstants.kShootHoodTarget);
@@ -80,7 +86,7 @@ public class HoodSubsystemNeo extends SubsystemBase {
         Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
     targetAngle = Rotation2d.fromDegrees(clipped);
     // PID setpoint in radians (encoder conversion factor uses radians)
-    pid.setSetpoint(targetAngle.getRadians());
+    pid.setGoal(targetAngle.getRadians());
     Logger.recordOutput("Shooter/Hood Target", clipped);
   }
 
@@ -114,7 +120,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
   }
 
   public Rotation2d getSetpoint() {
-    return Rotation2d.fromRadians(pid.getSetpoint());
+    // ProfiledPIDController.getSetpoint() returns a TrapezoidProfile.State
+    return Rotation2d.fromRadians(pid.getSetpoint().position);
   }
 
   public void resetHoodEncoder(Rotation2d angle) {
@@ -125,17 +132,24 @@ public class HoodSubsystemNeo extends SubsystemBase {
   @Override
   public void periodic() {
     // Update PID values from LoggedTunableNumbers
+    boolean changed = false;
     if (ShooterConstants.kPHood.hasChanged(hashCode()) || 
         ShooterConstants.kIHood.hasChanged(hashCode()) || 
-        ShooterConstants.kDHood.hasChanged(hashCode()) ||
-        ShooterConstants.kVHood.hasChanged(hashCode()) ||
-        ShooterConstants.kAHood.hasChanged(hashCode()) ||
-        ShooterConstants.kGHood.hasChanged(hashCode())) {
+        ShooterConstants.kDHood.hasChanged(hashCode())) {
       pid.setP(ShooterConstants.kPHood.get());
       pid.setI(ShooterConstants.kIHood.get());
       pid.setD(ShooterConstants.kDHood.get());
+      changed = true;
     }
-    hoodMotor.setVoltage(Volts.of(pid.calculate(getHoodAngle().getRadians())));
+    if (ShooterConstants.kVHood.hasChanged(hashCode()) || ShooterConstants.kAHood.hasChanged(hashCode())) {
+      pid.setConstraints(new TrapezoidProfile.Constraints(ShooterConstants.kVHood.get(), ShooterConstants.kAHood.get()));
+      changed = true;
+    }
+
+    // Calculate PID output using current hood angle (radians). The ProfiledPIDController
+    // internally respects the motion profile constraints when calculating the setpoint.
+    double pidOut = pid.calculate(getHoodAngle().getRadians());
+    hoodMotor.setVoltage(Volts.of(pidOut));
     Logger.recordOutput("Shooter/Hood Angle", getHoodAngle().getDegrees());
     Logger.recordOutput("Shooter/Hood Current", hoodMotor.getOutputCurrent());
     Logger.recordOutput("Shooter/Hood AtGoal", isAtGoal());
