@@ -60,16 +60,16 @@ public final class ShooterConstants {
     public static final double kHoodGearRatio = 1/4.0 * 1/4.0 * 30.0/364.0;
     public static final double kHoodCruiseRps = 2.0;
     public static final double kHoodAccelRps2 = 4.0;
-    public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 25);
+    public static final LoggedTunableNumber kPHood = new LoggedTunableNumber("Hood/kP", 15);
     public static final LoggedTunableNumber kIHood = new LoggedTunableNumber("Hood/kI", 0.0);
-    public static final LoggedTunableNumber kDHood = new LoggedTunableNumber("Hood/kD", 0.3);
+    public static final LoggedTunableNumber kDHood = new LoggedTunableNumber("Hood/kD", 0.0);
     public static final LoggedTunableNumber kVHood = new LoggedTunableNumber("Hood/kV", 0.0);
     public static final LoggedTunableNumber kAHood = new LoggedTunableNumber("Hood/kA", 0.0);
     public static final LoggedTunableNumber kGHood = new LoggedTunableNumber("Hood/kG", 0.0);
     public static final double kHoodAllowedError = 1.0;
 
     public static final double kHoodMinDegrees = 15.0;
-    public static final double kHoodMaxDegrees = 40.0;
+    public static final double kHoodMaxDegrees = 45.0;
 
     /** Common hood presets */
     public enum HoodPosition {

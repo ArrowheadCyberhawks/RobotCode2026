@@ -60,7 +60,7 @@ public class ShootCommand extends Command {
                 shooter.requestState(ShooterState.AIM);
             }
 
-            hopper.setHopperState(HopperState.KICKER);
+            hopper.setHopperState(HopperState.ON);
             
             if (shooter.areAllSubsystemsAtGoal()) {
                 hopperTriggered = true;

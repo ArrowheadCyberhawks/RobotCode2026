@@ -451,8 +451,11 @@ public class RobotContainer {
 		manipulatorController.b().whileTrue(
 			intakeSubsystem.manualPivotCommand(() -> MathUtil.applyDeadband(manipulatorController.getLeftX(), 0.05))
 		);
-		manipulatorController.y().whileTrue(
+		manipulatorController.start().whileTrue(
 			Commands.run(intakeSubsystem::resetPivotEncoder, intakeSubsystem)
+		);
+		manipulatorController.back().whileTrue(
+			Commands.run(hood::zeroHood)
 		);
 
 		

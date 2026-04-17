@@ -35,14 +35,15 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     /** Transform from robot center → Quest mount (tune to your actual mount) */
     private static final Transform3d ROBOT_TO_QUEST = new Transform3d(
-        Inches.of(-12.5), // x offset
-        Inches.of(-7.5), // y offset
-        Inches.of(14.5), // z offset
+        Inches.of(-10.5), // x offset
+        Inches.of(-8.625), // y offset
+        Inches.of(17), // z offset
         new Rotation3d(0.0, 0.0, Math.PI) // rotation offset
     );
 
     /** Last known robot pose from QuestNav */
     private Pose3d lastRobotPose = new Pose3d();
+    private Pose3d lastQuestPose = new Pose3d();
 
     /** Vision standard deviations */
     private static final Matrix<N3, N1> QUESTNAV_STD_DEVS =
@@ -59,6 +60,7 @@ public class QuestNavSubsystem extends SubsystemBase {
 
         questNav.onConnected(() -> {
             System.out.println("Quest connected!");
+            resetPose(drivetrain.getPose());
         });
         questNav.onDisconnected(() -> {
             DriverStation.reportWarning("Quest disconnected!", false);
@@ -74,10 +76,10 @@ public class QuestNavSubsystem extends SubsystemBase {
             DriverStation.reportWarning("Quest battery low: " + level + "%", false)
         );
         questNav.onCommandSuccess(response ->
-            System.out.println("Command succeeded: " + response.getCommandId())
+            System.out.println("Quest command succeeded: " + response.getCommandId())
         );
         questNav.onCommandFailure(response ->
-            DriverStation.reportError("Command failed: " + response.getErrorMessage(), false)
+            DriverStation.reportError("Quest command failed: " + response.getErrorMessage(), false)
         );
     }
 
@@ -108,7 +110,7 @@ public class QuestNavSubsystem extends SubsystemBase {
                 // Track last
                 //  pose for getters
                 lastRobotPose = robotPose;
-
+                lastQuestPose = questPose;
                 // Feed into drivetrain estimator
                 drivetrain.addVisionMeasurement(
                     robotPose.toPose2d(),
@@ -141,9 +143,17 @@ public class QuestNavSubsystem extends SubsystemBase {
         return useQuest;
     }
 
+    public QuestNav getQuestNav() {
+        return questNav;
+    }
+
     /** Allows external reset of the QuestNav pose. */
     public void resetPose(Pose2d newRobotPose) {
         Pose3d newQuestPose = new Pose3d(newRobotPose).transformBy(ROBOT_TO_QUEST);
         questNav.setPose(newQuestPose);
+    }
+
+    public Pose3d getLastQuestPose3d() {
+        return lastQuestPose;
     }
 }

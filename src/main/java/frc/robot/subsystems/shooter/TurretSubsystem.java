@@ -124,8 +124,7 @@ public class TurretSubsystem extends SubsystemBase {
   public Rotation2d getTurretRotation() {
     try {
       // With SensorToMechanismRatio configured, getPosition returns mechanism rotations
-      double mechanismRotations = turretMotor.getPosition().getValue().in(Rotations);
-      return Rotation2d.fromRadians(mechanismRotations * 2.0 * Math.PI);
+      return new Rotation2d(turretMotor.getPosition().getValue());
     } catch (Exception e) {
       return new Rotation2d();
     }

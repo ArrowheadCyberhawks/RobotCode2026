@@ -61,8 +61,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
   //       .i(ShooterConstants.kIHood.get())
   //       .d(ShooterConstants.kDHood.get())
   // .allowedClosedLoopError(ShooterConstants.kHoodAllowedError, ClosedLoopSlot.kSlot0);
-    cfg.softLimit.forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
-        .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
+    // cfg.softLimit.forwardSoftLimit(Math.toRadians(ShooterConstants.kHoodMaxDegrees))
+    //     .reverseSoftLimit(Math.toRadians(ShooterConstants.kHoodMinDegrees));
 
     cfg.smartCurrentLimit(15, 10);
 
@@ -76,8 +76,8 @@ public class HoodSubsystemNeo extends SubsystemBase {
    */
   public void setSetpoint(Rotation2d angle) {
     double degrees = angle.getDegrees();
-    double clipped = Math.max(ShooterConstants.kHoodMinDegrees,
-        Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
+    double clipped = degrees;//Math.max(ShooterConstants.kHoodMinDegrees, //TODO: re-enable clipping
+        //Math.min(ShooterConstants.kHoodMaxDegrees, degrees));
     targetAngle = Rotation2d.fromDegrees(clipped);
     // PID setpoint in radians (encoder conversion factor uses radians)
     pid.setSetpoint(targetAngle.getRadians());
@@ -86,6 +86,11 @@ public class HoodSubsystemNeo extends SubsystemBase {
 
   public void stopHood() {
     hoodMotor.stopMotor();
+  }
+
+  public void zeroHood() {
+    resetHoodEncoder(ShooterConstants.HoodPosition.STOW.getRotation());
+    setSetpoint(ShooterConstants.HoodPosition.STOW.getRotation());
   }
 
   /**
