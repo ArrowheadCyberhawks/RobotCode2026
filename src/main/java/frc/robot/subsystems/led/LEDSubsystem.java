@@ -1,8 +1,10 @@
 package frc.robot.subsystems.led;
 
+import java.util.ResourceBundle.Control;
 import java.util.function.Supplier;
 import com.ctre.phoenix6.configs.CANdleConfiguration;
 import com.ctre.phoenix6.controls.ColorFlowAnimation;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.EmptyAnimation;
 import com.ctre.phoenix6.controls.FireAnimation;
 import com.ctre.phoenix6.controls.LarsonAnimation;
@@ -55,7 +57,7 @@ public class LEDSubsystem extends SubsystemBase {
         var cfg = new CANdleConfiguration();
         // set the LED strip type and brightness
         cfg.LED.StripType = StripTypeValue.GRB;
-        cfg.LED.BrightnessScalar = 0.5;
+        cfg.LED.BrightnessScalar = 1.00;
         // disable status LED when being controlled
         cfg.CANdleFeatures.StatusLedWhenActive = StatusLedWhenActiveValue.Disabled;
 
@@ -90,11 +92,20 @@ public class LEDSubsystem extends SubsystemBase {
             setState(LEDState.DEFAULT);
         }
 
-        candle.setControl(currentState.getRequest());
+        if (!getCurrentAnimation().equals(currentState.getRequest()))
+            candle.setControl(currentState.getRequest());
         Logger.recordOutput("LED/LEDState", currentState.name());
     }
 
     public void setState(LEDState newState) {
         this.currentState = newState;
+    }
+
+    public LEDState getDesiredState() {
+        return currentState;
+    }
+
+    public ControlRequest getCurrentAnimation() {
+        return currentState.getRequest();
     }
 }

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.140008871579559,
-        "y": 4.993481322396963
+        "x": 7.933594864479314,
+        "y": 5.089500713266761
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.140008871579559,
-        "y": 3.5035969918020378
+        "x": 8.528773181169758,
+        "y": 4.416690442225392
       },
       "isLocked": false,
       "linkedName": "LeftDisruptor"
@@ -20,12 +20,12 @@
         "y": 5.519624329159212
       },
       "prevControl": {
-        "x": 6.355402504472272,
-        "y": 5.519624329159212
+        "x": 6.523281027104137,
+        "y": 5.4517831669044226
       },
       "nextControl": {
-        "x": 4.23925066190141,
-        "y": 5.519624329159212
+        "x": 4.24144337154576,
+        "y": 5.591376708438549
       },
       "isLocked": false,
       "linkedName": null
@@ -62,7 +62,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.5,
+      "waypointRelativePos": 0.556503198294239,
       "rotationDegrees": 180.0
     },
     {
@@ -125,7 +125,7 @@
   "reversed": false,
   "folder": "Cycles",
   "idealStartingState": {
-    "velocity": 3.0,
+    "velocity": 0.5,
     "rotation": -45.0
   },
   "useDefaultConstraints": true

@@ -264,12 +264,14 @@ public class RobotContainer {
 	private void buildAutonomousCommands() {
 		Command leftDoubleSwipe = new PathPlannerAuto("left-trench-2swipe");
 		Command leftDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe");
-		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("left-bump-2swipe-depot");
+		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("left-bump-2swipe-depot"); 
 		Command rightDoubleSwipe = new PathPlannerAuto("left-trench-2swipe", true);
-		Command rightDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe", true);
-		Command rightRiskPass = new PathPlannerAuto("right-pass-corner");
-		Command leftbumpdisruptor = new PathPlannerAuto("disruptor-left-bump-2swipe-depot");
+		Command rightDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe", true); //right side to test
+		Command rightRiskPass = new PathPlannerAuto("right-pass-corner"); // maybe this one
+		Command leftbumpdisruptor = new PathPlannerAuto("disruptor-left-bump-2swipe-depot"); //this one
 		Command middleDepot = new PathPlannerAuto("depot-auto");
+		Command riskyPassing = new PathPlannerAuto("Risky Passing (BlueLeft)"); //this one
+
 
 
 		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
@@ -281,6 +283,7 @@ public class RobotContainer {
 		autoChooser.addOption("RightRiskPass", rightRiskPass);
 		autoChooser.addOption("LeftBumpDisruptor", leftbumpdisruptor);
 		autoChooser.addOption("MiddleDepot", middleDepot);
+		autoChooser.addOption("RiskyPassing", riskyPassing);
 	}
 
 	private void configureBindings() {

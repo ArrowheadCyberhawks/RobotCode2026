@@ -313,6 +313,11 @@ public class FieldConstants {
         public static final Translation3d left = new Translation3d(1.25, 6.0, 0.0);
     }
 
+    public static class PassTarget {
+        public static final Translation3d right = new Translation3d(2.5, 2.5, 0.0);
+        public static final Translation3d left = new Translation3d(2.5, 5.5, 0.0);
+    }    
+
     public enum FieldType {
         ANDYMARK("andymark"),
         WELDED("welded");

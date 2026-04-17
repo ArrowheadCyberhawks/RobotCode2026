@@ -77,7 +77,7 @@ public final class LEDConstants {
      * CANdle supports 8 animation slots (0-7).
      */
     public static final int kSlot0StartIdx = 0;
-    public static final int kSlot0EndIdx = 67;
+    public static final int kSlot0EndIdx = 66;
 
     public static final int kSlot1StartIdx = 61;
     public static final int kSlot1EndIdx = 67;

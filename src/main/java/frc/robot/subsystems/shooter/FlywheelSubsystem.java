@@ -104,9 +104,9 @@ public class FlywheelSubsystem extends SubsystemBase {
       cfg.Slot0.kS = ShooterConstants.kSFlywheel.get();
       
       // Configure current limits for FOC
-      cfg.CurrentLimits.SupplyCurrentLimit = 40.0; // Amps
+      cfg.CurrentLimits.SupplyCurrentLimit = 60.0; // Amps
       cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-      cfg.CurrentLimits.StatorCurrentLimit = 40.0;
+      cfg.CurrentLimits.StatorCurrentLimit = 120.0;
       cfg.CurrentLimits.StatorCurrentLimitEnable = true;
 
       cfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
