@@ -120,9 +120,9 @@ public class ShotCalculator {
         hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.34, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(2.43, Rotation2d.fromDegrees(20));
-        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(25.5));
-        hoodAngleMap.put(4.00, Rotation2d.fromDegrees(27.0));
-        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(37.0)); //adjusted to 30.0 for WILAX playoff 11
+        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(25.0));
+        hoodAngleMap.put(4.00, Rotation2d.fromDegrees(26.0));
+        hoodAngleMap.put(5.5, Rotation2d.fromDegrees(35.0)); //adjusted to 30.0 for WILAX playoff 11
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
         hoodAngleMap.put(12.95, Rotation2d.fromDegrees(45));
 
@@ -131,7 +131,7 @@ public class ShotCalculator {
         flywheelSpeedMap.put(1.30,22.02);
         flywheelSpeedMap.put(2.43, 24.0); 
         flywheelSpeedMap.put(3.04, 27.0);
-        flywheelSpeedMap.put(4.00, 27.5);
+        flywheelSpeedMap.put(4.00, 27.0);
         flywheelSpeedMap.put(5.5, 33.0);
         flywheelSpeedMap.put(9.14, 38.0);
         flywheelSpeedMap.put(12.95, 55.0); 

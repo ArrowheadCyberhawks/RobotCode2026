@@ -24,7 +24,7 @@ public final class HopperConstants {
             new LoggedTunableNumber("Hopper/PIDConstants/kHopperMaxAccelRps2", 10.0); // Example value
 
         public static final LoggedTunableNumber kPKicker = 
-            new LoggedTunableNumber("Hopper/PIDConstants/kPKicker", 0.0004);
+            new LoggedTunableNumber("Hopper/PIDConstants/kPKicker", 0.0003);
         public static final LoggedTunableNumber kIKicker = 
             new LoggedTunableNumber("Hopper/PIDConstants/kIKicker", 0.0);
         public static final LoggedTunableNumber kDKicker = 

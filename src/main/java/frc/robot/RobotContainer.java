@@ -130,8 +130,6 @@ public class RobotContainer {
 		intakeSubsystem::getIntakeState,
 		shooterSubsystem::getState);
 
-	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
-
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(
 		DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond),
@@ -337,11 +335,6 @@ public class RobotContainer {
 		// driverController.y().whileTrue(drivetrain.applyRequest(() -> point
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
-
-		// driverController.povUp().or(manipulatorController.povUp())
-		// 	.whileTrue(climberSubsystem.runClimberDown());
-		// driverController.povDown().or(manipulatorController.povDown())
-		// 	.whileTrue(climberSubsystem.runClimberUp());
 		
 		
 		manipulatorController.povLeft()
@@ -378,7 +371,6 @@ public class RobotContainer {
 			})
 		);
 
-		driverController.b().onTrue(shooterSubsystem.trenchCommand());
 
 		driverController.povLeft().whileTrue(shootLeft);
 		driverController.povRight().whileTrue(shootRight);
@@ -396,8 +388,7 @@ public class RobotContainer {
 		}
 
 
-		driverController.start()
-		.whileTrue(Commands.run(()-> 
+		driverController.start().whileTrue(Commands.run(()-> 
 			drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))
 			// .andThen(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
 			// 	drivetrain.getState().Pose.getRotation().plus(new Rotation2d(Math.PI)))))
@@ -433,7 +424,7 @@ public class RobotContainer {
 						() -> hopperSubsystem.setHopperState(HopperState.ON),
 						() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 
-		manipulatorController.x().and(manipulatorController.leftBumper())
+		manipulatorController.x().and(manipulatorController.leftBumper()).or(driverController.b())
 				.whileTrue(
 						hopperSubsystem.runEnd(
 								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
