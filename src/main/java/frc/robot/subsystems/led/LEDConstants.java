@@ -51,14 +51,14 @@ public final class LEDConstants {
     *  herding/reverse intake (yellow), defense/intake up (blue), warning (red flashing)
     */
     public enum LEDState {
-        DEFAULT(new SingleFadeAnimation(0, kSlot0EndIdx).withColor(kPink).withFrameRate(1)),
+        DEFAULT(new SingleFadeAnimation(0, kSlot0EndIdx).withColor(kPink).withFrameRate(150)),
         DISABLED(new SolidColor(0, kSlot0EndIdx).withColor(kPink)),
         DEFENSE(new SolidColor(0, kSlot0EndIdx).withColor(kBlue)),
         TRENCH(new SolidColor(0, kSlot0EndIdx).withColor(kWhite)),
         SHOOTINTAKE(new SolidColor(0, kSlot0EndIdx).withColor(kPink)),
         INTAKE(new SolidColor(0, kSlot0EndIdx).withColor(kGreen)),
         HERD(new SolidColor(0, kSlot0EndIdx).withColor(kYellow)),
-        WARNING(new StrobeAnimation(0, kSlot0EndIdx).withColor(kRed).withFrameRate(1));
+        WARNING(new StrobeAnimation(0, kSlot0EndIdx).withColor(kRed).withFrameRate(5));
 
         public final ControlRequest request;
 

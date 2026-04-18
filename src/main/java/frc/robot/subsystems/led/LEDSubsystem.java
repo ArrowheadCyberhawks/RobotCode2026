@@ -85,7 +85,7 @@ public class LEDSubsystem extends SubsystemBase {
         } else if (intakeState == IntakeState.REVERSE) {
             setState(LEDState.HERD);
         } else if (intakeState == IntakeState.STOW) {
-            setState(LEDState.DEFENSE);
+            setState(LEDState.DEFENSE); 
         } else if (DriverStation. isDSAttached() && DriverStation.isDisabled()) {
             setState(LEDState.DISABLED);
         } else {

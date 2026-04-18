@@ -477,12 +477,12 @@ public class RobotContainer {
 
 		inLeftPass.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
-			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
+			sc.setTarget(FieldConstants.PassTarget.left.toTranslation2d());
 		}));
 
 		inRightPass.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
-			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
+			sc.setTarget(FieldConstants.PassTarget.right.toTranslation2d());
 		}));
 		
 		

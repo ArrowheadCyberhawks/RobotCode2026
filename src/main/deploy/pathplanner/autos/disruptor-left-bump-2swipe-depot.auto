@@ -33,6 +33,12 @@
           "data": {
             "pathName": "neutral-trench-depot"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "depot-trench"
+          }
         }
       ]
     }
