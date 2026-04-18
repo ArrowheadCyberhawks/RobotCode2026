@@ -120,8 +120,9 @@ public class ShotCalculator {
         // Meters
         hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.34, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
-        hoodAngleMap.put(2.43, Rotation2d.fromDegrees(23.5));
-        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(25.0));
+        hoodAngleMap.put(2.43, Rotation2d.fromDegrees(23.0));
+        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(24.5
+        ));
         hoodAngleMap.put(4.00, Rotation2d.fromDegrees(31.5));
         hoodAngleMap.put(5.5, Rotation2d.fromDegrees(33.5)); //adjusted to 30.0 for WILAX playoff 11
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
@@ -130,7 +131,7 @@ public class ShotCalculator {
         // Populate the flywheel speed calibration map (distance -> RPS). (rotations per second)
         //Distance is in Meters
         flywheelSpeedMap.put(1.30,22.02);
-        flywheelSpeedMap.put(2.43, 24.0); 
+        flywheelSpeedMap.put(2.43, 23.0); 
         flywheelSpeedMap.put(3.04, 25.5);
         flywheelSpeedMap.put(4.00, 27.0);
         flywheelSpeedMap.put(5.5, 32.0);
