@@ -33,6 +33,12 @@
           "data": {
             "pathName": "neutral-trench"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShooterOn"
+          }
         }
       ]
     }

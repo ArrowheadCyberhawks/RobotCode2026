@@ -48,12 +48,12 @@
     },
     {
       "anchor": {
-        "x": 3.392125534950071,
-        "y": 7.444336661911555
+        "x": 2.8228245363766047,
+        "y": 7.431398002853067
       },
       "prevControl": {
-        "x": 2.247933333333333,
-        "y": 7.435811111111111
+        "x": 1.6786323347598666,
+        "y": 7.422872452052623
       },
       "nextControl": null,
       "isLocked": false,
@@ -95,24 +95,65 @@
       "name": "ShooterOff",
       "waypointRelativePos": 0.30790006752195365,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "ShooterOff"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "HopperOff"
+              }
+            }
+          ]
+        }
+      }
     },
     {
       "name": "ShooterTrench",
       "waypointRelativePos": 0.55908170155301,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "ShooterTrench"
+        }
+      }
     },
     {
-      "name": "ShooterAim",
+      "name": "ShooterOn",
       "waypointRelativePos": 1.8798109385550206,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "ShooterOn"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "HopperOn"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 1.0,
+    "maxAcceleration": 0.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

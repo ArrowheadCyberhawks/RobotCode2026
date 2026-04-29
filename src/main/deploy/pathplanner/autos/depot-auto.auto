@@ -15,6 +15,12 @@
           "data": {
             "pathName": "CenterToDepot"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShooterAim"
+          }
         }
       ]
     }

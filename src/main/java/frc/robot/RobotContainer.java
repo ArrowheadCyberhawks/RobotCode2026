@@ -130,6 +130,8 @@ public class RobotContainer {
 		intakeSubsystem::getIntakeState,
 		shooterSubsystem::getState);
 
+	// public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
+
 	// slew limiter object
 	SlewRateLimiter xLimiter = new SlewRateLimiter(
 		DriveConstants.kMaxAcceleration.in(MetersPerSecondPerSecond),
@@ -264,14 +266,12 @@ public class RobotContainer {
 	private void buildAutonomousCommands() {
 		Command leftDoubleSwipe = new PathPlannerAuto("left-trench-2swipe");
 		Command leftDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe");
-		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("left-bump-2swipe-depot"); 
+		Command leftDoubleSwipeDepotBump = new PathPlannerAuto("left-bump-2swipe-depot");
 		Command rightDoubleSwipe = new PathPlannerAuto("left-trench-2swipe", true);
-		Command rightDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe", true); //right side to test
-		Command rightRiskPass = new PathPlannerAuto("right-pass-corner"); // maybe this one
-		Command leftbumpdisruptor = new PathPlannerAuto("disruptor-left-bump-2swipe-depot"); //this one
+		Command rightDoubleSwipeBump = new PathPlannerAuto("left-bump-2swipe", true);
+		Command rightRiskPass = new PathPlannerAuto("right-pass-corner");
+		Command leftbumpdisruptor = new PathPlannerAuto("disruptor-left-bump-2swipe-depot");
 		Command middleDepot = new PathPlannerAuto("depot-auto");
-		Command riskyPassing = new PathPlannerAuto("Risky Passing (BlueLeft)"); //this one
-
 
 
 		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
@@ -283,7 +283,6 @@ public class RobotContainer {
 		autoChooser.addOption("RightRiskPass", rightRiskPass);
 		autoChooser.addOption("LeftBumpDisruptor", leftbumpdisruptor);
 		autoChooser.addOption("MiddleDepot", middleDepot);
-		autoChooser.addOption("RiskyPassing", riskyPassing);
 	}
 
 	private void configureBindings() {
@@ -338,6 +337,11 @@ public class RobotContainer {
 		// driverController.y().whileTrue(drivetrain.applyRequest(() -> point
 		// .withModuleDirection(new Rotation2d(-driverController.getLeftY(),
 		// -driverController.getLeftX()))));
+
+		// driverController.povUp().or(manipulatorController.povUp())
+		// 	.whileTrue(climberSubsystem.runClimberDown());
+		// driverController.povDown().or(manipulatorController.povDown())
+		// 	.whileTrue(climberSubsystem.runClimberUp());
 		
 		
 		manipulatorController.povLeft()
@@ -374,6 +378,7 @@ public class RobotContainer {
 			})
 		);
 
+		driverController.b().onTrue(shooterSubsystem.trenchCommand());
 
 		driverController.povLeft().whileTrue(shootLeft);
 		driverController.povRight().whileTrue(shootRight);
@@ -391,7 +396,8 @@ public class RobotContainer {
 		}
 
 
-		driverController.start().whileTrue(Commands.run(()-> 
+		driverController.start()
+		.whileTrue(Commands.run(()-> 
 			drivetrain.resetPose(AllianceFlipUtil.apply(new Pose2d(3.500, 4.040, new Rotation2d(Math.PI)))))
 			// .andThen(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
 			// 	drivetrain.getState().Pose.getRotation().plus(new Rotation2d(Math.PI)))))
@@ -427,7 +433,7 @@ public class RobotContainer {
 						() -> hopperSubsystem.setHopperState(HopperState.ON),
 						() -> hopperSubsystem.setHopperState(HopperState.IDLE)));
 
-		manipulatorController.x().and(manipulatorController.leftBumper()).or(driverController.b())
+		manipulatorController.x().and(manipulatorController.leftBumper())
 				.whileTrue(
 						hopperSubsystem.runEnd(
 								() -> hopperSubsystem.setHopperState(HopperState.REVERSE),
@@ -477,12 +483,12 @@ public class RobotContainer {
 
 		inLeftPass.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
-			sc.setTarget(FieldConstants.PassTarget.left.toTranslation2d());
+			sc.setTarget(FieldConstants.Corners.left.toTranslation2d());
 		}));
 
 		inRightPass.whileTrue(Commands.runOnce(() -> {
 			ShotCalculator sc = ShotCalculator.getInstance();
-			sc.setTarget(FieldConstants.PassTarget.right.toTranslation2d());
+			sc.setTarget(FieldConstants.Corners.right.toTranslation2d());
 		}));
 		
 		
@@ -508,7 +514,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("IntakeStow",
 				Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		
-		NamedCommands.registerCommand("ShooterCommand", shootMode);
+		NamedCommands.registerCommand("ShooterCommand", shootMode.asProxy());
 
 		NamedCommands.registerCommand("ShooterAim", shooterSubsystem.aimCommand());
 
@@ -516,7 +522,7 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("ShooterOff", 
 			Commands.sequence(
-				shooterSubsystem.idle(),
+				Commands.runOnce(() -> shooterSubsystem.stop()),
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
 			)
 		);
@@ -529,38 +535,40 @@ public class RobotContainer {
 		NamedCommands.registerCommand("HopperOff",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
 
-		// Shooter Commands - Stop all shooting motors
-		NamedCommands.registerCommand("StopShoot",
-			Commands.sequence(
-			Commands.runOnce(() -> shooterSubsystem.stop()),
-			Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)))
-		);
+		// // Shooter Commands - Stop all shooting motors
+		// NamedCommands.registerCommand("StopShoot",
+		// 	Commands.sequence(
+		// 	Commands.runOnce(() -> shooterSubsystem.stop()),
+		// 	Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)))
+		// );
 	}
 
 	private void registerEventMarkers() {
-		new EventTrigger("IntakeOn").onTrue(
-			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
+		new EventTrigger("IntakeOn"); //.onTrue(
+		// 	Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
 		new EventTrigger("IntakeStow").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		new EventTrigger("IntakeOff").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)));
 
-		new EventTrigger("ShooterAim").onTrue(shootMode);
-		new EventTrigger("HopperOn").onTrue(
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
-		new EventTrigger("HopperOff").onTrue(
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
+		// new EventTrigger("ShooterAim").onTrue(shootMode.asProxy());
+		new EventTrigger("HopperOn");//.onTrue(
+				//Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
+		new EventTrigger("HopperOff");
+		//.onTrue(Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
 
-		new EventTrigger("ShooterOn").onTrue(
-			shooterSubsystem.aimCommand());
+		new EventTrigger("ShooterOn");
+		//.onTrue(shooterSubsystem.aimCommand());
 
 		// Shooter Commands - Stop all shooting motors
-		new EventTrigger("ShooterOff").onTrue(
-			Commands.sequence(
-				shooterSubsystem.idle(),
-				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))));
+		new EventTrigger("ShooterOff");
+		// onTrue(
+		// 	Commands.sequence(
+		// 		shooterSubsystem.idle(),
+		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		// 	).asProxy());
 
-		new EventTrigger("ShooterTrench").onTrue(shooterSubsystem.trenchCommand());
+		new EventTrigger("ShooterTrench");//.onTrue(shooterSubsystem.trenchCommand());
 		
 	}
 

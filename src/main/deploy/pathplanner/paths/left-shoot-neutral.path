@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.392125534950071,
-        "y": 7.444336661911555
+        "x": 2.8228245363766047,
+        "y": 7.431398002853067
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.544129112767602,
-        "y": 7.417996422182468
+        "x": 3.9748281141941364,
+        "y": 7.40505776312398
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
@@ -61,24 +61,65 @@
       "name": "IntakeOn",
       "waypointRelativePos": 0.2405745062836621,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "IntakeOn"
+        }
+      }
     },
     {
       "name": "ShooterOn",
       "waypointRelativePos": 0.2969151670951403,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "ShooterOn"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "HopperOn"
+              }
+            }
+          ]
+        }
+      }
     },
     {
-      "name": "HopperOff",
+      "name": "ShooterOff",
       "waypointRelativePos": 0.353470437018,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "ShooterOff"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "HopperOff"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 1.0,
+    "maxAcceleration": 0.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 3.392125534950071,
-        "y": 7.444336661911555
+        "x": 2.8228245363766047,
+        "y": 7.431398002853067
       },
       "prevControl": {
-        "x": 5.618398262222798,
-        "y": 7.475257116457009
+        "x": 5.049097263649332,
+        "y": 7.4623184573985215
       },
       "nextControl": {
-        "x": 2.078385564067525,
-        "y": 7.426090273427075
+        "x": 1.5090845654940588,
+        "y": 7.413151614368587
       },
       "isLocked": false,
       "linkedName": "LeftShoot"
@@ -73,8 +73,8 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 1.0,
+    "maxAcceleration": 0.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

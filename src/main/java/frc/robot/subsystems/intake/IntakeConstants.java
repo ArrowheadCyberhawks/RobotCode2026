@@ -47,7 +47,7 @@ public final class IntakeConstants {
         new LoggedTunableNumber("Intake/Pivot/ToleranceRadians", 0.02);
 
     // Pivot soft limits (degrees)
-    public static final double kPivotMinDegrees = -8.0;
+    public static final double kPivotMinDegrees = -30.0;
     public static final double kPivotMaxDegrees = 125.0;
 
     // Roller PID (velocity control)
@@ -77,11 +77,11 @@ public final class IntakeConstants {
 
     /** High-level intake states that control pivot and roller behavior */
     public enum IntakeState {
-        STOW(Degrees.of(120.0), 0.0), // pivot up and rollers stopped
-        IDLE(Degrees.of(0.0), 0.0), // pivot down (ready) but rollers not running
-        RUN(Degrees.of(-1.0), 1.0),   // pivot down and rollers running to intake
-        UNJAM(Degrees.of(-1.0), -1.0), // pivot down, rollers reverse briefly to clear jams
-        REVERSE(Degrees.of(0.0), -1.00),
+        STOW(Degrees.of(105.0), 0.0), // pivot up and rollers stopped
+        IDLE(Degrees.of(-4.0), 0.0), // pivot down (ready) but rollers not running
+        RUN(Degrees.of(-4.0), 1.0),   // pivot down and rollers running to intake
+        UNJAM(Degrees.of(-4.0), -1.0), // pivot down, rollers reverse briefly to clear jams
+        REVERSE(Degrees.of(-4.0), -1.00),
         MANUAL(Degrees.of(0.0), 0.0); // Placeholder values; actual targets determined by joystick input
 
 

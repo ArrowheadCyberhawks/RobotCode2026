@@ -385,7 +385,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public Command manualPivotCommand(DoubleSupplier pivotPercent) {
-        IntakeState previousState = intakeState;
+        IntakeState previousState = IntakeState.IDLE;
         this.intakeState = IntakeState.MANUAL; // Set to manual mode to bypass automatic control in periodic()
         return this.runEnd(() -> {
             double pivotSpeed = pivotPercent.getAsDouble();
