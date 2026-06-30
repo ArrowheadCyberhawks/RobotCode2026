@@ -42,24 +42,22 @@ public class ShootCommand extends Command {
 
     @Override
     public void execute() {
-        if (inTrench.getAsBoolean()) {
-            // Request TRENCH state so the shooter state machine knows we are inside the trench.
-            // The hood going down is handled by the inTrench.whileTrue(hood.down()) trigger.
-            // Pause the hopper and re-arm so it fires again once we leave the trench.
-            shooter.requestState(ShooterState.TRENCH);
-            hopper.setHopperState(HopperState.IDLE);
-            hopperTriggered = false;
-        } else if (inTower.getAsBoolean()) {
+        // if (inTrench.getAsBoolean()) {
+        //     // Request TRENCH state so the shooter state machine knows we are inside the trench.
+        //     // The hood going down is handled by the inTrench.whileTrue(hood.down()) trigger.
+        //     // Pause the hopper and re-arm so it fires again once we leave the trench.
+        //     shooter.requestState(ShooterState.TRENCH);
+        //     hopper.setHopperState(HopperState.IDLE);
+        //     hopperTriggered = false;
+        // } else if (inTower.getAsBoolean()) {
+        //     shooter.requestState(ShooterState.AIM);
+        //     hopper.setHopperState(HopperState.IDLE);
+        // } else {
+        //     // Normal AIM + fire sequence
+        //     if (inPass.getAsBoolean()) {
+        //         shooter.requestState(ShooterState.PASS);
+            
             shooter.requestState(ShooterState.AIM);
-            hopper.setHopperState(HopperState.IDLE);
-        } else {
-            // Normal AIM + fire sequence
-            if (inPass.getAsBoolean()) {
-                shooter.requestState(ShooterState.PASS);
-            } else {
-                shooter.requestState(ShooterState.AIM);
-            }
-
             hopper.setHopperState(HopperState.ON);
             
             if (shooter.areAllSubsystemsAtGoal()) {
@@ -75,7 +73,6 @@ public class ShootCommand extends Command {
                 hopper.setHopperState(HopperState.IDLE);
             }
 
-        }
     }
 
     @Override
