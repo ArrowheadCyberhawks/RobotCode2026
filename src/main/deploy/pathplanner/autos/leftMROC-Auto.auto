@@ -19,7 +19,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "bump-neutral-shoot"
+            "pathName": "LeftNeutralToLeftShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftJiggle"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
           }
         },
         {
@@ -31,7 +43,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "neutral-trench-depot"
+            "pathName": "closeneutral-trench-shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftJiggle"
           }
         },
         {

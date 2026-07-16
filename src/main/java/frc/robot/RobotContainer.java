@@ -272,6 +272,9 @@ public class RobotContainer {
 		Command rightRiskPass = new PathPlannerAuto("right-pass-corner");
 		Command leftbumpdisruptor = new PathPlannerAuto("disruptor-left-bump-2swipe-depot");
 		Command middleDepot = new PathPlannerAuto("depot-auto");
+		Command leftMROCauto = new PathPlannerAuto("leftMROC-Auto");
+		Command rightMROCauto = new PathPlannerAuto("leftMROC-Auto", true);
+
 
 
 		autoChooser.addDefaultOption("Do Nothing", new InstantCommand());
@@ -283,6 +286,8 @@ public class RobotContainer {
 		autoChooser.addOption("RightRiskPass", rightRiskPass);
 		autoChooser.addOption("LeftBumpDisruptor", leftbumpdisruptor);
 		autoChooser.addOption("MiddleDepot", middleDepot);
+		autoChooser.addOption("MROCAUTO", leftMROCauto);
+		autoChooser.addOption("RightMROCauto", rightMROCauto);
 	}
 
 	private void configureBindings() {
