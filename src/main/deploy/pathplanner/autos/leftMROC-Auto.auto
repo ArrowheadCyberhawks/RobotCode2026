@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "IntakeOn"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "left-trench-neutral"

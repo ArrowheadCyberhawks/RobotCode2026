@@ -540,40 +540,41 @@ public class RobotContainer {
 		NamedCommands.registerCommand("HopperOff",
 				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
 
-		// // Shooter Commands - Stop all shooting motors
-		// NamedCommands.registerCommand("StopShoot",
-		// 	Commands.sequence(
-		// 	Commands.runOnce(() -> shooterSubsystem.stop()),
-		// 	Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)))
-		// );
+		/*// Shooter Commands - Stop all shooting motors
+		NamedCommands.registerCommand("StopShoot",
+		 	Commands.sequence(
+		 	Commands.runOnce(() -> shooterSubsystem.stop()),
+		 	Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)))
+		 );*/
 	}
 
 	private void registerEventMarkers() {
-		new EventTrigger("IntakeOn"); //.onTrue(
-		// 	Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
+		new EventTrigger("IntakeOn").onTrue(
+		 	Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.RUN)));
 		new EventTrigger("IntakeStow").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.STOW)));
 		new EventTrigger("IntakeOff").onTrue(
 			Commands.runOnce(() -> intakeSubsystem.setIntakeState(IntakeConstants.IntakeState.IDLE)));
 
-		// new EventTrigger("ShooterAim").onTrue(shootMode.asProxy());
-		new EventTrigger("HopperOn");//.onTrue(
-				//Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
-		new EventTrigger("HopperOff");
-		//.onTrue(Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
+		 new EventTrigger("ShooterAim").onTrue(
+			shootMode.asProxy());
+		new EventTrigger("HopperOn").onTrue(
+				Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.ON)));
+		new EventTrigger("HopperOff").onTrue(
+			Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE)));
 
-		new EventTrigger("ShooterOn");
-		//.onTrue(shooterSubsystem.aimCommand());
+		new EventTrigger("ShooterOn").onTrue(
+			shooterSubsystem.aimCommand());
 
 		// Shooter Commands - Stop all shooting motors
-		new EventTrigger("ShooterOff");
-		// onTrue(
-		// 	Commands.sequence(
-		// 		shooterSubsystem.idle(),
-		// 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
-		// 	).asProxy());
+		new EventTrigger("ShooterOff").onTrue(
+		 	Commands.sequence(
+		 		shooterSubsystem.idle(),
+		 		Commands.runOnce(() -> hopperSubsystem.setHopperState(HopperSubsystem.HopperState.IDLE))
+		 	).asProxy());
 
-		new EventTrigger("ShooterTrench");//.onTrue(shooterSubsystem.trenchCommand());
+		new EventTrigger("ShooterTrench").onTrue(
+			shooterSubsystem.trenchCommand());
 		
 	}
 
