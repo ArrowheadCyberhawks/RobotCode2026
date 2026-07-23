@@ -48,6 +48,12 @@
                       "data": {
                         "name": "HopperOn"
                       }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "ShooterAim"
+                      }
                     }
                   ]
                 }
@@ -91,6 +97,12 @@
                       "type": "named",
                       "data": {
                         "name": "HopperOn"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "ShooterAim"
                       }
                     }
                   ]
