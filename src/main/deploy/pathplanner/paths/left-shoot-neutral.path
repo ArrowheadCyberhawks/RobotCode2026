@@ -56,70 +56,10 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "IntakeOn",
-      "waypointRelativePos": 0.2405745062836621,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "IntakeOn"
-        }
-      }
-    },
-    {
-      "name": "ShooterOn",
-      "waypointRelativePos": 0.2969151670951403,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "ShooterOn"
-              }
-            },
-            {
-              "type": "named",
-              "data": {
-                "name": "HopperOn"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "ShooterOff",
-      "waypointRelativePos": 0.353470437018,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "ShooterOff"
-              }
-            },
-            {
-              "type": "named",
-              "data": {
-                "name": "HopperOff"
-              }
-            }
-          ]
-        }
-      }
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 1.5,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
