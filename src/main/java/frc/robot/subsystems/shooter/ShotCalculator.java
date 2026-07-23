@@ -15,6 +15,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -121,8 +122,7 @@ public class ShotCalculator {
         hoodAngleMap.put(1.14, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(1.34, Rotation2d.fromDegrees(15)); //Change to 15 once hood can go down that low
         hoodAngleMap.put(2.43, Rotation2d.fromDegrees(23.0));
-        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(24.5
-        ));
+        hoodAngleMap.put(3.04, Rotation2d.fromDegrees(24.5));
         hoodAngleMap.put(4.00, Rotation2d.fromDegrees(31.5));
         hoodAngleMap.put(5.5, Rotation2d.fromDegrees(33.5)); //adjusted to 30.0 for WILAX playoff 11
         hoodAngleMap.put(9.14, Rotation2d.fromDegrees(45));
@@ -192,6 +192,11 @@ public class ShotCalculator {
                 robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
                 robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
                 robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
+
+
+        if (DriverStation.isAutonomous()) {
+            target = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+        }
         
         // Calculate distance from turret to target
         // Apply currently-configured target (default is the hub) with alliance flip
@@ -305,6 +310,10 @@ public class ShotCalculator {
 
         lastTurretAngle = turretAngle;
         lastHoodAngle = hoodAngle;
+
+        //TODO: DELETE MONKEY FIX
+
+
         // Valid only when distance in range AND turret angle is within +/- 3/4*pi
         latestData = new ShotData(
                 true, //lookaheadTurretToTargetDistance >= minDistance && lookaheadTurretToTargetDistance <= maxDistance,
