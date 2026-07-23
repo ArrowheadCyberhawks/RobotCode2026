@@ -72,26 +72,7 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "ShooterOn",
-      "waypointRelativePos": 0.30161579892280066,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "ShooterTrench",
-      "waypointRelativePos": 1.5080789946140034,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "ShooterAim",
-      "waypointRelativePos": 2.547576301615793,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.5,
     "maxAcceleration": 1.0,
