@@ -17,42 +17,62 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "deadline",
           "data": {
             "commands": [
               {
-                "type": "sequential",
+                "type": "parallel",
                 "data": {
                   "commands": [
                     {
-                      "type": "path",
+                      "type": "sequential",
                       "data": {
-                        "pathName": "LeftNeutralToLeftShoot"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 4.0
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "HopperOn"
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "LeftNeutralToLeftShoot"
+                            }
+                          },
+                          {
+                            "type": "wait",
+                            "data": {
+                              "waitTime": 2.0
+                            }
+                          }
+                        ]
                       }
                     },
                     {
-                      "type": "named",
+                      "type": "sequential",
                       "data": {
-                        "name": "ShooterAim"
+                        "commands": [
+                          {
+                            "type": "wait",
+                            "data": {
+                              "waitTime": 5.0
+                            }
+                          },
+                          {
+                            "type": "parallel",
+                            "data": {
+                              "commands": [
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "HopperOn"
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "ShooterAim"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
                       }
                     }
                   ]
@@ -64,13 +84,26 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 5.0
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "HopperOff"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "HopperOff"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShooterOff"
+                }
+              }
+            ]
           }
         },
         {
@@ -80,53 +113,74 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "deadline",
           "data": {
             "commands": [
               {
-                "type": "sequential",
+                "type": "parallel",
                 "data": {
                   "commands": [
                     {
-                      "type": "wait",
+                      "type": "sequential",
                       "data": {
-                        "waitTime": 6.0
+                        "commands": [
+                          {
+                            "type": "path",
+                            "data": {
+                              "pathName": "closeneutral-trench-shoot"
+                            }
+                          },
+                          {
+                            "type": "wait",
+                            "data": {
+                              "waitTime": 2.0
+                            }
+                          }
+                        ]
                       }
                     },
                     {
-                      "type": "named",
+                      "type": "sequential",
                       "data": {
-                        "name": "HopperOn"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "ShooterAim"
+                        "commands": [
+                          {
+                            "type": "wait",
+                            "data": {
+                              "waitTime": 5.0
+                            }
+                          },
+                          {
+                            "type": "parallel",
+                            "data": {
+                              "commands": [
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "HopperOn"
+                                  }
+                                },
+                                {
+                                  "type": "named",
+                                  "data": {
+                                    "name": "ShooterAim"
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
                       }
                     }
                   ]
                 }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "closeneutral-trench-shoot"
-                }
               }
             ]
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "HopperOff"
           }
         }
       ]
