@@ -274,6 +274,8 @@ public class RobotContainer {
 		Command middleDepot = new PathPlannerAuto("depot-auto");
 		Command leftMROCauto = new PathPlannerAuto("leftMROC-Auto");
 		Command rightMROCauto = new PathPlannerAuto("leftMROC-Auto", true); // using "true" flips the auto from left to right
+		Command trialLeftMROC = new PathPlannerAuto ("TrialLeftMROC-Auto");
+		Command trialRightMROC = new PathPlannerAuto ("TrialLeftMROC-Auto", true);
 
 
 
@@ -288,6 +290,8 @@ public class RobotContainer {
 		autoChooser.addOption("MiddleDepot", middleDepot);
 		autoChooser.addOption("MROCAUTO", leftMROCauto); //left
 		autoChooser.addOption("RightMROCauto", rightMROCauto); //right
+		autoChooser.addOption("trialLeftMROC",trialLeftMROC); 
+		autoChooser.addOption("trialRightMROC", trialRightMROC);
 	}
 
 	private void configureBindings() {
