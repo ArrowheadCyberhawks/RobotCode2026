@@ -7,15 +7,17 @@
     "Cycles",
     "Depot",
     "NEW Right",
+    "New Member Paths",
     "Outpost",
     "PID",
     "Risky Passing",
-    "neutral",
     "bump",
+    "neutral",
     "trench"
   ],
   "autoFolders": [
     "Competition Autos",
+    "New Member Autos",
     "PID",
     "Testing"
   ],
