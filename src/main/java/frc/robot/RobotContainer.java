@@ -276,7 +276,6 @@ public class RobotContainer {
 		Command rightMROCauto = new PathPlannerAuto("leftMROC-Auto", true); // using "true" flips the auto from left to right
 		Command trialLeftMROC = new PathPlannerAuto ("TrialLeftMROC-Auto");
 		Command trialRightMROC = new PathPlannerAuto ("TrialLeftMROC-Auto", true);
-		Command newMemberAutoTest = new PathPlannerAuto("new-member-path-test");
 
 
 
@@ -293,7 +292,6 @@ public class RobotContainer {
 		autoChooser.addOption("RightMROCauto", rightMROCauto); //right
 		autoChooser.addOption("trialLeftMROC",trialLeftMROC); 
 		autoChooser.addOption("trialRightMROC", trialRightMROC);
-		autoChooser.addOption("newMemberAutoTest", newMemberAutoTest);
 	}
 
 	private void configureBindings() {
