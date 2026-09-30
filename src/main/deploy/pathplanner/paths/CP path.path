@@ -24,7 +24,7 @@
         "y": 6.832493975903615
       },
       "nextControl": {
-        "x": 0.6342048192771079,
+        "x": 0.634204819277108,
         "y": 4.297265060240964
       },
       "isLocked": false,
@@ -136,7 +136,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 0.5,
     "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -148,7 +148,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "New Member Paths",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

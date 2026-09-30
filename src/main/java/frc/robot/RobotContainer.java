@@ -277,6 +277,7 @@ public class RobotContainer {
 		Command trialLeftMROC = new PathPlannerAuto ("TrialLeftMROC-Auto");
 		Command trialRightMROC = new PathPlannerAuto ("TrialLeftMROC-Auto", true);
 		Command newMemberAutoTest = new PathPlannerAuto("new-member-path-test");
+		Command WWauto = new PathPlannerAuto("WWauto");
 
 
 
@@ -294,6 +295,7 @@ public class RobotContainer {
 		autoChooser.addOption("trialLeftMROC",trialLeftMROC); 
 		autoChooser.addOption("trialRightMROC", trialRightMROC);
 		autoChooser.addOption("newMemberAutoTest", newMemberAutoTest);
+		autoChooser.addOption("WWauto", WWauto);
 	}
 
 	private void configureBindings() {

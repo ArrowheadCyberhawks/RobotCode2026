@@ -25,7 +25,7 @@
       },
       "nextControl": {
         "x": 1.341831325301205,
-        "y": 0.4616385542168677
+        "y": 0.46163855421686817
       },
       "isLocked": false,
       "linkedName": null
@@ -72,7 +72,7 @@
         "y": 5.719046680864082
       },
       "nextControl": {
-        "x": 1.6045339208396088,
+        "x": 1.6045339208396086,
         "y": 8.03336295769014
       },
       "isLocked": false,
@@ -145,7 +145,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 0.5,
     "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -157,7 +157,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "New Member Paths",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

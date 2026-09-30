@@ -68,8 +68,8 @@
         "y": 2.989584210762147
       },
       "prevControl": {
-        "x": 1.4961184541333494,
-        "y": 2.7860038018966025
+        "x": 1.4961184541333483,
+        "y": 2.786003801896601
       },
       "nextControl": {
         "x": 1.7863253949610072,
@@ -113,7 +113,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 0.5,
     "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -125,7 +125,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "New Member Paths",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

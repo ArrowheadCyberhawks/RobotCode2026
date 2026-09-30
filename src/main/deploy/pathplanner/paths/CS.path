@@ -20,7 +20,7 @@
         "y": 4.1442771084337355
       },
       "prevControl": {
-        "x": 0.9682409638554215,
+        "x": 0.9682409638554217,
         "y": 5.530262048192772
       },
       "nextControl": {
@@ -37,7 +37,7 @@
       },
       "prevControl": {
         "x": 2.5383012048192777,
-        "y": 1.3358554216867469
+        "y": 1.335855421686747
       },
       "nextControl": null,
       "isLocked": false,
@@ -61,7 +61,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "New Member Paths",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
